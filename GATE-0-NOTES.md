@@ -103,7 +103,7 @@ Agent decisions recorded here so nothing in Rob's tests reads as a defect by sur
 Run by the agent from the repository root, in this order, after Rob had installed Build Tools. Each script checks its prerequisites (engine path from `$env:UE_ROOT`, then the default install folder - accepted only when `Engine\Build\Build.version` matches - then the Launcher's registry entry, then HKCU source builds; `vswhere`, `dotnet`) and stops with the fix printed if one is missing. All timings are wall time on this laptop.
 
 ```powershell
-.\Tools\generate_project_files.ps1                          # OK, 18.5 s: UnrealBuildTool -projectfiles -> Hellfall.slnx (5.8 writes .slnx, not .sln; git-ignored since 7b3e60f)
+.\Tools\generate_project_files.ps1                          # OK, 18.5 s: UnrealBuildTool -projectfiles -> Hellfall.slnx (also Hellfall.sln, Automation_Hellfall.sln/.slnx, .vsconfig; *.sln was already ignored, *.slnx + .vsconfig since 7b3e60f)
 .\Tools\build_editor.ps1                                    # Build.bat HellfallEditor Win64 Development - three attempts, see below; final: Result: Succeeded
 .\Tools\ue\run_editor_script.ps1 -Script build_greybox.py   # final generators: L_ExecutiveFloor 249 actors, 0 errors, 0 warnings (committed 12faf06)
 .\Tools\ue\run_editor_script.ps1 -Script build_feel_gym.py  # L_FeelGym 171 actors, 0 errors, 0 warnings (committed 12faf06)
@@ -195,7 +195,7 @@ Other known gaps for Gate 0 (none block Gate 0 approval, all are recorded so the
 - The LFS quota plan is undecided (section 3, item 8); the remote itself exists and is pushed.
 - `Docs/METRICS.md` is DRAFT until the feel gym has been walked; the doorway-jump arithmetic, the effective 72 cm crawl capsule (now confirmed by the packaged run's warning) and the 83 cm clear duct mouth are flagged there.
 - The `AndroidFileServer` plugin is disabled in `Hellfall.uproject` and its editor-written block was removed from `Config/DefaultEngine.ini` (`BUILD.md` 3.21). Any twin `.uproject` written **before** that change (`Saved/NoCodeTwin/HellfallNoCode.uproject`) still enables the plugin and re-appends the block on each run; regenerate such twins from the current `Hellfall.uproject`, and if the block reappears delete it - never commit it. With the module compiled, the twin is no longer needed for generation.
-- `Builds/` (the gate-0 staged tree and zip, `pipeline-test/`, `expo-test/`), `Saved/`, `Binaries/`, `Intermediate/` and `Hellfall.slnx` are git-ignored working files; the zip ships only on the Release.
+- `Builds/` (the gate-0 staged tree and zip, `pipeline-test/`, `expo-test/`), `Saved/`, `Binaries/`, `Intermediate/`, `.vs/`, the generated solution files (`Hellfall.sln`/`.slnx`, `Automation_Hellfall.sln`/`.slnx`, `.vsconfig`), `Tools/ue/__pycache__/` and the UAT-written `Build/Windows/FileOpenOrder/*.log` are all git-ignored working files (`.gitignore` keeps only `Build/*/Resources/` and `Build/*/PakBlacklist*.txt` tracked); none is in the index. The zip ships only on the Release.
 - The audio brief said 16 files; the supplied tree holds 14. `BUILD.md` and `Docs/ASSET-MANIFEST.md` record 14.
 - `crimson_hellfiend_texture_0_1.png` is a byte-identical duplicate; dropped at Gate 2, kept untouched now (no scope work before Gate 1 approval).
 - The two `.ogv` videos must be re-encoded to MP4/H.264 at Gate 6; ffmpeg is not installed.
