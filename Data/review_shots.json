@@ -1,0 +1,29 @@
+{
+  "_comment": "Review screenshot sweep (Tools/screenshot_sweep.ps1). Positions are PLAN space in cm (photo x right, y down toward the window; see Docs/FLOORPLAN-SCHEMA.md); yaw_plan 0 = facing +x, 90 = facing +y (toward the window). The script converts to Unreal (X = plan.y, Y = -plan.x, yaw = plan yaw - 90) and launches the packaged exe with ?spawn=X,Y,0,Yaw. Floor is z = 0 everywhere in Gate 1.",
+  "version": 1,
+  "shots": [
+    { "id": "01_closet_start",          "map": "L_ExecutiveFloor", "x": 2650, "y": 150,  "yaw_plan": 90,  "note": "Supply Closet from the player start, duct mouth ahead" },
+    { "id": "02_closet_corner",         "map": "L_ExecutiveFloor", "x": 2600, "y": 380,  "yaw_plan": 235, "note": "Supply Closet looking back at the racks wall and the reference figure" },
+    { "id": "03_break_room_from_duct",  "map": "L_ExecutiveFloor", "x": 2650, "y": 1050, "yaw_plan": 90,  "note": "Break Room just inside the duct exit, looking south" },
+    { "id": "04_break_room_to_door",    "map": "L_ExecutiveFloor", "x": 2700, "y": 1340, "yaw_plan": 180, "note": "Break Room centre looking west at the corridor door" },
+    { "id": "05_corridor_from_break",   "map": "L_ExecutiveFloor", "x": 1900, "y": 1590, "yaw_plan": 180, "note": "Corridor from the Break Room door, looking west down the spine" },
+    { "id": "06_junction_west",         "map": "L_ExecutiveFloor", "x": 1240, "y": 1650, "yaw_plan": 180, "note": "T-junction looking west: Office #2 door, collapse at the end" },
+    { "id": "07_junction_elevator",     "map": "L_ExecutiveFloor", "x": 1240, "y": 1680, "yaw_plan": 270, "note": "T-junction looking north into the elevator alcove" },
+    { "id": "08_collapse",              "map": "L_ExecutiveFloor", "x": 700,  "y": 1590, "yaw_plan": 180, "note": "Blocked corridor: the collapse close up" },
+    { "id": "09_mens_restroom",         "map": "L_ExecutiveFloor", "x": 1740, "y": 1380, "yaw_plan": 270, "note": "Men's restroom from its door" },
+    { "id": "10_office_2",              "map": "L_ExecutiveFloor", "x": 840,  "y": 1820, "yaw_plan": 90,  "note": "Office #2 from its door, looking south" },
+    { "id": "11_passage_south",         "map": "L_ExecutiveFloor", "x": 1240, "y": 1800, "yaw_plan": 90,  "note": "Reception passage looking south toward reception and the CEO door" },
+    { "id": "12_office_1",              "map": "L_ExecutiveFloor", "x": 1480, "y": 2320, "yaw_plan": 0,   "note": "Office #1 from its door, looking east" },
+    { "id": "13_reception",             "map": "L_ExecutiveFloor", "x": 1240, "y": 2760, "yaw_plan": 90,  "note": "Reception from the passage mouth, CEO door ahead" },
+    { "id": "14_money_shot_doorway",    "map": "L_ExecutiveFloor", "x": 1240, "y": 3560, "yaw_plan": 90,  "note": "CEO office doorway: the window wall (money shot framing)" },
+    { "id": "15_ceo_nook",              "map": "L_ExecutiveFloor", "x": 1250, "y": 4000, "yaw_plan": 0,   "note": "CEO office looking east into the screened nook (Demon #2 reservation)" },
+    { "id": "16_ceo_from_window",       "map": "L_ExecutiveFloor", "x": 1240, "y": 4420, "yaw_plan": 270, "note": "CEO office from the window looking back at the door and dividing wall" },
+    { "id": "20_gym_start",             "map": "L_FeelGym",        "x": 3000, "y": 300,  "yaw_plan": 90,  "note": "Feel gym overview from the start" },
+    { "id": "21_gym_doorways",          "map": "L_FeelGym",        "x": 420,  "y": 300,  "yaw_plan": 90,  "note": "Doorway widths station" },
+    { "id": "22_gym_corridors",         "map": "L_FeelGym",        "x": 1755, "y": 300,  "yaw_plan": 90,  "note": "Corridor widths station" },
+    { "id": "23_gym_ceilings",          "map": "L_FeelGym",        "x": 3905, "y": 300,  "yaw_plan": 90,  "note": "Ceiling heights station" },
+    { "id": "24_gym_ledges",            "map": "L_FeelGym",        "x": 320,  "y": 2100, "yaw_plan": 90,  "note": "Jump ledges station" },
+    { "id": "25_gym_ramp",              "map": "L_FeelGym",        "x": 870,  "y": 2100, "yaw_plan": 90,  "note": "Step ramp station" },
+    { "id": "26_gym_tunnels",           "map": "L_FeelGym",        "x": 1865, "y": 2100, "yaw_plan": 90,  "note": "Crawl tunnels station" }
+  ]
+}
