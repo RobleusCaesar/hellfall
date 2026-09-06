@@ -1,7 +1,9 @@
 // HELLFALL tuning subsystem (REQ-G1-003: every feel value is read from Data/, not hard-coded).
 //
 // Data flow:  Data/movement.json  --FJsonSerializer-->  FHellfallMovementTuning (this file)
-//             --copied at BeginPlay-->  UHellfallMovementComponent / AHellfallCharacter / AHellfallPlayerController / AHellfallHUD
+//             --copied at InitializeComponent (before possession / BeginPlay)-->  UHellfallMovementComponent
+//             --read straight from this subsystem-->  AHellfallCharacter (SetupPlayerInputComponent: binds, invert_y),
+//                                                    AHellfallPlayerController (BeginPlay), AHellfallHUD (every frame)
 //
 // Fail-soft rule: if the file is missing or corrupt the compiled defaults below are used. They are
 // kept EQUAL to the values in Data/movement.json so a broken file never changes the feel silently;

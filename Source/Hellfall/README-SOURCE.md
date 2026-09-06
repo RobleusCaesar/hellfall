@@ -11,8 +11,8 @@ the input actions are built in C++ at possession time from `Data/movement.json`.
 | `UHellfallTuning` | `UGameInstanceSubsystem` | Loads `Data/movement.json` into `FHellfallMovementTuning` and `Data/levels.json` into `FHellfallLevelEntry[]` once per game instance. Fail-soft: compiled defaults equal the JSON; `GetLoadError()` is non-empty when the file was not honoured. |
 | `UHellfallMovementComponent` | `UCharacterMovementComponent` | Three-stance body (Standing / Crouching / Crawling), stance transitions, clearance probe, per-stance speed caps, sprint, coyote-time jump rule. Engine crouch is disabled (`bCanCrouch = false`). |
 | `AHellfallCharacter` | `ACharacter` | Capsule + first-person camera, Enhanced Input built in C++, input handlers, camera follows the stance interpolation, F1 level toggle via the registry. |
-| `AHellfallPlayerController` | `APlayerController` | Pitch clamp from tuning, game-only input mode, focus loss -> cursor released / focus regain -> one look sample dropped, menuless Gate-1 pause. |
-| `AHellfallHUD` | `AHUD` | Canvas text: CONTROLS block (every bind by name), stance, STAND BLOCKED, speed, map, red tuning error line, centre dot. |
+| `AHellfallPlayerController` | `APlayerController` | Pitch clamp from tuning, game-only input mode, focus loss -> cursor released / focus regain -> one look sample dropped and the game or paused input mode re-applied (alt-tab while paused cannot lock the game), menuless Gate-1 pause. |
+| `AHellfallHUD` | `AHUD` | Canvas text: header `HELLFALL  greybox build` (no gate number - the first Release is gate-0), CONTROLS block (every bind by name), stance, STAND BLOCKED, speed, map, red tuning error line, centre dot. |
 | `AHellfallGameMode` | `AGameModeBase` | Wires the three classes above; `GlobalDefaultGameMode` in `Config/DefaultEngine.ini`. |
 
 `Hellfall.h/.cpp` define the module and the `LogHellfall` category.
@@ -31,10 +31,15 @@ Data/movement.json ──FJsonSerializer──> FHellfallMovementTuning   (UHell
    margin, transition time, coyote time)
 ```
 
-Rules: values are copied at `BeginPlay` (component) / `SetupPlayerInputComponent` (character). Missing
-file or any missing/invalid key => whole struct falls back to compiled defaults (never a half-authored
-body) and the HUD prints `TUNING: ...` in red. Bind names are `FKey` names (`SpaceBar`, `LeftControl`,
-`F1`, ...); an unknown name is a load error, not a silent drop.
+Rules: the component copies the values at `InitializeComponent` (spawn time, before possession and
+`BeginPlay`; `BeginPlay` re-applies only if no game instance existed then). The character reads the
+subsystem directly in `SetupPlayerInputComponent`: on a map load possession - and with it the input
+mapping build - happens inside `UEngine::LoadMap` before the world's `BeginPlay`, so reading the
+component's copy there would bake the compiled-default binds and `invert_y` into the mapping. The
+controller reads the subsystem at `BeginPlay`, the HUD every frame. Missing file or any missing/invalid
+key => whole struct falls back to compiled defaults (never a half-authored body) and the HUD prints
+`TUNING: ...` in red. Bind names are `FKey` names (`SpaceBar`, `LeftControl`, `F1`, ...); an unknown
+name is a load error, not a silent drop.
 
 ## Stance state machine
 
@@ -79,10 +84,12 @@ Everything else is a Boolean action on one key. `Pause` has `bTriggerWhenPaused`
 
 ## Verify first, in this order, once UE 5.8 + VS are installed
 
-1. **Compile** `HellfallEditor` (Tools/build_editor.ps1). Expected trouble spots, all marked `TODO(VERIFY 5.8)`
-   or discussed in comments: `BuildSettingsVersion.V5` (warning only if a newer one exists); the JSON
-   `TryGet*Field` overloads (FString vs FStringView — both accept what is passed); `FSlateApplication::
-   OnApplicationActivationStateChanged` signature (`const bool`).
+1. **Compile** `HellfallEditor` (Tools/build_editor.ps1). Both targets use `BuildSettingsVersion.V7`
+   (== `Latest` in 5.8): V6/V7 turn undefined-identifier, return-type, dangling, unreachable-code and
+   shadow-variable warnings into errors - if one appears, fix the code, do not downgrade. The only
+   `TODO(VERIFY 5.8)` marker left under `Source/` is the look sign (step 2); spots discussed in comments
+   without a marker: the JSON `TryGet*Field` overloads (FString vs FStringView — both accept what is
+   passed); `FSlateApplication::OnApplicationActivationStateChanged` signature (`const bool`).
 2. **Look sign** (first thing on first launch): push the mouse forward — the view must pitch **up**. If
    it pitches down, set `"invert_y": true` in `Data/movement.json` (data fix) or flip the single sign in
    `AHellfallCharacter::Input_Look` (code fix). Reason: this project disables legacy input scales.
@@ -92,5 +99,14 @@ Everything else is a Boolean action on one key. `Pause` has `bTriggerWhenPaused`
    does not clip, walking out of the duct auto-completes the pending stand.
 5. **REQ-G1-003 acceptance 3**: change `walk_speed_cms` in `Data/movement.json`, rebuild/re-run — HUD speed
    cap changes. Break the JSON on purpose — red `TUNING:` line appears and the body still works with defaults.
+   Bind proof: change `"jump"` to `"F"` and relaunch — the HUD must print F **and** F must jump (the mapping
+   is built from the subsystem in `SetupPlayerInputComponent`, so both change together); then set
+   `"invert_y": true` — the pitch direction flips with no code change.
 6. Coyote time: walk off a ledge and press Space within 0.1 s — you jump; press again in the air — nothing.
-7. Focus: alt-tab away (cursor appears), alt-tab back and move the mouse — no view snap.
+7. Focus: alt-tab away (cursor appears), alt-tab back and move the mouse — no view snap. Then pause
+   (Escape), alt-tab away and back — the cursor stays visible and Escape still resumes (focus regain
+   re-applies `EnterPausedInputMode` while paused, `EnterGameInputMode` otherwise, so the UI-only
+   ignore-input state set on focus loss is always cleared).
+8. Log check: `LogHellfall: Movement: tuning applied (...)` must appear **once** per pawn spawn (from
+   `InitializeComponent`). A second copy at `BeginPlay` means `UHellfallTuning::Get` returned null at
+   `InitializeComponent` time on 5.8 — behaviour is still correct, but record it.

@@ -44,18 +44,42 @@ UHellfallMovementComponent::UHellfallMovementComponent(const FObjectInitializer&
 	CurrentEyeHeightAboveFeet = Defaults.EyeHeightStandCm;
 }
 
+void UHellfallMovementComponent::InitializeComponent()
+{
+	Super::InitializeComponent(); // UMovementComponent: registers the UpdatedComponent if it was not set (ACharacter sets it in its constructor)
+
+	// Runs from AActor::InitializeComponents at spawn, i.e. before possession and before BeginPlay.
+	// On a map load the local player possesses the pawn inside UEngine::LoadMap, ahead of the world's
+	// BeginPlay, and APawn::PawnClientRestart -> SetupPlayerInputComponent builds the input mapping
+	// right then. Applying the JSON here makes Tuning (and AHellfallCharacter::GetMovementTuning())
+	// correct before any of that. UMovementComponent sets bWantsInitializeComponent = true, so this
+	// override is reached without further setup; CharacterOwner is already set (OnRegister ->
+	// SetUpdatedComponent), so the capsule resize inside ApplyTuning can run here as well.
+	bTuningFromSubsystem = ApplyTuningFromSubsystem();
+}
+
 void UHellfallMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Normally nothing to do: InitializeComponent already applied the subsystem values. Re-applies
+	// only if there was no game instance back then (keeps the body honest in any odd spawn order).
+	if (!bTuningFromSubsystem)
+	{
+		bTuningFromSubsystem = ApplyTuningFromSubsystem();
+	}
+}
+
+bool UHellfallMovementComponent::ApplyTuningFromSubsystem()
+{
 	const UHellfallTuning* TuningSubsystem = UHellfallTuning::Get(this);
 	ApplyTuning(TuningSubsystem ? TuningSubsystem->GetMovementTuning() : FHellfallMovementTuning());
+	return TuningSubsystem != nullptr;
 }
 
 void UHellfallMovementComponent::ApplyTuning(const FHellfallMovementTuning& InTuning)
 {
 	Tuning = InTuning;
-	bTuningApplied = true;
 
 	// Acceleration/deceleration ramps: "the character has weight, not instant velocity" (REQ-G1-003).
 	MaxAcceleration = Tuning.MaxAccelerationCms2;

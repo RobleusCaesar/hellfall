@@ -177,7 +177,14 @@ void AHellfallCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		return;
 	}
 
-	BuildInputAssets(GetMovementTuning());
+	// Possession (and so this call) happens inside UEngine::LoadMap / ULocalPlayer::SpawnPlayActor,
+	// BEFORE the world's BeginPlay, so nothing that only runs at BeginPlay can be relied on here. The
+	// binds and invert_y therefore come straight from the tuning subsystem, which lives on the game
+	// instance and loaded Data/movement.json before any map. (The movement component also copies the
+	// subsystem values in at InitializeComponent, but this read does not depend on that order.)
+	// Fallback = the component's copy, which equals the compiled defaults when there is no game instance.
+	const UHellfallTuning* TuningSubsystem = UHellfallTuning::Get(this);
+	BuildInputAssets(TuningSubsystem ? TuningSubsystem->GetMovementTuning() : GetMovementTuning());
 	AddMappingContextToLocalPlayer();
 
 	// Bindings. Triggered = every frame the value is non-zero (axes); Started/Completed = press/release edges.
@@ -363,7 +370,9 @@ void AHellfallCharacter::Input_Look(const FInputActionValue& Value)
 	// no negation here: mouse up -> look up. The 5.x templates negate Y in their IMC only because they
 	// keep the legacy -2.5 InputPitchScale, which this project disables.
 	// TODO(VERIFY 5.8): first run - push the mouse forward; the view must pitch UP. If it does not, the
-	// data-only fix is "invert_y": true in Data/movement.json; the code fix is a single sign below.
+	// data-only fix is "invert_y": true in Data/movement.json (read from the tuning subsystem when the
+	// mapping is built in SetupPlayerInputComponent, so it takes effect on the next launch with no code
+	// change); the code fix is a single sign below.
 	AddControllerYawInput(Axis.X * Sensitivity);
 	AddControllerPitchInput(Axis.Y * Sensitivity);
 }

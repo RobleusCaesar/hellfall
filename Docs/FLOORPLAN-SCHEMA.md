@@ -78,6 +78,8 @@ Connects two rooms through the wall between them. The generator cuts the wall an
 }
 ```
 
+For `type: "window"`, `between[1]` may be the literal `"exterior"` (or omitted): nothing is built beyond the glass, and the validator treats the wall as exterior. The live plan does exactly this (`Data/floorplan.json : window_ceo_city` has `between: ["ceo_office", "exterior"]`). Alternatively `between[1]` may be the id of a non-enterable backdrop room reached only through windows (`Tools/validate_floorplan.mjs` `isBackdrop`), which is accepted but not used in Gate 1. Do **not** author an `exterior_city` room to hold the window: a sealed room there would receive a floor, ceiling, light, label and reference figure, all visible through the glass.
+
 ### Duct
 
 ```jsonc
@@ -99,6 +101,7 @@ The generator builds the duct as a box tube with its own floor/ceiling/sides, cu
 { "id": "collapse", "kind": "collapse", "room": "corridor_blocked", "depth_cm": 200 }   // rubble wedge filling the corridor, floor to ceiling, un-jumpable, un-crawlable
 { "id": "elevator", "kind": "elevator_doors", "room": "elevator_lobby", "wall": "west", "width_cm": 140, "height_cm": 220 }  // shut doors as a slab flush in the wall, labeled
 ```
+The blocker and duct examples above are illustrative; the live values are in `Data/floorplan.json` (the plan's elevator doors are 200 wide on the lobby's north wall, its duct 520 face to face).
 
 ### Marker
 

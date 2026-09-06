@@ -9,6 +9,11 @@ DerivedDataCache/
 Plugins/*/Binaries/
 Plugins/*/Intermediate/
 
+# Temporary code-free twin of Hellfall.uproject ("Modules" removed) written by
+# Tools/ue/run_editor_script.ps1 -NoCode so editor Python can generate maps before the C++ module
+# compiles; deleted after each run. Never committed.
+HellfallNoCode.uproject
+
 # Packaged / staged builds go on GitHub Releases, never in the repo (G-5).
 # Build/<Platform>/Resources (icons, splash) and PakBlacklist files stay tracked; the directory
 # itself must be re-included before its contents, or git never descends into it.

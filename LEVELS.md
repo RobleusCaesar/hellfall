@@ -10,16 +10,17 @@ Walk a new developer from an empty map to a registered, playable level using onl
 
 | Piece | Path | Role |
 |---|---|---|
-| Level registry | `Data/levels.json` | `executive_floor -> /Game/Maps/L_ExecutiveFloor`, `feel_gym -> /Game/Maps/L_FeelGym`. Read by the game to resolve a level id to a map path; the F1 toggle uses it. |
+| Level registry | `Data/levels.json` | `executive_floor -> /Game/Maps/L_ExecutiveFloor` (order 10), `feel_gym -> /Game/Maps/L_FeelGym` (order 900, hidden). Each entry carries `id`, `display_name`, `map`, `order` and optional `hidden`. Read by `UHellfallTuning` to resolve a level id to a map path; the F1 toggle uses it. |
 | Main level source | `Data/floorplan.json` (+ `Data/metrics.json`, `Data/greybox_style.json`) | Rooms, openings, ducts, blockers, markers, checkpoints, encounters, money shot. Schema: `Docs/FLOORPLAN-SCHEMA.md`. |
 | Main level generator | `Tools/ue/build_greybox.py` | Reads the JSON above and emits `/Game/Maps/L_ExecutiveFloor` through `Tools/ue/hf_common.py` (UnrealEmitter inside the editor, ManifestEmitter without it). Geometry maths is in `Tools/ue/hf_geometry.py` (pure Python, testable without the engine). |
 | Feel gym generator | `Tools/ue/build_feel_gym.py` | Reads `Data/metrics.json` (`feel_gym` block) and emits `/Game/Maps/L_FeelGym`. |
-| Driver | `Tools/ue/run_editor_script.ps1 -Script <name>.py` | Runs a generator headless with `UnrealEditor-Cmd.exe -run=pythonscript`. |
+| Driver | `Tools/ue/run_editor_script.ps1 -Script <name>.py` | Runs a generator headless with `UnrealEditor-Cmd.exe -run=pythonscript`. `-NoCode` runs it against a temporary code-free twin project (`HellfallNoCode.uproject`, git-ignored, deleted afterwards) so maps can be generated before the C++ module is compiled. |
 | Validators | `Tools/validate_floorplan.mjs`, `Tools/check_manifest.mjs` | Run before any generation; fail loudly on schema, adjacency or metric violations. |
+| Generated output | `Content/Maps/L_ExecutiveFloor.umap`, `Content/Maps/L_FeelGym.umap`, `Content/Greybox/Materials/M_GB_*.uasset` (24 tints) | Output only (Git LFS), never hand-edited; both maps were first generated on UE 5.8.2 on 2026-09-06 with the driver above (249 and 171 actors). Committed with the first commit after the baseline `2c27652`, then re-committed at gate tags only. |
 
 ## To be completed at Gate 6 (REQ-G6-006)
 
 - Base level structure (spawn point, NavMesh bounds, lighting root, trigger root, level-complete event) captured as a template generator.
-- Level manager that loads by registry id; registry gains `display_name` and `order` fields.
+- Level manager that loads by registry id and honours `order` / `hidden` (the fields are already present in `Data/levels.json`; today only the F1 toggle reads the file).
 - The worked example: add a second level by instantiating the template and adding one registry entry, with no edits to existing scripts.
 - Acceptance: every file path in this document exists in the repository; changing demon health in `Data/` changes shots-to-kill with no code edit.

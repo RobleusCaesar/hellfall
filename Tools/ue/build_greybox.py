@@ -68,4 +68,8 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     code = main()
     sys.stdout.flush()
+    # sys.exit is correct under the pythonscript commandlet too (verified 2026-09-06, UE 5.8.2 run + source):
+    # PyUtil.cpp::FetchPythonError traps SystemExit with code 0/None and discards it ("Python script executed
+    # successfully", process exit 0); any non-zero SystemExit is logged as "LogPython: Error" and makes the
+    # commandlet return -1, which is exactly the failure signal Tools/ue/run_editor_script.ps1 checks for.
     sys.exit(code)

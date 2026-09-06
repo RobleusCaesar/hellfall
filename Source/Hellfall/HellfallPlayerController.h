@@ -31,6 +31,9 @@ public:
 	/** Mouse captured, cursor hidden, all input to the game. */
 	void EnterGameInputMode();
 
+	/** Paused: cursor free and visible, keys still reach the pawn's input component (so the pause key can resume). */
+	void EnterPausedInputMode();
+
 private:
 	void HandleApplicationActivationChanged(const bool bIsActive);
 	void ApplyCameraLimitsFromTuning();

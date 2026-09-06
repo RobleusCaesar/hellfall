@@ -39,6 +39,7 @@ public:
 	UHellfallMovementComponent(const FObjectInitializer& ObjectInitializer);
 
 	// UActorComponent
+	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
@@ -89,6 +90,8 @@ public:
 	const FHellfallMovementTuning& GetMovementTuning() const { return Tuning; }
 
 private:
+	/** ApplyTuning() with the subsystem's values (compiled defaults when there is no game instance). Returns true when the subsystem was found. */
+	bool ApplyTuningFromSubsystem();
 	void UpdateStance(float DeltaTime);
 	bool TryBeginTransition(EHellfallStance Target);
 	void AdvanceTransition(float DeltaTime);
@@ -130,5 +133,6 @@ private:
 	/** World time (s) at which the body was last on walkable ground. -1 = never. */
 	float LastGroundedTimeS = -1.f;
 	bool bCoyoteConsumed = false;
-	bool bTuningApplied = false;
+	/** True once ApplyTuning() ran with the UHellfallTuning values (not merely the compiled defaults). */
+	bool bTuningFromSubsystem = false;
 };

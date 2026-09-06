@@ -9,7 +9,7 @@ Plan space: `x` right on the photo, `y` down toward the window; all values cm; r
 
 ## 1. Rooms
 
-Grid rule: every room origin is on the 50 cm grid and every interior dimension is `50k - 20` (280, 430, 480, 580, 780, 930, 980, 1080, 1480); every coordinate in the file is on a 10 cm grid. Footprint including outer walls: **x -20..3000, y -20..4600 = 30.2 m x 46.2 m**; interior floor area about 530 m2.
+Grid rule: every room origin is on the 50 cm grid and every interior dimension is `50k - 20` (280, 430, 480, 580, 780, 930, 980, 1080, 1480); every coordinate in the file is on a 10 cm grid. Footprint including outer walls: **x -20..3000, y -20..4600 = 30.2 m x 46.2 m**; interior floor area about 590 m2 (the twelve rects sum to 589.8; 565 m2 enterable once the sealed 24.9 m2 women's room is taken out).
 
 | id | label | rect (x, y) | interior w x d x ceiling | floor | role |
 |---|---|---|---|---|---|
@@ -60,15 +60,15 @@ Every door sits at least 60 cm from the nearest wall end (minimum jamb: Office #
 |---|---|
 | Supply racks | east wall x 2920-2980, y 0-430, ~200 tall; seated man against the rack face; intern against the west wall north of the mouth; mop + bucket x 2760-2840 on the south wall |
 | Kitchenette counter | east wall x 2920-2980, y 950-1500; fridge SE corner x 2900-2980, y 1650-1730; round table D120 + 4 chairs at (2550, 1340), one chair pushed out |
-| Dead guard + shotgun | along the corridor's NORTH wall x 1840-1960, y 1460-1540; shotgun x 1760-1840, y 1470-1500. The spine centre y 1540-1640 stays clear (Demon #1 retreat lane) |
+| Dead guard + shotgun | slumped against the corridor's NORTH wall in its NE corner, knees drawn up, feet at the east wall just north of the break-room door: x 1880-1980, y 1450-1510 (100 x 60); shotgun beside his head x 1800-1880, y 1450-1480, east of the men's door (x 1680-1800). Nothing south of y 1510 at x 1800-1980, so 220 cm of floor (>= the 216 corridor minimum) stays clear along the whole Demon #1 retreat lane; the corridor's reference figure stands on the south wall at (1600, 1690), out of the corner |
 | Toilet stalls / vanity | men's west wall x 1500-1640, y 960-1400; vanity men's SE corner x 1830-1980, y 1030-1430 (Rob to confirm, see Q3) |
 | Office desks | Office #2 west wall x 620-780, y 2200-2360; Office #1 east wall x 1720-1880, y 2380-2540 |
 | Secretary desk | x 1450-1880, y 2950-3100, chair south side, EAST of the axis |
 | Screen wall | x 1550-1980 at y 3800, full height (money_shot.dividing_wall) |
-| Dead CEO | lounge pocket x 1600-1700, y 4150-4250 (behind the screen wall) |
-| Couch set | lounge SE corner x 1600-1950, y 4250-4550 |
+| Dead CEO | slumped against the EAST wall in the lounge pocket, x 1900-1980, y 3980-4060 (80 x 80), 20 cm south of Demon #2's idle capsule; inside the hidden wedge from all three doorway rays (west-jamb boundary at y 4060 is x > 1883, 17 cm margin by the conservative NW-corner test in section 6). It cannot lie deeper in the pocket: at y 4150 the boundary is already x > 1994, outside the room |
+| Couch set | lounge SE corner x 1600-1950, y 4250-4550; inside the doorway -> glass cone but below eye line (a 90 cm couch back 760 cm from the door centre hides only the bottom 17 cm of glass above the 40 cm sill across the east third; the 75 cm CEO desk projects 4 cm above the sill) |
 | CEO desk | WEST of the axis x 520-900, y 4300-4500, chair on the window side x 630-790, y 4500-4570 |
-| **Axis strip** | **x 1100-1380 is prop-free from the corridor junction (y 1450) to the glass (y 4580)** |
+| **Axis strip** | **x 1100-1380 is prop-free from the corridor junction (y 1450) to the glass (y 4580)**, except the Gate 1 reference figure against the passage's west wall at (1130, 2620): footprint x 1105-1155, 25 cm west of the lit door slot (x 1180-1300), so the teaser numbers in section 6 are untouched |
 
 Sketch positions Rob drew that the spec moved are kept as notes so the greybox review shows him where and why: Demon #1 X inside Office #2's NW corner (660, 1810); Demon #2 X in the reception half (1000, 3080); dead guard X inside the break room's NW corner (2100, 1000); the Vanity arrow landing in the men's room's SE corner.
 
@@ -78,7 +78,7 @@ Sketch positions Rob drew that the spec moved are kept as notes so the greybox r
 |---|---|---|---|---|
 | `cp_start` | supply_closet | (2650, 150) | 90 | = player start |
 | `cp_break_room` | break_room | (2300, 1590) | 180 | 3 m inside the corridor door, facing it |
-| `cp_corridor_post_pickup` | corridor_main | (1740, 1500) | 180 | between the restroom doors, north side, clear of the Demon #1 retreat lane |
+| `cp_corridor_post_pickup` | corridor_main | (1600, 1500) | 180 | north side, east of the junction, clear of the men's door (x 1680-1800), the pickup (x 1800-1880) and the Demon #1 retreat lane (y 1554-1626) |
 | `cp_ceo_entry` | ceo_office | (1100, 3600) | 90 | 1 m inside the CEO door, west of the axis so it does not sit under the Demon #2 lane marker |
 
 **Encounters (REQ-G2-003/004 reserved space; the validator walks every lane):**
@@ -86,15 +86,15 @@ Sketch positions Rob drew that the spec moved are kept as notes so the greybox r
 | | demon_1 | demon_2 |
 |---|---|---|
 | room | corridor_main | ceo_office |
-| spawn | (840, 1640) - 80 cm in front of Office #2's door, dead-end side | (1900, 3900) - NE lounge pocket, 90 cm behind the screen wall |
-| trigger | the junction floor x 1100-1380, y 1450-1730 | full-width strip y 3900-4000 (player 400-500 cm inside the office) |
-| player approach | (1240, 1590) junction centre | (1240, 4000) on the axis |
+| spawn | (840, 1640) - 90 cm in front of Office #2's door (corridor south face 1730), dead-end side | (1900, 3900) - NE lounge pocket, 90 cm behind the screen wall |
+| trigger | the junction floor x 1100-1380, y 1450-1730 | full-width strip y 3650-3750 (150-250 cm inside the door wall; fires before the capsule clears the screen wall's free end from anywhere in the axis strip, see section 6) |
+| player approach | (1240, 1590) junction centre | (1240, 3850) on the axis, 40 cm past the screen wall's south face (y 3810) |
 | retreat | EAST toward the break room: 700 stated, 760 geometric (to the break-room wall face at x 2000) | WEST: 700 stated, 740 geometric (to x 500) |
-| strafe each side | 400 stated: north into the elevator alcove (590 clear), south into the passage (930+) | 300 stated: north 500 to the door wall, south 580 to the glass |
+| strafe each side | 400 stated: north into the elevator alcove (640 clear to its north wall face at y 950), south into the passage (930+) | 300 stated: north 350 to the door wall, south 730 to the glass |
 | capsule | r 45, h 220 | r 60, h 280 |
-| chokepoint spawn -> approach | none: 280 corridor floor all the way (403 cm) | none: open floor (668 cm), clear of the screen wall, couch set and dead CEO |
+| chokepoint spawn -> approach | none: 280 corridor floor all the way (403 cm) | none: open floor (662 cm) heading west along y 3900-3850, clear of the screen wall, the couch set and the dead CEO (who lies south of the spawn against the east wall) |
 
-Demon #1 read: the player walks west from the break room, passes the facing restroom doors and the guard, reaches the junction (elevator alcove ahead-right, passage left, rubble at the far end) and the demon comes out of the only dark door on the dead-end side. Backing east is a straight 7.6 m run; the alcove and the passage are the dodge pockets. Demon #2 read: the player enters on axis with the window filling the view, walks 4-5 m toward it, and the demon comes from the left (plan +x = UE left) out of the pocket behind the screen wall; the retreat is west along the room with the window on the player's right; nothing in the fight space is between the door and the glass (REQ-G2-004 AC3).
+Demon #1 read: the player walks west from the break room, passes the facing restroom doors and the guard, reaches the junction (elevator alcove ahead-right, passage left, rubble at the far end) and the demon comes out of the only dark door on the dead-end side. Backing east is a straight 7.6 m run; the alcove and the passage are the dodge pockets. Demon #2 read: the player enters on axis with the window filling the view, walks about 2 m in (the trigger strip y 3650-3750 fires 1.5-2.5 m inside the door wall), and the demon comes from the left (plan +x = UE left) out of the pocket behind the screen wall; the retreat is west along the room with the window on the player's right; nothing in the fight space is between the door and the glass (REQ-G2-004 AC3). The ambush holds for the whole axis strip: the capsule's west edge (1840, 3900) clears the wall's free end only from y 3670 at x 1100, 3714 on the axis and 3757 at x 1380, i.e. 20-107 cm after the trigger's north edge (56+ cm counting the player's capsule radius). The exposure line runs from the wall's SW corner (1550, 3810) up to the door wall at x 551, so only a player who turns west on entry and passes x 1030 before crossing y 3650 sees the demon early; if Gate 5 places the demon idle at its spawn instead of spawning it on the trigger, that is the residual risk, and a second strip along the door wall (x 500-1100, y 3500-3650) closes it.
 
 ## 5. Critical path and pacing (walk 400 cm/s, crawl 130 cm/s)
 
@@ -105,7 +105,7 @@ Demon #1 read: the player walks west from the break room, passes the facing rest
 | start (2650, 150) -> duct mouth (2650, 430) | 280 | 0.7 s |
 | duct crawl, face to face | 520 | 4.0 s |
 | duct exit (2650, 950) -> break-room door (2000, 1590), diagonal past the table | ~910 | 2.3 s |
-| door -> junction (1240, 1590), west along the spine | 740 | 1.9 s |
+| door -> junction (1240, 1590), west along the spine | 760 (740 from the corridor's east wall face at x 1980) | 1.9 s |
 | junction -> reception (1240, 2700), down the passage | 1110 | 2.8 s |
 | reception -> CEO door (1240, 3490) | 790 | 2.0 s |
 | CEO door -> dwell rect (1240, 4430) | 940 | 2.4 s |
@@ -144,7 +144,9 @@ Viewer points are the door's west jamb (1180, 3490), centre (1240, 3490) and eas
 | centre | (1240, 3490) -> (1550, 3790) | 164 cm | 104 cm |
 | east jamb | (1300, 3490) -> (1550, 3790) | 198 cm | 138 cm |
 
-The hidden wedge behind a wall end narrows as you go deeper into the room, so the lair is deliberately right behind the wall (90 cm south of it, 20 cm off the east wall), not deep in the pocket; a demon up to about r 75 stays hidden. Real demon dimensions are unknown until the Gate 2 Blender pass.
+The hidden wedge behind a wall end narrows as you go deeper into the room, so the lair is deliberately right behind the wall (90 cm south of it, 20 cm off the east wall), not deep in the pocket; a demon up to about r 75 stays hidden. Real demon dimensions are unknown until the Gate 2 Blender pass. The dead CEO uses the same wedge: against the east wall at y 3980-4060 the west-jamb boundary is x > 1883, so the footprint x 1900-1980 keeps 17 cm; at y 4150 the boundary is already x > 1994 (outside the room), which is why the body sits beside the demon and not deeper in the lounge.
+
+The table pivots on the free end's NW corner (1550, 3790). A ray through that corner from the doorway still enters the wall's body, so the ray that actually clears the wall passes the SW corner (1550, 3810) and every margin above is a lower bound. The same SW-corner ray says where the pocket opens up for a player walking in: the capsule's west edge (1840, 3900) stays hidden until y 3714 on the axis (3670 at the strip's west edge x 1100, 3757 at x 1380), which is what puts the Demon #2 trigger strip at y 3650-3750 and not further in.
 
 ## 7. ASCII plan (1 character = 1 m both ways; y downward like the photo)
 
@@ -161,54 +163,54 @@ x (m) 0    5    10   15   20   25   30
   7                              #           W  window wall (money shot)
   8                              #           == screen wall (money_shot.dividing_wall)
   9                              #           ~~ dwell rect (5 s)
- 10           +-EE-+----+------#--+          1/2 demon spawns   p player approach
- 11           |    |    |x        |          c  checkpoints     g dead guard + shotgun
- 12           |LOBY|MENS|  BREAK  |          x  positions Rob DREW (kept as notes)
- 13           |    |    |  ROOM   |          k  dead CEO   %% CEO desk   oo couch set
- 14 +----+----+::::+-D--+         |          dd secretary desk
- 15 |XX  :          c g |         |
- 16 |XX  :  1   p       D  c      |
- 17 +----+--D--+::+--L--+---------+
- 18       +----+  +-----+
- 19       |x   |  |WOMEN|
- 20       |OFF.|P |S (L)|
- 21       | #2 |S |     |
- 22       |    |G +----++
- 23       |    |  D    |
- 24       |    |  |OFF.|
- 25       |    |  | #1 |
- 26       |    |  |    |
- 27      +-----+::+-----+
- 28      |              |
- 29      |  RECEPTION   |
- 30      |         dddd |
- 31      |    x         |
- 32      |              |
- 33      |              |
- 34      |              |
- 35      +------D-------+
- 36      |     c        |
- 37      |              |
- 38      |          ====|
- 39      |             2|
- 40      |      p       |
- 41      |  CEO OFFICE  |
- 42      |           k  |
- 43      |%%%%      oooo|
- 44      |%%%%      oooo|
- 45      |    ~~~~~~oooo|
- 46      +WWWWWWWWWWWWWW+
+ 10             +-EE-+----+------#--+        1/2 demon spawns   p player approach
+ 11             |    |    |x        |        c  checkpoints     g dead guard + shotgun
+ 12             |LOBY|MENS|  BREAK  |        x  positions Rob DREW (kept as notes)
+ 13             |    |    |  ROOM   |        k  dead CEO   %% CEO desk   oo couch set
+ 14   +----+----+::::+-D--+         |        dd secretary desk
+ 15   |XX  :          c g |         |
+ 16   |XX  :  1   p       D  c      |
+ 17   +----+--D--+::+--L--+---------+
+ 18         +----+  +-----+
+ 19         |x   |  |WOMEN|
+ 20         |OFF.|P |S (L)|
+ 21         | #2 |S |     |
+ 22         |    |G +----++
+ 23         |    |  D    |
+ 24         |    |  |OFF.|
+ 25         |    |  | #1 |
+ 26         |    |  |    |
+ 27        +-----+::+-----+
+ 28        |              |
+ 29        |  RECEPTION   |
+ 30        |         dddd |
+ 31        |    x         |
+ 32        |              |
+ 33        |              |
+ 34        |              |
+ 35        +------D-------+
+ 36        |     c        |
+ 37        |              |
+ 38        |          ====|
+ 39        |      p      2|
+ 40        |             k|
+ 41        |  CEO OFFICE  |
+ 42        |              |
+ 43        |%%%%      oooo|
+ 44        |%%%%      oooo|
+ 45        |    ~~~~~~oooo|
+ 46        +WWWWWWWWWWWWWW+
 ```
 
 ## 8. What was interpreted from the drawing vs decided
 
-**Interpreted (kept from the drawing):** the full topology of the agreed reading in `Docs/FLOORPLAN-SCHEMA.md`; racks on the closet's east wall with the man against them and the intern on the opposite wall; the duct leaving the closet's lower-left toward the break room's top wall; a near-square break room with the counter run down the east wall, the fridge at its lower end and the table centred slightly east (candidate A's 1.2 cm/px trace); the men's room above the corridor's east half with stalls on its west wall; the elevator on the corridor's north wall just west of the passage and the collapse zigzag at the far west end; the women's locked room as a long band directly under the corridor running east to the break-room wall line, with its dark door tick roughly opposite the men's door; Office #2 west of the passage, Office #1 east of it under the women's room; one big reception + CEO block with the window along the very bottom edge; reception extends further west than Office #2 and the women's band further east than Office #1 (both as drawn).
+**Interpreted (kept from the drawing):** the full topology of the agreed reading in `Docs/FLOORPLAN-SCHEMA.md`; racks on the closet's east wall with the man against them and the intern on the opposite wall; the duct dropping from the middle of the closet's bottom wall into the east half of the break room (the plan's mouth at x 2600-2700 lands 61-71 % across the break room, as drawn; its position on the closet wall, 50 cm off the closet's west wall, is ours); a near-square break room with the counter run down the east wall, the fridge at its lower end and the table centred slightly east (candidate A's 1.2 cm/px trace); the men's room above the corridor's east half with stalls on its west wall; the elevator on the corridor's north wall just west of the passage and the collapse zigzag at the far west end; the women's locked room as a long band directly under the corridor running east to the break-room wall line, with its dark door tick roughly opposite the men's door; Office #2 west of the passage, Office #1 east of it under the women's room; one big reception + CEO block with the window along the very bottom edge; reception extends further west than Office #2 and the women's band further east than Office #1 (both as drawn).
 
 **Decided (the drawing has no scale; these are the Metrics Standard applied through the 50 cm grid):**
 
 1. **50 cm module, one straight spine, one design axis.** Every room origin on 50, every interior 50k-20; x = 1240 is the centreline of the passage, the CEO door and the window, so the approach is head-on and the door faces the glass squarely.
 2. **Passage at true corridor width (280)** and named `corridor_south` so the corridor rules apply to it; Demon #1 is therefore staged as a corridor fight at the junction, with Office #2's door moved to the corridor 4 m west of the junction (candidate C). The drawn passage-wall door is a one-field fallback (Q1).
-3. **Elevator lobby as a 4.8 x 4.8 open alcove** north of the junction with the shut doors on its back wall; it is Demon #1's north dodge pocket and sits where the drawing puts the elevator.
+3. **Elevator lobby as a 4.8 x 4.8 open alcove** north of the junction with the shut doors on its back wall, one module east of where the drawing puts the elevator door (the drawing has it between the passage and the collapse, i.e. over the plan's solid void x 500-980, y 950-1430); kept at the junction so it is Demon #1's north dodge pocket (Q10).
 4. **Break room 980 x 780** (two modules wide) instead of B's 480 bar, so the drawn counter/fridge/table composition fits.
 5. **Supply closet 430 x 430 at 310** - the drawing shows it almost as big as the men's room; a 4.3 m janitor's closet reads "tight before the duct". 280 ceiling offered as Q5.
 6. **Reception | CEO office split by a full wall + 120 door** (schema rule 4); the drawing's single mid-room partial wall becomes (a) that party wall and (b) the 430 cm screen wall inside the CEO office on the east side, 300 cm inside the door wall, which hides the lounge and Demon #2.
@@ -227,9 +229,9 @@ x (m) 0    5    10   15   20   25   30
 5. Supply closet 4.3 x 4.3 m at a 310 ceiling (drawn much larger, but only to fit the two figures?). Option: 280 ceiling for a tighter janitor's closet.
 6. The break room exits through a 120 door; the sketch runs the corridor straight into the room. OK?
 7. Secretary desk moved east of the axis (drawn on the centreline) to keep the head-on approach to the CEO door clear.
-8. Dead CEO lies in the lounge pocket behind the screen wall (found together with Demon #2); the sketch has him west of the CEO desk.
+8. Dead CEO lies in the lounge pocket against the east wall just south of Demon #2's idle spot (found together with the demon, hidden from the doorway); the sketch has him west of the CEO desk, but the built desk stands against the west wall with a 20 cm gap, so the drawn position needs the desk moved east first.
 9. Money shot: 76 % of the horizontal FOV from the door at 10.8 m depth. One module shallower gives 85 % (table in section 6). Too dominant, or the right amount?
-10. Elevator as an open alcove north of the junction with 200-wide doors, versus doors flush on the corridor wall as drawn.
+10. Elevator as an open alcove north of the junction with 200-wide doors, versus doors flush on the corridor wall as drawn. Alternative: lobby rect (500, 950) 480 x 480 matches the sketch (elevator between the passage and the collapse) and fills the solid void north of the corridor's west leg, but Demon #1 then has no north strafe from (1240, 1590) (the corridor's north wall at y 1450 is 140 cm away, below the 200 minimum), so the fight would have to move.
 11. Duct 520 instead of the 500 default (keeps both rooms on the module).
 12. Every room can move one 50 cm module in either direction without breaking the grid; the feel gym decides.
 
@@ -248,7 +250,7 @@ x (m) 0    5    10   15   20   25   30
 | Elevator lobby top edge not collinear | lobby y 950-1430 = men's and break-room tops |
 | Grafts | C: axis strip prop-free + door-slot teaser numbers, corridor fight with east retreat, prop footprints, collapse 200 in a 480 stub; A: drawn X positions as notes, six open questions carried, 600-wide dwell rect, 200-wide elevator doors, women's band, vanity reading, break-room proportions; B: 50 cm module everywhere, 3-ray occlusion proof kept as a documented check |
 
-Validation state at hand-off: `node Tools/validate_floorplan.mjs Data/floorplan.json` -> PASS, 0 warnings. `build_greybox.py --dry-run` -> 249 actors, no warnings, deterministic (SHA256 identical across two runs). `check_manifest.mjs` -> 0 overlaps among 154 collision boxes, money shot 68.3 deg = 76 % PASS. Known cosmetic artefact: `Wall_corridor_south_south_01/02` are 20 x 20 corner cells at the passage mouth (x 1080-1100 and 1380-1400, y 2680-2700) that the generator splits from the passage walls because N/S walls own corners; geometry is continuous, no gap, no overlap.
+Validation state at hand-off: `node Tools/validate_floorplan.mjs Data/floorplan.json` -> PASS, 0 warnings. `build_greybox.py --dry-run` -> 249 actors, no warnings, deterministic (SHA256 identical across two runs; the value is whatever `Tools/test_dry_run.ps1` prints at commit time, since the plan-review fixes of 2026-09-06 moved two reference figures, one checkpoint and the Demon #2 trigger/approach without changing the actor count). `check_manifest.mjs` -> 0 overlaps among 154 collision boxes, money shot 68.3 deg = 76 % PASS. Known cosmetic artefact: `Wall_corridor_south_south_01/02` are 20 x 20 corner cells at the passage mouth (x 1080-1100 and 1380-1400, y 2680-2700) that the generator splits from the passage walls because N/S walls own corners; geometry is continuous, no gap, no overlap.
 
 ## 11. Feedback loop
 

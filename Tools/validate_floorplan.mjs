@@ -323,6 +323,15 @@ for (const d of ducts) {
   }
   ductMouthFootprints.push({ id: d.id, room: a.id, side: aSide, lateral, half }, { id: d.id, room: b.id, side: bSide, lateral, half });
 }
+// authored openings must not overlap a duct mouth (the generator cuts the mouth into the same wall strip and
+// would otherwise fail later with the less helpful "openings overlap in the wall grid")
+for (const m of ductMouthFootprints) {
+  const mouthRect = footprintRect(roomById.get(m.room), m.side, m.lateral, 2 * m.half);
+  for (const o of validOpenings) {
+    const rect = footprintRect(roomById.get(o.between[0]), o.wall, o.center_along_wall_cm, o.width_cm);
+    if (rectsOverlap(mouthRect, rect)) fail(`opening "${o.id}" overlaps the mouth of duct "${m.id}" on ${m.room}'s ${m.side} wall`);
+  }
+}
 const ductPairs = ducts.filter((d) => isStr(d.id)).map((d) => `${d.from}->${d.to}`);
 if (!ductPairs.includes('supply_closet->break_room')) fail('no duct connects supply_closet -> break_room');
 if (ducts.length !== 1) warn(`${ducts.length} ducts declared (spec has exactly one)`);

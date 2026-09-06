@@ -34,6 +34,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import textwrap
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -104,6 +105,21 @@ class Box:
 
 @dataclass(frozen=True)
 class Label:
+    """A floating TextRenderActor - exactly ONE single-sided actor per Label.
+
+    Facing convention (VERIFIED 5.8.2 by packaged-run frames, 2026-09-06): a TextRenderComponent quad is
+    visible from BOTH sides - readable from the side its local +X points to, MIRRORED from the other side.
+    The room label spawned at plan yaw 90 (UE yaw 0, local +X = UE +X) was mirrored for a player standing
+    on the -X side looking toward +X, so the readable face points along local +X and the viewer has to
+    stand on the +X side of the quad.  In plan space: a label with yaw_plan_deg = Y is readable by a viewer
+    located in direction Y from the label.  To face a viewer at V from a label at L:
+        yaw_plan_deg = degrees(atan2(V.y - L.y, V.x - L.x))          -> label_yaw_facing()
+
+    The old double_sided 180-degree twin is gone: two overlapping quads whose glyphs do not align render as
+    doubled / garbled text (seen in the same frames).  The field stays for the manifest but defaults False,
+    no style sets it, and the emitter spawns one actor regardless.  viewer_plan / facing record which point
+    (and which rule) the label faces so the dry-run manifest can be checked by hand.
+    """
     name: str
     pos_plan: Tuple[float, float, float]
     text: str
@@ -111,16 +127,24 @@ class Label:
     color_rgb: Tuple[float, float, float]
     folder: str
     style_key: str = "element"
-    yaw_plan_deg: float = 90.0       # facing direction in plan space (90 = facing +plan.y = UE +X)
-    double_sided: bool = True
+    yaw_plan_deg: float = 270.0      # readable-face direction in plan space (270 = read from the -plan.y side)
+    double_sided: bool = False       # retired; always False (see docstring)
     room: str = ""
+    viewer_plan: Optional[Tuple[float, float]] = None   # plan point the label faces (None = a direction rule)
+    facing: str = ""                 # rule that chose the yaw: player_start | critical_path:<id> | opening:<id> | ...
 
 
 @dataclass(frozen=True)
 class Light:
+    """A light actor.  Point lights are EVEN FILL lights (packaged-run finding 2026-09-06: ceiling-hung
+    inverse-square candela lights blew the ceiling around each fixture out to white while the walls read
+    flat tan, and the auto-exposure swallowed a 12.5x candela change; the greybox needs even light so Rob
+    can judge space, not mood): inverse-square falloff OFF, unitless intensity, falloff exponent from style,
+    attenuation radius covering the whole room, shadows off, MOVABLE.  Built only via _point_light().
+    """
     name: str
     pos_plan: Tuple[float, float, float]
-    intensity: float                 # candela for point lights, lux for directional, scalar for sky
+    intensity: float                 # point: unitless (see intensity_units); directional: lux; sky: scalar
     temperature_k: float
     attenuation_radius_cm: float
     folder: str
@@ -130,6 +154,9 @@ class Light:
     pitch_deg: float = 0.0           # directional only (UE pitch)
     yaw_deg: float = 0.0             # directional only (UE yaw)
     room: str = ""
+    intensity_units: str = "unitless"   # point: "unitless" (ELightUnits::Unitless); directional "lux"; sky "scalar"
+    inverse_squared: bool = False       # point only: bUseInverseSquaredFalloff
+    falloff_exponent: float = 2.0       # point only: LightFalloffExponent (applies when inverse_squared is False)
 
 
 @dataclass(frozen=True)
@@ -165,6 +192,44 @@ def plan_yaw_to_ue_yaw(yaw_plan_deg: float) -> float:
     if yaw > 180.0:
         yaw -= 360.0
     return r3(yaw)
+
+
+def label_yaw_facing(label_xy: Sequence[float], viewer_xy: Sequence[float], snap_deg: float = 10.0) -> float:
+    """Plan yaw whose readable face points from label_xy toward viewer_xy (Label docstring, fact 2).
+
+    yaw = degrees(atan2(V.y - L.y, V.x - L.x)) in [0, 360), snapped to the nearest multiple of 90 only when
+    within snap_deg of one (keeps the text axis-aligned when a door is roughly centred on the room; otherwise
+    the exact angle stays).  Passing a unit direction as viewer_xy with label_xy = (0, 0) yields the yaw of that
+    direction.  A coincident viewer (dx = dy = 0) falls back to 270 (readable from the -plan.y side).
+    """
+    dx = float(viewer_xy[0]) - float(label_xy[0])
+    dy = float(viewer_xy[1]) - float(label_xy[1])
+    if abs(dx) < EPS and abs(dy) < EPS:
+        return 270.0
+    yaw = math.degrees(math.atan2(dy, dx)) % 360.0
+    nearest = (round(yaw / 90.0) * 90.0) % 360.0
+    if abs(((yaw - nearest) + 180.0) % 360.0 - 180.0) <= snap_deg:
+        yaw = nearest
+    return r3(yaw)
+
+
+def _selftest() -> None:
+    """Cheap invariants of the pure helpers; hf_common.run_build runs this on every --dry-run."""
+    checks = [
+        (label_yaw_facing((0.0, 0.0), (0.0, -10.0)), 270.0, "facing -plan.y must be 270"),
+        (label_yaw_facing((0.0, 0.0), (10.0, 0.0)), 0.0, "facing +plan.x must be 0"),
+        (label_yaw_facing((0.0, 0.0), (0.0, 10.0)), 90.0, "facing +plan.y must be 90"),
+        (label_yaw_facing((0.0, 0.0), (-10.0, 0.0)), 180.0, "facing -plan.x must be 180"),
+        (label_yaw_facing((0.0, 0.0), (10.0, 1.0)), 0.0, "5.7 deg off axis snaps to 0"),
+        (label_yaw_facing((0.0, 0.0), (10.0, -1.0)), 0.0, "-5.7 deg off axis snaps to 0, not 360"),
+        (label_yaw_facing((0.0, 0.0), (10.0, 3.0)), 16.699, "16.7 deg off axis is kept"),
+        (label_yaw_facing((5.0, 5.0), (5.0, 5.0)), 270.0, "coincident viewer falls back to 270"),
+        (plan_yaw_to_ue_yaw(270.0), 180.0, "plan 270 -> UE 180"),
+        (plan_yaw_to_ue_yaw(0.0), -90.0, "plan 0 -> UE -90"),
+    ]
+    for got, want, what in checks:
+        if abs(float(got) - want) > 1e-3:
+            raise GeometryError("selftest: %s (got %s, want %s)" % (what, got, want))
 
 
 def box_ue_transform(box: Box) -> Dict[str, Any]:
@@ -205,6 +270,9 @@ def actor_to_manifest(a: Actor) -> Dict[str, Any]:
             "size_cm": r3(a.size_cm),
             "color_rgb": [r3(c) for c in a.color_rgb],
             "double_sided": a.double_sided,
+            "yaw_plan_deg": r3(a.yaw_plan_deg),
+            "viewer_plan": None if a.viewer_plan is None else [r3(a.viewer_plan[0]), r3(a.viewer_plan[1])],
+            "facing": a.facing,
             "pos_plan": [r3(x), r3(y), r3(z)],
             "ue": {"location": list(plan_to_ue(x, y, z)), "rotation": [0.0, 0.0, plan_yaw_to_ue_yaw(a.yaw_plan_deg)]},
         }
@@ -217,6 +285,9 @@ def actor_to_manifest(a: Actor) -> Dict[str, Any]:
             "folder": a.folder,
             "room": a.room,
             "intensity": r3(a.intensity),
+            "intensity_units": a.intensity_units,
+            "inverse_squared": a.inverse_squared,
+            "falloff_exponent": r3(a.falloff_exponent),
             "temperature_k": r3(a.temperature_k),
             "attenuation_radius_cm": r3(a.attenuation_radius_cm),
             "cast_shadows": a.cast_shadows,
@@ -389,14 +460,17 @@ def _label_style(style: Dict[str, Any], key: str, metrics: Dict[str, Any]) -> Di
 
 
 def _make_label(name: str, x: float, y: float, text: str, style_key: str, style: Dict[str, Any],
-                metrics: Dict[str, Any], folder: str, room: str = "", yaw_plan_deg: float = 90.0,
-                z_override: Optional[float] = None) -> Label:
+                metrics: Dict[str, Any], folder: str, room: str = "", *, yaw_plan_deg: float,
+                z_override: Optional[float] = None, viewer_plan: Optional[Tuple[float, float]] = None,
+                facing: str = "") -> Label:
+    """One single-sided label.  yaw_plan_deg is keyword-REQUIRED so no call site can inherit a mirrored default."""
     ls = _label_style(style, style_key, metrics)
     z = float(ls["height_cm"]) if z_override is None else z_override
     return Label(
         name=name, pos_plan=(x, y, z), text=text, size_cm=float(ls["size_cm"]),
         color_rgb=tuple(float(c) for c in ls["color_rgb"]), folder=folder, style_key=style_key,
-        yaw_plan_deg=yaw_plan_deg, double_sided=bool(ls.get("double_sided", True)), room=room,
+        yaw_plan_deg=float(yaw_plan_deg), double_sided=bool(ls.get("double_sided", False)), room=room,
+        viewer_plan=None if viewer_plan is None else (float(viewer_plan[0]), float(viewer_plan[1])), facing=facing,
     )
 
 
@@ -568,18 +642,107 @@ def _figure_boxes(name_base: str, x: float, y: float, metrics: Dict[str, Any], s
     ]
 
 
+def _light_intensity(spec: Dict[str, Any], where: str) -> float:
+    """Unitless fill intensity from a style spec; the retired candela key is refused so there is one source of truth."""
+    if "intensity_cd" in spec:
+        raise GeometryError("greybox_style.json %s: intensity_cd (candela) was retired 2026-09-06 - use intensity_unitless" % where)
+    if "intensity_unitless" not in spec:
+        raise GeometryError("greybox_style.json %s needs intensity_unitless (point lights are unitless fill lights)" % where)
+    return float(spec["intensity_unitless"])
+
+
+def _point_light(name: str, pos: Tuple[float, float, float], spec: Dict[str, Any], where: str, style: Dict[str, Any],
+                 attenuation_radius_cm: float, folder: str, room: str = "") -> Light:
+    """The ONE code path for every point light (rooms, ducts, feel-gym rooms / corridors / tunnels): even fill
+    light - inverse-square OFF, unitless intensity, falloff exponent from the spec or lights.falloff_exponent,
+    shadows and mobility from lights.* (see the Light docstring for why)."""
+    ls = style["lights"]
+    return Light(
+        name=name, pos_plan=pos, intensity=_light_intensity(spec, where), temperature_k=float(spec["temperature_k"]),
+        attenuation_radius_cm=float(attenuation_radius_cm), folder=folder, light_type="point",
+        cast_shadows=bool(ls["cast_shadows"]), mobility=str(ls["mobility"]), room=room,
+        intensity_units="unitless", inverse_squared=False,
+        falloff_exponent=float(spec.get("falloff_exponent", ls["falloff_exponent"])),
+    )
+
+
 def _room_light(room: _Room, style: Dict[str, Any], folder: str) -> Light:
+    """One fill light per room at the room centre, hung drop_below_ceiling_cm under the ceiling (60: further from
+    the slab shrinks the ceiling hot spot); radius = max(min_attenuation_radius_cm, attenuation_diagonal_factor *
+    room diagonal) with the factor at 1.25 so the whole room sits inside the radius."""
     ls = style["lights"]
     spec = dict(ls["default"])
     spec.update(ls.get("by_role", {}).get(room.role, {}))
     diag = math.hypot(room.w, room.h)
     radius = max(float(ls["min_attenuation_radius_cm"]), float(ls["attenuation_diagonal_factor"]) * diag)
-    return Light(
-        name="Light_%s" % room.id, pos_plan=(room.cx, room.cy, room.ceiling - float(ls["drop_below_ceiling_cm"])),
-        intensity=float(spec["intensity_cd"]), temperature_k=float(spec["temperature_k"]),
-        attenuation_radius_cm=radius, folder=folder, light_type="point",
-        cast_shadows=bool(ls["cast_shadows"]), mobility=str(ls["mobility"]), room=room.id,
-    )
+    return _point_light("Light_%s" % room.id, (room.cx, room.cy, room.ceiling - float(ls["drop_below_ceiling_cm"])),
+                        spec, "lights.default/by_role.%s" % room.role, style, radius, folder, room.id)
+
+
+def _room_viewer_points(fp: Dict[str, Any], rooms: Dict[str, _Room], footprints: List[_Footprint],
+                        warnings: List[str]) -> Dict[str, Tuple[Optional[Tuple[float, float]], str]]:
+    """Per room: the plan point its labels face (= where the player reads them from) and the rule that chose it.
+
+    Rule order:  (a) the player_start position, for the room holding the player_start marker;
+                 (b) the centre of the opening (door / open / duct mouth) to the PREVIOUS room on critical_path;
+                 (c) the centre of any door / open to a critical-path room, corridor rooms (corridor_*) first;
+                 (d) the duct mouth on this room's own wall;
+                 (e) none -> (None, fallback): the labels face -plan.y (yaw 270).
+    Ties break on (mouth on this room's wall first, opening id) so the result is deterministic.
+    """
+    critical = [rid for rid in fp.get("critical_path", []) if rid in rooms]
+    crit_set = set(critical)
+    previous = {critical[i]: critical[i - 1] for i in range(1, len(critical))}
+    start_room: Optional[str] = None
+    start_pos: Optional[Tuple[float, float]] = None
+    for m in fp.get("markers", []):
+        if m.get("kind") == "player_start":
+            start_room = m.get("room")
+            start_pos = (float(m["pos"]["x"]), float(m["pos"]["y"]))
+
+    def connections(rid: str, kinds: Tuple[str, ...], other: Optional[str] = None) -> List[Tuple[_Footprint, str]]:
+        out: List[Tuple[_Footprint, str]] = []
+        for f in footprints:
+            if f.kind not in kinds:
+                continue
+            if f.room_a == rid:
+                o = f.room_b
+            elif f.room_b == rid:
+                o = f.room_a
+            else:
+                continue
+            if other is not None and o != other:
+                continue
+            out.append((f, o))
+        out.sort(key=lambda c: (0 if c[0].room_a == rid else 1, c[0].opening_id))
+        return out
+
+    result: Dict[str, Tuple[Optional[Tuple[float, float]], str]] = {}
+    for rid in sorted(rooms):
+        if rid == start_room and start_pos is not None:
+            result[rid] = (start_pos, "player_start")
+            continue
+        if rid in previous:
+            cands = connections(rid, ("door", "open", "duct_mouth"), previous[rid])
+            if cands:
+                f = cands[0][0]
+                result[rid] = ((f.cx, f.cy), "critical_path:%s" % f.opening_id)
+                continue
+        cands = [c for c in connections(rid, ("door", "open")) if c[1] in crit_set]
+        if cands:
+            cands.sort(key=lambda c: (0 if c[1].startswith("corridor_") else 1, 0 if c[0].room_a == rid else 1, c[0].opening_id))
+            f = cands[0][0]
+            result[rid] = ((f.cx, f.cy), "opening:%s" % f.opening_id)
+            continue
+        cands = [c for c in connections(rid, ("duct_mouth",)) if c[0].room_a == rid]
+        if cands:
+            f = cands[0][0]
+            result[rid] = ((f.cx, f.cy), "duct_mouth:%s" % f.opening_id)
+            continue
+        result[rid] = (None, "fallback:-plan.y")
+        if rooms[rid].enterable:
+            warnings.append("room %r has no entry opening on record; its labels face -plan.y (yaw 270)" % rid)
+    return result
 
 
 def _far_side_of_room(room: _Room, fp: Dict[str, Any], warnings: List[str]) -> str:
@@ -630,9 +793,8 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                 floor_tint, True, True, F_FLOORS, rid))
         actors.append(_rect_box("Ceiling_%s" % rid, "ceiling", r.x, r.x + r.w, r.y, r.y + r.h, r.ceiling,
                                 r.ceiling + ceil_slab, _style_tint(style, "ceiling"), True, True, F_CEILINGS, rid))
-        text = "%s\n%d x %d cm, ceiling %d" % (r.label, int(round(r.w)), int(round(r.h)), int(round(r.ceiling)))
-        actors.append(_make_label("Label_room_%s" % rid, r.cx, r.cy, text, "room", style, metrics, F_LABELS, rid))
         actors.append(_room_light(r, style, F_LIGHTS))
+        # Room labels are emitted after the openings and ducts exist: each one faces the room's entry point.
 
     # ---- openings -> footprints ---------------------------------------------------------
     footprints: List[_Footprint] = []
@@ -680,13 +842,28 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
         footprints.append(_Footprint(opening_id=oid, kind=otype, x0=x0, x1=x1, y0=y0, y1=y1,
                                      z_bottom=z_bottom, z_top=z_top, infill_tint=infill,
                                      room_a=room_a.id, room_b=room_b_id, side_a=side))
-        # labels for locked doors / windows on the approach side
+        # LOCKED label(s): one on every side the player can actually stand on.  A sealed room's interior
+        # exists "for depth only" (Docs/FLOORPLAN-SCHEMA.md), so a label inside it would never be read -
+        # the women's restroom lock must be read from corridor_main, not from behind the infill slab.
         if otype == "locked_door":
-            nx, ny = _side_normal(side)
+            nx, ny = _side_normal(side)          # outward normal of room_a's wall = toward room_b
             off = float(style["labels"]["wall_offset_cm"])
             fx, fy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
-            actors.append(_make_label("Label_locked_%s" % oid, fx - nx * (t / 2.0 + off), fy - ny * (t / 2.0 + off),
-                                      "LOCKED", "element", style, metrics, F_LABELS, room_a.id))
+            room_b = rooms[room_b_id]
+            sides: List[Tuple[float, str]] = []   # (sign along the normal, room the label stands in)
+            if room_a.enterable:
+                sides.append((-1.0, room_a.id))
+            if room_b.enterable:
+                sides.append((1.0, room_b.id))
+            if not sides:
+                sides.append((-1.0, room_a.id))   # neither side enterable: keep the legacy placement
+            for k, (sgn, label_room) in enumerate(sides):
+                name = "Label_locked_%s" % oid if k == 0 else "Label_locked_%s_%s" % (oid, label_room)
+                # Readable face points away from the door into the room the label stands in (= the offset direction).
+                actors.append(_make_label(name, fx + sgn * nx * (t / 2.0 + off), fy + sgn * ny * (t / 2.0 + off),
+                                          "LOCKED", "element", style, metrics, F_LABELS, label_room,
+                                          yaw_plan_deg=label_yaw_facing((0.0, 0.0), (sgn * nx, sgn * ny)),
+                                          facing="wall_normal:into_%s" % label_room))
 
     # ---- elevator doors (blocker) -> infill footprint -----------------------------------
     for b in fp.get("blockers", []):
@@ -707,9 +884,11 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                      room_a=room.id, room_b="exterior", side_a=side))
         nx, ny = _side_normal(side)
         off = float(style["labels"]["wall_offset_cm"])
+        # Offset -n puts the label inside the room; the readable face points the same way (inward normal).
         actors.append(_make_label("Label_elevator_%s" % b["id"], (x0 + x1) / 2.0 - nx * (t / 2.0 + off),
                                   (y0 + y1) / 2.0 - ny * (t / 2.0 + off), "ELEVATOR - SHUT", "element", style,
-                                  metrics, F_LABELS, room.id))
+                                  metrics, F_LABELS, room.id, yaw_plan_deg=label_yaw_facing((0.0, 0.0), (-nx, -ny)),
+                                  facing="wall_normal:into_%s" % room.id))
 
     # ---- money-shot window: synthesize when the digitizer only declared money_shot.window_wall ---------
     # Docs/FLOORPLAN-SCHEMA.md models the window as an Opening of type "window", but a plan that only says
@@ -809,18 +988,39 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
             # face_in is already the interior wall face, so offset by `off` only (no t/2 here).
             lx = lateral if axis == "y" else face_in - n[0] * off
             ly = face_in - n[1] * off if axis == "y" else lateral
+            # Offset -n puts the label inside the room; the readable face points the same way (inward normal).
             actors.append(_make_label("Label_duct_%s_%s" % (did, tag), lx, ly,
-                                      "AIR DUCT %d x %d\ncrawl only" % (int(iw), int(ih)), "element", style, metrics, F_LABELS, room.id))
+                                      "AIR DUCT %d x %d\ncrawl only" % (int(iw), int(ih)), "element", style, metrics, F_LABELS, room.id,
+                                      yaw_plan_deg=label_yaw_facing((0.0, 0.0), (-n[0], -n[1])), facing="wall_normal:into_%s" % room.id))
 
         dl = style["lights"]["duct"]
         mid = (lo + hi) / 2.0
         lpos = (lateral, mid, z0 + ih - float(dl["drop_below_ceiling_cm"])) if axis == "y" else (mid, lateral, z0 + ih - float(dl["drop_below_ceiling_cm"]))
-        actors.append(Light(name="Light_duct_%s" % did, pos_plan=lpos, intensity=float(dl["intensity_cd"]),
-                            temperature_k=float(dl["temperature_k"]), attenuation_radius_cm=float(dl["attenuation_radius_cm"]),
-                            folder=F_LIGHTS, light_type="point", cast_shadows=bool(style["lights"]["cast_shadows"]),
-                            mobility=str(style["lights"]["mobility"]), room=""))
+        actors.append(_point_light("Light_duct_%s" % did, lpos, dl, "lights.duct", style, float(dl["attenuation_radius_cm"]), F_LIGHTS))
         duct_meta.append({"id": did, "from": a.id, "to": b.id, "axis": axis, "tube_from": r3(lo), "tube_to": r3(hi),
                           "interior": [r3(iw), r3(ih)], "interior_length_cm": r3(interior_len)})
+
+    # ---- room labels: every label in a room faces the point the player enters it from ---------------
+    viewer_points = _room_viewer_points(fp, rooms, footprints, warnings)
+
+    def room_facing(rid: str, x: float, y: float) -> Dict[str, Any]:
+        """_make_label kwargs (yaw + provenance) for a label standing at (x, y) inside room rid."""
+        vp, why = viewer_points[rid]
+        if vp is None:
+            return {"yaw_plan_deg": 270.0, "viewer_plan": None, "facing": why}
+        return {"yaw_plan_deg": label_yaw_facing((x, y), vp), "viewer_plan": vp, "facing": why}
+
+    for rid in sorted(rooms):
+        r = rooms[rid]
+        text = "%s\n%d x %d cm, ceiling %d" % (r.label, int(round(r.w)), int(round(r.h)), int(round(r.ceiling)))
+        # The room light hangs at ceiling - drop_below_ceiling_cm on the same (cx, cy); keep the label one
+        # text height below it so the two never coincide (light drop 60: 310 rooms -> label 210, 280 restrooms -> 180).
+        # Same clamp the feel gym uses for its inside ceiling labels.
+        room_ls = _label_style(style, "room", metrics)
+        label_z = min(float(room_ls["height_cm"]),
+                      r.ceiling - float(style["lights"]["drop_below_ceiling_cm"]) - float(room_ls["size_cm"]))
+        actors.append(_make_label("Label_room_%s" % rid, r.cx, r.cy, text, "room", style, metrics, F_LABELS, rid,
+                                  z_override=label_z, **room_facing(rid, r.cx, r.cy)))
 
     # ---- windows: glass panes + mullions -----------------------------------------------
     win = style["window"]
@@ -860,9 +1060,11 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                         f.z_bottom, f.z_top, _style_tint(style, "mullion"), True, True, F_OPENINGS, f.room_a))
         nx, ny = _side_normal(f.side_a)
         off = float(style["labels"]["wall_offset_cm"])
+        # Offset -n puts the label inside the room; the readable face points the same way (inward normal).
         actors.append(_make_label("Label_window_%s" % f.opening_id, f.cx - nx * (t / 2.0 + off), f.cy - ny * (t / 2.0 + off),
                                   "WINDOW WALL %d cm\n(money shot, impassable)" % int(round(length)), "element", style, metrics,
-                                  F_LABELS, f.room_a))
+                                  F_LABELS, f.room_a, yaw_plan_deg=label_yaw_facing((0.0, 0.0), (-nx, -ny)),
+                                  facing="wall_normal:into_%s" % f.room_a))
 
     # ---- walls from the grid -------------------------------------------------------------
     actors.extend(_build_walls(rooms, footprints, metrics, style, F_WALLS, F_OPENINGS))
@@ -901,8 +1103,10 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
             lx, ly = room.cx, (room.y + depth + loff) if far == "north" else (room.y + room.h - depth - loff)
         else:
             lx, ly = (room.x + depth + loff) if far == "west" else (room.x + room.w - depth - loff), room.cy
+        # The player stands on the walkable side, i.e. away from the far wall: readable face points along -n(far).
         actors.append(_make_label("Label_collapse_%s" % b["id"], lx, ly, "COLLAPSED\nimpassable", "element", style, metrics,
-                                  F_LABELS, room.id))
+                                  F_LABELS, room.id, yaw_plan_deg=label_yaw_facing((0.0, 0.0), (-nx, -ny)),
+                                  facing="wall_normal:away_from_%s_wall" % far))
 
     # ---- money shot: dividing wall + dwell marker ------------------------------------------
     ms = fp.get("money_shot") or {}
@@ -931,9 +1135,9 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
             actors.append(_rect_box("Marker_dwell", "marker", float(dr["x"]), float(dr["x"]) + float(dr["w"]), float(dr["y"]),
                                     float(dr["y"]) + float(dr["h"]), lift, lift + float(dm["height_cm"]),
                                     _style_tint(style, "dwell"), False, True, F_MARKERS, room.id))
-            actors.append(_make_label("Label_marker_dwell", float(dr["x"]) + float(dr["w"]) / 2.0,
-                                      float(dr["y"]) + float(dr["h"]) / 2.0, "DWELL ZONE (5 s)", "marker", style, metrics,
-                                      F_LABELS, room.id))
+            dcx, dcy = float(dr["x"]) + float(dr["w"]) / 2.0, float(dr["y"]) + float(dr["h"]) / 2.0
+            actors.append(_make_label("Label_marker_dwell", dcx, dcy, "DWELL ZONE (5 s)", "marker", style, metrics,
+                                      F_LABELS, room.id, **room_facing(room.id, dcx, dcy)))
         entry = opening_by_id.get(ms.get("entry_opening_id", ""))
         win_fp = [f for f in footprints if f.kind == "window" and f.room_a == room.id and f.side_a == ms.get("window_wall")]
         if entry is not None and win_fp:
@@ -976,8 +1180,14 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
             figures_by_room[room.id] = figures_by_room.get(room.id, 0) + 1
             actors.extend(_figure_boxes(m["id"], px, py, metrics, style, F_FIGURES, room.id))
         elif kind == "note":
-            actors.append(_make_label("Label_note_%s" % m["id"], px, py, "NOTE: %s" % m.get("text", ""), "note", style, metrics,
-                                      F_LABELS, room.id))
+            # TextRenderComponent has no word wrap: a 300-character note at 16 cm glyphs would be a 25 m line
+            # through the neighbouring rooms.  Wrap deterministically at labels.note.wrap_chars (style).
+            note_text = str(m.get("text", ""))
+            wrap_chars = int(style["labels"]["note"].get("wrap_chars", 0))
+            if wrap_chars > 0 and note_text:
+                note_text = "\n".join(textwrap.wrap(note_text, width=wrap_chars))
+            actors.append(_make_label("Label_note_%s" % m["id"], px, py, "NOTE: %s" % note_text, "note", style, metrics,
+                                      F_LABELS, room.id, **room_facing(room.id, px, py)))
         else:
             raise GeometryError("marker %r: unknown kind %r" % (m["id"], kind))
     if player_starts != 1:
@@ -993,8 +1203,10 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
         s = float(cpm["size_cm"])
         actors.append(_rect_box("Marker_checkpoint_%s" % c["id"], "checkpoint", px - s / 2.0, px + s / 2.0, py - s / 2.0, py + s / 2.0,
                                 0.0, float(cpm["height_cm"]), _style_tint(style, "checkpoint"), False, True, F_MARKERS, room.id))
+        # The checkpoint's yaw_deg is the respawn facing (runtime), not the label's: the label faces the room's entry
+        # point like every other label in the room.
         actors.append(_make_label("Label_checkpoint_%s" % c["id"], px, py, "CHECKPOINT\n%s" % c["id"], "marker", style, metrics,
-                                  F_LABELS, room.id, yaw_plan_deg=float(c.get("yaw_deg", 90.0))))
+                                  F_LABELS, room.id, **room_facing(room.id, px, py)))
 
     # ---- encounters (reserved space, translucent, no collision) --------------------------------
     em = style["encounter_marker"]
@@ -1010,8 +1222,9 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
         actors.append(_rect_box("Marker_encounter_%s_trigger" % eid, "marker", float(tr["x"]), float(tr["x"]) + float(tr["w"]),
                                 float(tr["y"]), float(tr["y"]) + float(tr["h"]), lift, lift + mh,
                                 _style_tint(style, "encounter_trigger"), False, True, F_MARKERS, room.id))
-        actors.append(_make_label("Label_encounter_%s_trigger" % eid, float(tr["x"]) + float(tr["w"]) / 2.0,
-                                  float(tr["y"]) + float(tr["h"]) / 2.0, "TRIGGER %s" % eid, "marker", style, metrics, F_LABELS, room.id))
+        tcx, tcy = float(tr["x"]) + float(tr["w"]) / 2.0, float(tr["y"]) + float(tr["h"]) / 2.0
+        actors.append(_make_label("Label_encounter_%s_trigger" % eid, tcx, tcy, "TRIGGER %s" % eid, "marker", style, metrics,
+                                  F_LABELS, room.id, **room_facing(room.id, tcx, tcy)))
         sp = e["spawn"]
         cr = float(e["capsule_radius_cm"])
         actors.append(_rect_box("Marker_encounter_%s_spawn" % eid, "marker", float(sp["x"]) - cr, float(sp["x"]) + cr,
@@ -1019,7 +1232,7 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                 _style_tint(style, "encounter_spawn"), False, True, F_MARKERS, room.id))
         actors.append(_make_label("Label_encounter_%s_spawn" % eid, float(sp["x"]), float(sp["y"]),
                                   "%s SPAWN\nr%d h%d" % (eid, int(cr), int(float(e["capsule_height_cm"]))), "marker", style, metrics,
-                                  F_LABELS, room.id))
+                                  F_LABELS, room.id, **room_facing(room.id, float(sp["x"]), float(sp["y"]))))
         pa = e["player_approach"]
         ax, ay = float(pa["x"]), float(pa["y"])
         rd = e["retreat_dir"]
@@ -1042,7 +1255,7 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                     lift, lift + mh, _style_tint(style, "encounter_lane"), False, True, F_MARKERS, room.id))
         actors.append(_make_label("Label_encounter_%s_approach" % eid, ax, ay,
                                   "%s APPROACH\nretreat %s %d / strafe %d" % (eid, rd, int(rl), int(sl)), "marker", style, metrics,
-                                  F_LABELS, room.id))
+                                  F_LABELS, room.id, **room_facing(room.id, ax, ay)))
 
     # ---- boundary shell ------------------------------------------------------------------------
     actors.extend(_boundary_boxes(actors, metrics, style, F_BOUNDARY))
@@ -1283,7 +1496,10 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
     """Feel gym (REQ-G1-004): stations laid out in rows (greybox_style.feel_gym.station_rows / row_y_cm).
 
     Every element is labelled with its dimension and has a 180 cm reference figure beside it.
-    The player starts at start_y_cm facing +plan.y (= Unreal +X) and walks forward into the rows.
+    The player starts at start_y_cm facing +plan.y (= Unreal +X) and walks forward into the rows, so every
+    gym label is single-sided with yaw 270 (readable from the -y side the player approaches from); labels inside
+    a station (the ceiling rooms' inside label) face the station's north entrance the same way.  Enclosed pieces
+    get the same even fill point lights as the office (_point_light); the sun and sky light stay (outdoor gym).
     """
     metrics = inputs["metrics"]
     style = inputs["style"]
@@ -1312,11 +1528,14 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
     actors: List[Actor] = []
     stations: List[Dict[str, Any]] = []
 
+    # The player walks +y from start_y: every label's readable face points -y (Label docstring, fact 2).
+    gym_face = {"yaw_plan_deg": 270.0, "facing": "gym_approach:-plan.y"}
+
     def title(name: str, x: float, y: float, text: str) -> Label:
         ls = style["labels"]["element"]
         return Label(name=name, pos_plan=(x, y, float(gs["title_label_height_cm"])), text=text,
                      size_cm=float(gs["title_label_size_cm"]), color_rgb=tuple(float(c) for c in ls["color_rgb"]),
-                     folder=G_LABELS, style_key="element", yaw_plan_deg=90.0, double_sided=True)
+                     folder=G_LABELS, style_key="element", double_sided=False, **gym_face)
 
     def figure(name: str, x: float, y: float) -> List[Box]:
         """Reference figure standing in the figure zone that starts at x (its left edge)."""
@@ -1324,10 +1543,7 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
 
     def point_light(name: str, x: float, y: float, z: float, spec_key: str) -> Light:
         spec = gs[spec_key]
-        return Light(name=name, pos_plan=(x, y, z), intensity=float(spec["intensity_cd"]),
-                     temperature_k=float(spec["temperature_k"]), attenuation_radius_cm=float(spec["attenuation_radius_cm"]),
-                     folder=G_LIGHTS, light_type="point", cast_shadows=bool(style["lights"]["cast_shadows"]),
-                     mobility=str(style["lights"]["mobility"]))
+        return _point_light(name, (x, y, z), spec, "feel_gym.%s" % spec_key, style, float(spec["attenuation_radius_cm"]), G_LIGHTS)
 
     # ---- station builders: each takes (sx, y0) and returns the width it used along x -----------------
 
@@ -1347,7 +1563,7 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
             actors.append(_rect_box("Gym_%s_jamb_left" % tag, "wall", sx, sx + jamb, wy0, wy0 + t, 0.0, wall_h, wall_tint, True, True, G_DOORS))
             actors.append(_rect_box("Gym_%s_jamb_right" % tag, "wall", sx + jamb + width, sx + wall_w, wy0, wy0 + t, 0.0, wall_h, wall_tint, True, True, G_DOORS))
             actors.append(_rect_box("Gym_%s_header" % tag, "header", sx + jamb, sx + jamb + width, wy0, wy0 + t, door_h, wall_h, wall_tint, True, True, G_DOORS))
-            actors.append(_make_label("Gym_label_%s" % tag, sx + wall_w / 2.0, wy0 - fig_gap, "DOOR %d x %d" % (int(width), int(door_h)), "element", style, metrics, G_LABELS))
+            actors.append(_make_label("Gym_label_%s" % tag, sx + wall_w / 2.0, wy0 - fig_gap, "DOOR %d x %d" % (int(width), int(door_h)), "element", style, metrics, G_LABELS, **gym_face))
             actors.extend(figure(tag, sx + wall_w, wy0 + t / 2.0))
         return wall_w + fig_zone
 
@@ -1362,7 +1578,7 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
             actors.append(_rect_box("Gym_%s_wall_right" % tag, "wall", x + t + width, x + 2 * t + width, y0, y0 + length, 0.0, ceiling + ceil_slab, wall_tint, True, True, G_CORR))
             actors.append(_rect_box("Gym_%s_ceiling" % tag, "ceiling", x + t, x + t + width, y0, y0 + length, ceiling, ceiling + ceil_slab, ceil_tint, True, True, G_CORR))
             cx = x + t + width / 2.0
-            actors.append(_make_label("Gym_label_%s" % tag, cx, y0 - fig_gap, "CORRIDOR %d wide\n%d long, ceiling %d" % (int(width), int(length), int(ceiling)), "element", style, metrics, G_LABELS))
+            actors.append(_make_label("Gym_label_%s" % tag, cx, y0 - fig_gap, "CORRIDOR %d wide\n%d long, ceiling %d" % (int(width), int(length), int(ceiling)), "element", style, metrics, G_LABELS, **gym_face))
             actors.append(point_light("Gym_light_%s_a" % tag, cx, y0 + length * 0.25, ceiling - light_drop, "enclosed_light"))
             actors.append(point_light("Gym_light_%s_b" % tag, cx, y0 + length * 0.75, ceiling - light_drop, "enclosed_light"))
             actors.extend(figure(tag, x + 2 * t + width, y0 - fig_gap - fig_d / 2.0))
@@ -1392,9 +1608,10 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
             actors.append(_rect_box("Gym_%s_ceiling" % tag, "ceiling", ix0, ix1, iy0, iy1, ceiling, top, ceil_tint, True, True, G_ROOMS))
             cx = (ix0 + ix1) / 2.0
             cy = (iy0 + iy1) / 2.0
-            actors.append(_make_label("Gym_label_%s" % tag, cx, y0 - fig_gap, "CEILING %d\n%d x %d room, door %d" % (int(ceiling), int(foot), int(foot), int(door_w)), "element", style, metrics, G_LABELS))
+            actors.append(_make_label("Gym_label_%s" % tag, cx, y0 - fig_gap, "CEILING %d\n%d x %d room, door %d" % (int(ceiling), int(foot), int(foot), int(door_w)), "element", style, metrics, G_LABELS, **gym_face))
+            # Inside label faces the room's north door (the player enters walking +y) - same yaw as everything else.
             actors.append(_make_label("Gym_label_%s_inside" % tag, cx, cy, "CEILING %d" % int(ceiling), "element", style, metrics, G_LABELS,
-                                      z_override=min(elem_label_h, ceiling - light_drop - marker_h)))
+                                      z_override=min(elem_label_h, ceiling - light_drop - marker_h), **gym_face))
             actors.append(point_light("Gym_light_%s" % tag, cx, cy, ceiling - light_drop, "enclosed_light"))
             actors.extend(figure(tag, ix1 + t, y0 - fig_gap - fig_d / 2.0))
             actors.extend(_figure_boxes("%s_inside" % tag, ix1 - fig_gap - fig_w / 2.0, iy1 - fig_gap - fig_d / 2.0, metrics, style, G_FIGURES, ""))
@@ -1410,9 +1627,11 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
         for n, h in enumerate(gym["jump_ledge_heights_cm"]):
             h = float(h)
             tag = "ledge%02d_%d" % (n + 1, int(h))
-            ly0 = y0 + n * ld
+            # element_gap_cm of floor between ledges: each one is jumped onto from the ground.  Placed
+            # back to back they formed a 20 cm-riser staircase the player simply walked up (max step 40).
+            ly0 = y0 + n * (ld + elem_gap)
             actors.append(_rect_box("Gym_%s" % tag, "ledge", sx, sx + lw, ly0, ly0 + ld, 0.0, h, wall_tint, True, True, G_LEDGES))
-            actors.append(_make_label("Gym_label_%s" % tag, sx + lw / 2.0, ly0 + ld / 2.0, "LEDGE %d" % int(h), "element", style, metrics, G_LABELS, z_override=h + marker_h))
+            actors.append(_make_label("Gym_label_%s" % tag, sx + lw / 2.0, ly0 + ld / 2.0, "LEDGE %d" % int(h), "element", style, metrics, G_LABELS, z_override=h + marker_h, **gym_face))
             actors.extend(figure(tag, sx + lw, ly0 + ld / 2.0))
         return lw + fig_zone
 
@@ -1432,7 +1651,7 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
             tag = "step%02d_riser%d" % (k + 1, int(round(riser)))
             sy0 = y0 + k * sd
             actors.append(_rect_box("Gym_%s" % tag, "step", sx, sx + sw, sy0, sy0 + sd, 0.0, cum, wall_tint, True, True, G_RAMP))
-            actors.append(_make_label("Gym_label_%s" % tag, sx + sw / 2.0, sy0 + sd / 2.0, "RISER %d\n(top %d)" % (int(round(riser)), int(round(cum))), "element", style, metrics, G_LABELS, z_override=cum + marker_h))
+            actors.append(_make_label("Gym_label_%s" % tag, sx + sw / 2.0, sy0 + sd / 2.0, "RISER %d\n(top %d)" % (int(round(riser)), int(round(cum))), "element", style, metrics, G_LABELS, z_override=cum + marker_h, **gym_face))
         actors.extend(figure("ramp_bottom", sx + sw, y0 + sd / 2.0))
         actors.extend(figure("ramp_top", sx + sw, y0 + (n_steps - 0.5) * sd))
         return sw + fig_zone
@@ -1448,7 +1667,7 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
             actors.append(_rect_box("Gym_%s_wall_right" % tag, "wall", x + t + tw, x + 2 * t + tw, y0, y0 + tl, 0.0, h + t, wall_tint, True, True, G_TUNNELS))
             actors.append(_rect_box("Gym_%s_ceiling" % tag, "ceiling", x + t, x + t + tw, y0, y0 + tl, h, h + t, ceil_tint, True, True, G_TUNNELS))
             cx = x + t + tw / 2.0
-            actors.append(_make_label("Gym_label_%s" % tag, cx, y0 - fig_gap, "CRAWL %d high\n%d wide, %d long" % (int(h), int(tw), int(tl)), "element", style, metrics, G_LABELS))
+            actors.append(_make_label("Gym_label_%s" % tag, cx, y0 - fig_gap, "CRAWL %d high\n%d wide, %d long" % (int(h), int(tw), int(tl)), "element", style, metrics, G_LABELS, **gym_face))
             actors.append(point_light("Gym_light_%s" % tag, cx, y0 + tl / 2.0, h - tunnel_light_drop, "tunnel_light"))
             actors.extend(figure(tag, x + 2 * t + tw, y0 - fig_gap - fig_d / 2.0))
             x += 2 * t + tw + fig_zone + elem_gap
@@ -1505,10 +1724,10 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
     actors.append(Light(name="Gym_sun", pos_plan=(slab_w / 2.0, slab_d / 2.0, sky_z), intensity=float(sun["intensity_lux"]),
                         temperature_k=float(sun["temperature_k"]), attenuation_radius_cm=0.0, folder=G_LIGHTS, light_type="directional",
                         cast_shadows=bool(sun["cast_shadows"]), mobility=str(style["lights"]["mobility"]),
-                        pitch_deg=float(sun["pitch_deg"]), yaw_deg=float(sun["yaw_deg"])))
+                        pitch_deg=float(sun["pitch_deg"]), yaw_deg=float(sun["yaw_deg"]), intensity_units="lux"))
     actors.append(Light(name="Gym_sky", pos_plan=(slab_w / 2.0, slab_d / 2.0, sky_z), intensity=float(gs["sky_light"]["intensity"]),
                         temperature_k=0.0, attenuation_radius_cm=0.0, folder=G_LIGHTS, light_type="sky", cast_shadows=False,
-                        mobility=str(style["lights"]["mobility"])))
+                        mobility=str(style["lights"]["mobility"]), intensity_units="scalar"))
     actors.extend(_boundary_boxes(actors, metrics, style, G_BOUNDARY))
 
     actors = _finalize(actors)

@@ -106,7 +106,10 @@ Set-Content -LiteralPath (Join-Path $staged "BUILD-INFO.txt") -Value $info -Enco
 # ---- 5. zip -------------------------------------------------------------------------------------------------
 if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
 Write-Host "HELLFALL: compressing $staged -> $zip"
-Compress-Archive -Path (Join-Path $staged "*") -DestinationPath $zip -CompressionLevel Optimal
+# .NET ZipFile instead of Compress-Archive: Windows PowerShell 5.1's Microsoft.PowerShell.Archive 1.0 fails on
+# any single entry over 2 GB (a cooked .pak can be) and is several times slower on multi-GB folders.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[IO.Compression.ZipFile]::CreateFromDirectory($staged, $zip, [IO.Compression.CompressionLevel]::Optimal, $false)
 $item = Get-Item -LiteralPath $zip
 $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
 Write-Host ""

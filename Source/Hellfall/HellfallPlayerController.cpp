@@ -74,6 +74,18 @@ void AHellfallPlayerController::EnterGameInputMode()
 	bShowMouseCursor = false;
 }
 
+void AHellfallPlayerController::EnterPausedInputMode()
+{
+	// GameAndUI keeps UGameViewportClient::IgnoreInput false (UIOnly sets it true and the viewport then
+	// drops every key before the controller sees it), so the Pause action's bTriggerWhenPaused mapping
+	// still fires; the cursor is released and shown for the reviewer.
+	FInputModeGameAndUI GameAndUI;
+	GameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	GameAndUI.SetHideCursorDuringCapture(false);
+	SetInputMode(GameAndUI);
+	bShowMouseCursor = true;
+}
+
 void AHellfallPlayerController::HandleApplicationActivationChanged(const bool bIsActive)
 {
 	bApplicationInactive = !bIsActive;
@@ -92,7 +104,14 @@ void AHellfallPlayerController::HandleApplicationActivationChanged(const bool bI
 	// Focus regained. Whatever mouse travel accumulated while unfocused arrives as one large delta on
 	// this frame; the character skips exactly that one Look sample so the view does not snap.
 	bIgnoreNextLookDelta = true;
-	if (!IsPaused())
+	// Always leave the UI-only mode set on focus loss. Left in place while paused, its IgnoreInput flag
+	// would swallow the pause key and the game could never resume (pause -> alt-tab -> alt-tab back ->
+	// Escape did nothing; only the console or killing the process got out).
+	if (IsPaused())
+	{
+		EnterPausedInputMode();
+	}
+	else
 	{
 		EnterGameInputMode();
 	}
@@ -112,11 +131,7 @@ void AHellfallPlayerController::TogglePauseMenuless()
 	{
 		if (SetPause(true))
 		{
-			FInputModeGameAndUI GameAndUI;
-			GameAndUI.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			GameAndUI.SetHideCursorDuringCapture(false);
-			SetInputMode(GameAndUI);
-			bShowMouseCursor = true;
+			EnterPausedInputMode();
 		}
 	}
 }

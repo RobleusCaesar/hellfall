@@ -8,10 +8,11 @@ public class HellfallTarget : TargetRules
 	{
 		Type = TargetType.Game;
 
-		// BuildSettingsVersion.V5 and EngineIncludeOrderVersion.Latest both exist since UE 5.4.
-		// TODO(VERIFY 5.8): if UBT warns that a newer BuildSettingsVersion exists, bump V5 to it
-		// (pure warning, not an error; behaviour of this project does not depend on it).
-		DefaultBuildSettings = BuildSettingsVersion.V5;
+		// V7 == BuildSettingsVersion.Latest in UE 5.8 (Engine/Source/Programs/UnrealBuildTool/Configuration/
+		// Rules/TargetRules.cs). Anything older makes UBT print "[Upgrade] Using backward-compatible build
+		// settings" on every build. V6/V7 promote the undefined-identifier, return-type, dangling,
+		// unreachable-code and shadow-variable warnings to errors: if one shows up, fix the code, do not downgrade.
+		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 
 		ExtraModuleNames.AddRange(new string[] { "Hellfall" });

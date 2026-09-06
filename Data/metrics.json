@@ -29,7 +29,7 @@
     "_comment": "Checked by Tools/validate_floorplan.mjs. capsule_diameter = 2 * movement.player.capsule_radius_cm (72).",
     "door_clear_width_min_cm": "capsule_diameter + 40 = 112",
     "corridor_width_min_cm": "3 * capsule_diameter = 216",
-    "duct_passable_stance": "crawl only: duct_interior_height (95) must exceed crawl_height (64) and be below crouch_height (116)"
+    "duct_passable_stance": "crawl only: duct_interior_height (95) must exceed crawl_height (64) and be below crouch_height (116). Each duct mouth carries a duct_wall_thickness_cm (6) floor lip and head bar, so the clear mouth is 100 x 83; the engine clamps the crawl capsule to a 72 cm sphere (radius 36), leaving about 9 cm at the mouth and 23 cm inside. Feel-gym crawl tunnels have no lips."
   },
   "encounter_space": {
     "_comment": "Gate 2 acceptance (REQ-G2-004) but the rooms must be sized for it in Gate 1 so the greybox is never reopened.",

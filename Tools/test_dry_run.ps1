@@ -7,7 +7,10 @@
   3. validate_floorplan.mjs on Data/floorplan.json
   4. build_feel_gym.py --dry-run + check_manifest.mjs
   5. copies both manifests to Saved\Manifests\ for inspection
-  Non-zero exit on any failure.
+  Non-zero exit on any failure.  Inside every step the native tool's output goes to the host (Out-Host),
+  so the ONLY thing a step body emits to the pipeline is its trailing boolean; Step() additionally accepts
+  nothing but a trailing [bool] $true as a pass (a leaked string would otherwise make the result truthy).
+  Negative check: `Tools\test_dry_run.ps1 -Floorplan Saved\narrow.json` (door 100 wide) must exit 1.
 .PARAMETER Floorplan
   Alternative floor plan to test (default Data\floorplan.json).
 #>
@@ -34,7 +37,12 @@ function Step {
     Write-Host ""
     Write-Host "=== $Name ===" -ForegroundColor Cyan
     $ok = $false
-    try { $ok = & $Body } catch { Write-Host "  exception: $($_.Exception.Message)" -ForegroundColor Red; $ok = $false }
+    try {
+        # Collect everything the body emitted; only a trailing boolean $true counts as a pass.
+        $r = @(& $Body)
+        $ok = ($r.Count -gt 0 -and ($r[-1] -is [bool]) -and $r[-1])
+        if ($r.Count -gt 1) { Write-Host "  note: step body leaked $($r.Count - 1) object(s) into the pipeline" -ForegroundColor Yellow }
+    } catch { Write-Host "  exception: $($_.Exception.Message)" -ForegroundColor Red; $ok = $false }
     if ($ok) { Write-Host "--- PASS: $Name" -ForegroundColor Green } else { Write-Host "--- FAIL: $Name" -ForegroundColor Red; $script:failed++ }
     $script:results += [pscustomobject]@{ Step = $Name; Result = $(if ($ok) { "PASS" } else { "FAIL" }) }
 }
@@ -42,11 +50,11 @@ function Step {
 Push-Location $repo
 try {
     Step "1a. build_greybox.py --dry-run (run A)" {
-        & $py "Tools\ue\build_greybox.py" --dry-run --out $gbA --floorplan $Floorplan
+        & $py "Tools\ue\build_greybox.py" --dry-run --out $gbA --floorplan $Floorplan | Out-Host
         return ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $gbA))
     }
     Step "1b. build_greybox.py --dry-run (run B)" {
-        & $py "Tools\ue\build_greybox.py" --dry-run --out $gbB --floorplan $Floorplan | Out-Null
+        & $py "Tools\ue\build_greybox.py" --dry-run --out $gbB --floorplan $Floorplan | Out-Host
         return ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $gbB))
     }
     Step "1c. determinism: SHA256(A) == SHA256(B)" {
@@ -59,20 +67,20 @@ try {
     }
     Step "2. check_manifest.mjs (greybox)" {
         if (-not (Test-Path -LiteralPath $gbA)) { return $false }
-        & $node "Tools\check_manifest.mjs" $gbA
+        & $node "Tools\check_manifest.mjs" $gbA | Out-Host
         return ($LASTEXITCODE -eq 0)
     }
     Step "3. validate_floorplan.mjs" {
-        & $node "Tools\validate_floorplan.mjs" $Floorplan
+        & $node "Tools\validate_floorplan.mjs" $Floorplan | Out-Host
         return ($LASTEXITCODE -eq 0)
     }
     Step "4a. build_feel_gym.py --dry-run" {
-        & $py "Tools\ue\build_feel_gym.py" --dry-run --out $fg
+        & $py "Tools\ue\build_feel_gym.py" --dry-run --out $fg | Out-Host
         return ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $fg))
     }
     Step "4b. check_manifest.mjs (feel gym)" {
         if (-not (Test-Path -LiteralPath $fg)) { return $false }
-        & $node "Tools\check_manifest.mjs" $fg
+        & $node "Tools\check_manifest.mjs" $fg | Out-Host
         return ($LASTEXITCODE -eq 0)
     }
     $manifests = Join-Path $repo "Saved\Manifests"

@@ -13,6 +13,13 @@ Two emitters share one tiny interface::
 
 Unreal 5.8 API notes are inline.  Anything not verified against a running 5.8
 editor carries a ``TODO(VERIFY 5.8)`` comment and uses the most conservative call.
+Calls marked ``VERIFIED 5.8.2`` were exercised by the first real commandlet runs on
+2026-09-06 (build_greybox 249 actors / build_feel_gym 171 actors, both "Python script
+executed successfully", exit 0; Saved/Logs/hf_*_warmup.log.stdout.txt) and/or checked
+against the installed engine headers.  The packaged-run frames of the same day settled
+two more facts: a TextRender reads correctly only from its local +X side (so labels are
+single actors turned toward the viewer, see hf_geometry.Label) and inverse-square point
+lights blow the ceiling out (so point lights are unitless fill lights, see _emit_light).
 """
 from __future__ import annotations
 
@@ -129,7 +136,11 @@ class UnrealEmitter:
       deleted because it is the currently loaded world, we fall back to load + destroy-all-actors.
     * Point lights are MOVABLE: static lights need a lighting build, which the commandlet cannot do
       reliably and which this iGPU machine should not wait for; a dozen movable, shadowless lights
-      is cheap.  Gate 3 replaces all of this anyway.
+      is cheap.  They are EVEN FILL lights (inverse-square off, unitless intensity, falloff exponent
+      from style, radius covering the room) so Rob judges space, not mood.  Gate 3 replaces all of
+      this anyway.
+    * Labels are ONE TextRenderActor each, yawed so the readable face (local +X) points at the point
+      the player reads it from; the 180-degree twin garbled the glyphs (packaged run, 2026-09-06).
     * Every box is a scaled /Engine/BasicShapes/Cube StaticMeshActor -> simple box collision only
       (REQ-G1-007: no complex/per-triangle collision on architecture).
     """
@@ -158,33 +169,53 @@ class UnrealEmitter:
             raise RuntimeError("cannot load %s" % CUBE_ASSET)
         self._ensure_materials()
 
+    def _map_file_on_disk(self, map_path: str) -> str:
+        """Absolute .umap path for a /Game/... asset path (empty string if not under /Game)."""
+        u = self.unreal
+        if not map_path.startswith("/Game/"):
+            return ""
+        content_dir = u.SystemLibrary.get_project_content_directory()
+        rel = map_path[len("/Game/"):].split(".")[0]
+        return os.path.normpath(os.path.join(content_dir, rel + ".umap"))
+
     def _recreate_level(self, map_path: str) -> None:
         u = self.unreal
         eal = u.EditorAssetLibrary
-        if eal.does_asset_exist(map_path):
-            current = None
-            try:
-                world = self.editor_sub.get_editor_world()
-                current = world.get_path_name() if world is not None else None
-            except Exception:  # pragma: no cover - defensive; API surface differs per build
-                current = None
-            if current is not None and current.split(".")[0] == map_path:
-                # Cannot delete the world we are standing in: clear it instead (same end state).
-                u.log_warning("[hellfall] %s is the loaded world; clearing actors instead of recreating" % map_path)
-                for a in list(self.actor_sub.get_all_level_actors()):
-                    self.actor_sub.destroy_actor(a)
-                return
-            if not eal.delete_asset(map_path):
-                # Fallback: load it and clear it.
-                u.log_warning("[hellfall] delete_asset(%s) failed; loading and clearing actors" % map_path)
-                if not self.level_sub.load_level(map_path):
-                    raise RuntimeError("cannot load existing level %s" % map_path)
-                for a in list(self.actor_sub.get_all_level_actors()):
-                    self.actor_sub.destroy_actor(a)
-                return
+        # VERIFIED 5.8.2 (2026-09-06): under -run=pythonscript the asset registry has not scanned /Game
+        # yet, so does_asset_exist() returned False for an existing map, the delete was skipped and
+        # new_level() failed with "An asset already exists at this location". Scan the map's folder
+        # synchronously first and also trust the file on disk; remove the stale file if the library
+        # cannot delete it (nothing is loaded in the commandlet, so this is safe).
+        try:
+            registry = u.AssetRegistryHelpers.get_asset_registry()
+            registry.scan_paths_synchronous([map_path.rsplit("/", 1)[0]], True)
+        except Exception as exc:  # pragma: no cover - scanning is an optimisation, not a requirement
+            u.log_warning("[hellfall] asset registry scan skipped: %s" % exc)
+        on_disk = self._map_file_on_disk(map_path)
+        exists = bool(eal.does_asset_exist(map_path)) or bool(on_disk and os.path.isfile(on_disk))
+        if exists:
+            # VERIFIED 5.8.2 (2026-09-06): deleting an existing map in the commandlet does not work -
+            # EditorAssetLibrary.delete_asset() returns True but leaves the .umap on disk, and even after
+            # removing the file ourselves the in-memory package makes new_level() refuse the path
+            # ("An asset already exists at this location"). Loading the existing map and destroying every
+            # generated actor gives the same end state (the generator re-emits everything, deterministically)
+            # and finish() saves over the same package. World-owned defaults are kept.
+            if not self.level_sub.load_level(map_path):
+                raise RuntimeError("cannot load existing level %s" % map_path)
+            keep = ("WorldSettings", "Brush", "DefaultPhysicsVolume", "WorldDataLayers", "WorldPartition")
+            removed = 0
+            for a in list(self.actor_sub.get_all_level_actors()):
+                cls = a.get_class().get_name()
+                if cls in keep or cls.endswith("WorldSettings"):
+                    continue
+                if self.actor_sub.destroy_actor(a):
+                    removed += 1
+            u.log("[hellfall] reusing %s: cleared %d actors before regenerating" % (map_path, removed))
+            return
         # new_level(asset_path) closes the current level (unsaved), creates a blank level, saves and loads it.
         if not self.level_sub.new_level(map_path):
             raise RuntimeError("LevelEditorSubsystem.new_level(%s) returned False" % map_path)
+        u.log("[hellfall] created %s" % map_path)
 
     def finish(self) -> Dict[str, Any]:
         u = self.unreal
@@ -220,7 +251,8 @@ class UnrealEmitter:
                 mel.connect_material_property(rough, "", u.MaterialProperty.MP_ROUGHNESS)
                 opacity = float(spec.get("opacity", 1.0))
                 if opacity < 1.0:
-                    # TODO(VERIFY 5.8): Material.blend_mode editor property + BlendMode.BLEND_TRANSLUCENT enum name.
+                    # VERIFIED 5.8.2: Material.blend_mode + BlendMode.BLEND_TRANSLUCENT (glass/marker materials
+                    # were created by the 2026-09-06 run; a wrong name would have raised and printed FAILED).
                     mat.set_editor_property("blend_mode", u.BlendMode.BLEND_TRANSLUCENT)
                     mat.set_editor_property("two_sided", True)
                     op = mel.create_material_expression(mat, u.MaterialExpressionConstant, -400, 400)
@@ -257,8 +289,8 @@ class UnrealEmitter:
         if actor is None:
             raise RuntimeError("spawn failed for %s" % box.name)
         actor.set_actor_label(box.name)
-        smc = actor.static_mesh_component
-        if smc is None:  # TODO(VERIFY 5.8): StaticMeshActor.static_mesh_component property; fallback below.
+        smc = actor.static_mesh_component   # VERIFIED 5.8.2: BlueprintReadOnly UPROPERTY StaticMeshComponent (StaticMeshActor.h)
+        if smc is None:
             smc = actor.get_component_by_class(u.StaticMeshComponent)
         # StaticMeshActor spawns with STATIC mobility; set_static_mesh is allowed on static components in
         # the editor (the runtime restriction does not apply here).  We set it explicitly anyway.
@@ -284,26 +316,29 @@ class UnrealEmitter:
     def _emit_label(self, label: hg.Label) -> None:
         u = self.unreal
         m = hg.actor_to_manifest(label)
-        yaws = [m["ue"]["rotation"][2]]
         if label.double_sided:
-            yaws.append((yaws[0] + 180.0) % 360.0)
+            # Retired 2026-09-06: the 180-degree twin overlapped the front quad and garbled the glyphs.
+            u.log_warning("[hellfall] %s: double_sided is ignored - labels are single-sided, faced by yaw" % label.name)
         r, g, b = label.color_rgb
-        color = u.Color(int(round(r * 255)), int(round(g * 255)), int(round(b * 255)), 255)
-        for i, yaw in enumerate(yaws):
-            actor = self.actor_sub.spawn_actor_from_class(u.TextRenderActor, self._vec(m["ue"]["location"]), self._rot(yaw))
-            if actor is None:
-                raise RuntimeError("spawn failed for %s" % label.name)
-            actor.set_actor_label(label.name if i == 0 else "%s_back" % label.name)
-            trc = getattr(actor, "text_render", None)  # TODO(VERIFY 5.8): ATextRenderActor 'text_render' component property
-            if trc is None:
-                trc = actor.get_component_by_class(u.TextRenderComponent)
-            trc.set_text(u.Text(label.text))
-            trc.set_world_size(float(label.size_cm))
-            trc.set_horizontal_alignment(u.HorizTextAligment.EHTA_CENTER)      # Epic's misspelling is the real enum name
-            trc.set_vertical_alignment(u.VerticalTextAligment.EVRTA_TEXT_CENTER)
-            trc.set_text_render_color(color)
-            actor.set_folder_path(u.Name(label.folder))
-            self.count += 1
+        # FColor is declared B, G, R, A (NoExportTypes.h) so the generated unreal.Color.__init__ takes its
+        # POSITIONAL arguments as (b, g, r, a); keywords keep the amber 'element' labels amber.
+        color = u.Color(r=int(round(r * 255)), g=int(round(g * 255)), b=int(round(b * 255)), a=255)
+        # Exactly ONE TextRenderActor per label.  Its yaw (plan yaw -> UE yaw in the manifest) points the readable
+        # face (local +X; VERIFIED 5.8.2 by packaged-run frames 2026-09-06, mirrored from behind) at the viewer point.
+        actor = self.actor_sub.spawn_actor_from_class(u.TextRenderActor, self._vec(m["ue"]["location"]), self._rot(m["ue"]["rotation"][2]))
+        if actor is None:
+            raise RuntimeError("spawn failed for %s" % label.name)
+        actor.set_actor_label(label.name)
+        trc = getattr(actor, "text_render", None)  # VERIFIED 5.8.2: BlueprintReadOnly UPROPERTY TextRender (TextRenderActor.h)
+        if trc is None:
+            trc = actor.get_component_by_class(u.TextRenderComponent)
+        trc.set_text(u.Text(label.text))
+        trc.set_world_size(float(label.size_cm))
+        trc.set_horizontal_alignment(u.HorizTextAligment.EHTA_CENTER)      # Epic's misspelling is the real enum name
+        trc.set_vertical_alignment(u.VerticalTextAligment.EVRTA_TEXT_CENTER)
+        trc.set_text_render_color(color)
+        actor.set_folder_path(u.Name(label.folder))
+        self.count += 1
 
     def _emit_light(self, light: hg.Light) -> None:
         u = self.unreal
@@ -312,12 +347,27 @@ class UnrealEmitter:
         mobility = getattr(u.ComponentMobility, light.mobility, u.ComponentMobility.MOVABLE)
         if light.light_type == "point":
             actor = self.actor_sub.spawn_actor_from_class(u.PointLight, loc, self._rot(0.0))
-            comp = getattr(actor, "point_light_component", None)  # TODO(VERIFY 5.8): APointLight.point_light_component
+            comp = getattr(actor, "point_light_component", None)  # VERIFIED 5.8.2: BlueprintReadOnly UPROPERTY PointLightComponent (PointLight.h)
             if comp is None:
                 comp = actor.get_component_by_class(u.PointLightComponent)
             comp.set_mobility(mobility)
-            # TODO(VERIFY 5.8): LightUnits.CANDELAS enum spelling; intensity_units property.
-            comp.set_editor_property("intensity_units", u.LightUnits.CANDELAS)
+            if light.inverse_squared:
+                # Legacy physical light (no generator path produces one today).
+                # VERIFIED 5.8.2: LightUnits.CANDELAS + intensity_units (13 point lights emitted by the 2026-09-06 run).
+                comp.set_editor_property("use_inverse_squared_falloff", True)   # TODO(VERIFY 5.8): property name
+                comp.set_editor_property("intensity_units", u.LightUnits.CANDELAS)
+            else:
+                # Even fill light (packaged-run finding 2026-09-06: inverse-square candela lights blew the ceiling
+                # around each fixture out to white).  Order matters: inverse-square OFF first, units second,
+                # intensity LAST so no PostEditChange unit conversion rescales the value we set.
+                # TODO(VERIFY 5.8): bUseInverseSquaredFalloff and LightFalloffExponent are UPROPERTYs of
+                # UPointLightComponent (PointLightComponent.h); the reflected Python names should be
+                # use_inverse_squared_falloff / light_falloff_exponent.  LightUnits.UNITLESS = ELightUnits::Unitless
+                # (LightComponentBase.h).  With inverse-square off the engine ignores the units anyway
+                # (UPointLightComponent::ComputeLightBrightness), so UNITLESS here mirrors what the editor UI forces.
+                comp.set_editor_property("use_inverse_squared_falloff", False)
+                comp.set_editor_property("intensity_units", u.LightUnits.UNITLESS)
+                comp.set_editor_property("light_falloff_exponent", float(light.falloff_exponent))
             comp.set_intensity(float(light.intensity))
             comp.set_editor_property("use_temperature", True)
             comp.set_temperature(float(light.temperature_k))
@@ -358,6 +408,8 @@ class UnrealEmitter:
 
 def run_build(kind: str, map_path: str, inputs: Dict[str, Any], dry_run: bool, out_path: Optional[str]) -> Dict[str, Any]:
     """Build + validate + emit.  Raises on failure; callers print FAILED and exit non-zero."""
+    if dry_run:
+        hg._selftest()   # pure-helper invariants (label_yaw_facing, plan_yaw_to_ue_yaw); raises GeometryError
     if kind == "greybox":
         actors, meta = hg.build_greybox(inputs)
     elif kind == "feel_gym":
@@ -381,6 +433,7 @@ def run_build(kind: str, map_path: str, inputs: Dict[str, Any], dry_run: bool, o
     result["plan_bounds"] = meta.get("plan_bounds", {})
     result["warnings"] = warnings
     result["kind"] = kind
+    result["selftest"] = "ok" if dry_run else "skipped (editor build)"
     return result
 
 
@@ -390,6 +443,8 @@ def print_result(result: Dict[str, Any]) -> None:
         print("  manifest : %s" % result["manifest"])
     if "map" in result:
         print("  map      : %s" % result["map"])
+    if "selftest" in result:
+        print("  selftest : %s" % result["selftest"])
     print("  actors   : %d" % result["summary"]["total"])
     for k, v in result["summary"]["by_kind"].items():
         print("    %-22s %d" % (k, v))

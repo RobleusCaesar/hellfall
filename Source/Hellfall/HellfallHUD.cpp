@@ -77,7 +77,7 @@ void AHellfallHUD::DrawHUD()
 	float Y = 24.f * Scale;
 
 	// ---- Header ----
-	Y += DrawLine(TEXT("HELLFALL  gate 1 greybox"), X, Y, ColorHeader, Medium, Scale);
+	Y += DrawLine(TEXT("HELLFALL  greybox build"), X, Y, ColorHeader, Medium, Scale);
 	Y += 6.f * Scale;
 
 	// ---- Controls (REQ-G1-003 acceptance 1: every control listed on screen, names from Data/movement.json) ----

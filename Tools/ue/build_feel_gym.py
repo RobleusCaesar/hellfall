@@ -72,4 +72,6 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     code = main()
     sys.stdout.flush()
+    # sys.exit is correct under the pythonscript commandlet too (see build_greybox.py for the PyUtil.cpp
+    # evidence): SystemExit(0) is trapped and discarded, SystemExit(non-zero) fails the commandlet.
     sys.exit(code)

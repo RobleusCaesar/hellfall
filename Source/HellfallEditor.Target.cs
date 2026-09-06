@@ -9,8 +9,8 @@ public class HellfallEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 
-		// See Hellfall.Target.cs for the version notes.
-		DefaultBuildSettings = BuildSettingsVersion.V5;
+		// See Hellfall.Target.cs for the version notes (V7 == Latest in UE 5.8; keep both targets equal).
+		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 
 		ExtraModuleNames.AddRange(new string[] { "Hellfall" });

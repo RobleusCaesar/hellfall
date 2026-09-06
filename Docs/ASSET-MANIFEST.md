@@ -30,7 +30,7 @@ Every file Rob supplied, grouped by folder, with the Unreal name it will receive
 
 The Godot-era decimation already hit the class budgets, so the Gate 4 Blender pass is mainly scale, pivot, transforms and collision; before/after counts are still recorded in `BUILD.md` as the spec requires.
 
-## Files (126 files, 109.9 MB; sizes in KB)
+## Files (126 files, 109.9 MiB = 115.3 MB; sizes in KB)
 
 ### models/characters
 
@@ -193,4 +193,4 @@ The Godot-era decimation already hit the class budgets, so the Gate 4 Blender pa
 | `reference/mood_before_4.png` | 2011 | (none) | Mood board "before" (intact office). The spec's Before_4.png = mood_before_4.png. NOT imported. |
 | `reference/shotgun_reference.png` | 1449 | (none) | Weapon reference for the viewmodel (G5-003). NOT imported. |
 
-Total: 126 files, 109.9 MB.
+Total: 126 files, 109.9 MiB (115,260,962 bytes = 115.3 MB). Sub-totals in MiB: reference 42.2, models 23.3, textures 22.9, audio 20.1, video 1.4.
