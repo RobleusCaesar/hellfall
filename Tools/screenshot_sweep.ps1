@@ -16,8 +16,11 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$exe = Join-Path $repo "Builds\$Tag\Windows\Hellfall.exe"
-if (-not (Test-Path -LiteralPath $exe)) { throw "Packaged exe not found: $exe (run Tools\package.ps1 -Tag $Tag first)" }
+# Launch the REAL game binary, not the root Hellfall.exe: that one is a bootstrapper that starts
+# Hellfall\Binaries\Win64\Hellfall.exe and exits at once, so waiting on / killing it does nothing and instances pile up.
+$exe = Join-Path $repo "Builds\$Tag\Windows\Hellfall\Binaries\Win64\Hellfall.exe"
+if (-not (Test-Path -LiteralPath $exe)) { throw "Packaged game binary not found: $exe (run Tools\package.ps1 -Tag $Tag first)" }
+Get-Process -Name "Hellfall" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 $shotsFile = Join-Path $repo "Data\review_shots.json"
 $shots = (Get-Content -LiteralPath $shotsFile -Raw | ConvertFrom-Json).shots
 $outDir = Join-Path $repo "Saved\ReviewShots\$Tag"
@@ -30,8 +33,16 @@ foreach ($s in $shots) {
     $url = "/Game/Maps/$($s.map)?spawn=$ueX,$ueY,0,$ueYaw"
     $t0 = Get-Date
     $p = Start-Process -FilePath $exe -ArgumentList @($url, "-windowed", "-ResX=1920", "-ResY=1080", "-DumpMovie", "-benchmark", "-fps=4", "-NoSound", "-unattended") -PassThru
+    # Wait for the requested time, then for at least 8 dumped frames (the first ones can be the loading screen).
     Start-Sleep -Seconds $Seconds
+    $deadline = (Get-Date).AddSeconds(20)
+    while ((Get-Date) -lt $deadline) {
+        $n = @(Get-ChildItem -LiteralPath $shotDir -Filter "*.png" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -gt $t0 }).Count
+        if ($n -ge 8) { break }
+        Start-Sleep -Milliseconds 500
+    }
     if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+    Get-Process -Name "Hellfall" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
     $last = Get-ChildItem -LiteralPath $shotDir -Filter "*.png" -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -gt $t0 } | Sort-Object LastWriteTime | Select-Object -Last 1
     if ($last) {
