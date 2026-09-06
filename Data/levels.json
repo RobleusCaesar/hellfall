@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "levels": [
+    {
+      "id": "executive_floor",
+      "display_name": "Executive Floor",
+      "map": "/Game/Maps/L_ExecutiveFloor",
+      "order": 10
+    },
+    {
+      "id": "feel_gym",
+      "display_name": "Feel Gym",
+      "map": "/Game/Maps/L_FeelGym",
+      "order": 900,
+      "hidden": true
+    }
+  ]
+}

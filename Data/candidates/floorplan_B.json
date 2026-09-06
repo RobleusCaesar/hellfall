@@ -1,0 +1,317 @@
+{
+  "version": 1,
+  "units": "cm",
+  "source_drawing": "SourceAssets/reference/game_layout.jpg",
+  "notes": "Candidate B (game-feel / grid lens). Plan space per Docs/FLOORPLAN-SCHEMA.md: x right on the photo, y down toward the window wall. Layout rule: a 50 cm module grid with the 20 cm wall consumed from the far side of every module, so every room origin (x,y) is on the 50 cm grid, every interior dimension is 50k-20 (280, 430, 480, 580, 730, 780, 1080, 1330, 1480) and every coordinate in this file is on a 10 cm grid. Rooms that share a wall have rects exactly 20 cm apart and their wall lines are collinear along whole columns (x = 500, 980/1000, 1480/1500, 1980/2000, 2480) and rows (y = 950, 1430/1450, 1730/1750, 2330/2350, 3080/3100, 3880/3900, 4980/5000). corridor_main is a single straight spine along x; reception_passage is the one leg dropping south from it toward reception (480 wide and 1330 long so the REQ-G2-004 lanes for Demon #1 - 6 m approach, 6 m retreat, 2 m strafe each side - fit inside that single room); offices hang off the passage, restrooms off the spine facing each other, the elevator lobby is an open alcove at the spine's west end, corridor_blocked continues the spine west and is filled by the collapse. Duct convention: start is the point where the duct centre-line meets the INTERIOR face of the FROM room's wall; length_cm runs to the INTERIOR face of the TO room's wall, so it includes both 20 cm walls (supply_closet bottom edge y=430 -> break_room top edge y=950 = 520). The window is authored as an opening of type window between ceo_office and a sealed helper room exterior_city (a Gate-1 stand-in for the REQ-G2-005 backdrop plane) so between[] holds two real room ids; sill 40 / head 300 come from metrics (height_cm 260 = head - sill). money_shot.dividing_wall is a full-height screen wall inside ceo_office hiding the lounge and Demon #2 from every point in the doorway (the drawing's dividing wall is realised as the reception/ceo_office party wall with the door, per schema rule 4). All Gate-2 prop intent is in markers of kind note.",
+  "rooms": [
+    {
+      "id": "supply_closet",
+      "label": "Supply Closet",
+      "rect": { "x": 2000, "y": 0, "w": 480, "h": 430 },
+      "ceiling_cm": 310,
+      "floor_finish": "concrete",
+      "enterable": true,
+      "role": "start"
+    },
+    {
+      "id": "break_room",
+      "label": "Break Room / Kitchenette",
+      "rect": { "x": 2000, "y": 950, "w": 480, "h": 780 },
+      "ceiling_cm": 310,
+      "floor_finish": "tile",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "corridor_main",
+      "label": "Main Corridor",
+      "rect": { "x": 500, "y": 1450, "w": 1480, "h": 280 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "corridor_blocked",
+      "label": "Collapsed Hallway",
+      "rect": { "x": 0, "y": 1450, "w": 480, "h": 280 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "dead_end"
+    },
+    {
+      "id": "elevator_lobby",
+      "label": "Elevator Lobby",
+      "rect": { "x": 500, "y": 1000, "w": 480, "h": 430 },
+      "ceiling_cm": 310,
+      "floor_finish": "tile",
+      "enterable": true,
+      "role": "dead_end"
+    },
+    {
+      "id": "mens_restroom",
+      "label": "Men's Restroom",
+      "rect": { "x": 1500, "y": 950, "w": 480, "h": 480 },
+      "ceiling_cm": 280,
+      "floor_finish": "tile",
+      "enterable": true,
+      "role": "optional"
+    },
+    {
+      "id": "womens_restroom",
+      "label": "Women's Restroom (LOCKED)",
+      "rect": { "x": 1500, "y": 1750, "w": 480, "h": 580 },
+      "ceiling_cm": 280,
+      "floor_finish": "tile",
+      "enterable": false,
+      "role": "sealed"
+    },
+    {
+      "id": "reception_passage",
+      "label": "Reception Passage",
+      "rect": { "x": 1000, "y": 1750, "w": 480, "h": 1330 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "office_2",
+      "label": "Office #2",
+      "rect": { "x": 500, "y": 2350, "w": 480, "h": 730 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "optional"
+    },
+    {
+      "id": "office_1",
+      "label": "Office #1",
+      "rect": { "x": 1500, "y": 2350, "w": 480, "h": 730 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "optional"
+    },
+    {
+      "id": "reception",
+      "label": "Reception",
+      "rect": { "x": 500, "y": 3100, "w": 1480, "h": 780 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "ceo_office",
+      "label": "CEO Office",
+      "rect": { "x": 500, "y": 3900, "w": 1480, "h": 1080 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "goal"
+    },
+    {
+      "id": "exterior_city",
+      "label": "Backdrop Volume (city on fire placeholder)",
+      "rect": { "x": 500, "y": 5000, "w": 1480, "h": 980 },
+      "ceiling_cm": 600,
+      "floor_finish": "concrete",
+      "enterable": false,
+      "role": "sealed"
+    }
+  ],
+  "openings": [
+    {
+      "id": "door_break_to_corridor",
+      "type": "door",
+      "between": ["break_room", "corridor_main"],
+      "wall": "west",
+      "center_along_wall_cm": 1590,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "door_mens_to_corridor",
+      "type": "door",
+      "between": ["mens_restroom", "corridor_main"],
+      "wall": "south",
+      "center_along_wall_cm": 1740,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "locked_door_womens_to_corridor",
+      "type": "locked_door",
+      "between": ["womens_restroom", "corridor_main"],
+      "wall": "north",
+      "center_along_wall_cm": 1740,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "open_corridor_to_blocked",
+      "type": "open",
+      "between": ["corridor_main", "corridor_blocked"],
+      "wall": "west",
+      "center_along_wall_cm": 1590,
+      "width_cm": 280,
+      "height_cm": 310
+    },
+    {
+      "id": "open_elevator_to_corridor",
+      "type": "open",
+      "between": ["elevator_lobby", "corridor_main"],
+      "wall": "south",
+      "center_along_wall_cm": 740,
+      "width_cm": 480,
+      "height_cm": 310
+    },
+    {
+      "id": "open_corridor_to_passage",
+      "type": "open",
+      "between": ["corridor_main", "reception_passage"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 480,
+      "height_cm": 310
+    },
+    {
+      "id": "door_office2_to_passage",
+      "type": "door",
+      "between": ["office_2", "reception_passage"],
+      "wall": "east",
+      "center_along_wall_cm": 3000,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "door_office1_to_passage",
+      "type": "door",
+      "between": ["office_1", "reception_passage"],
+      "wall": "west",
+      "center_along_wall_cm": 2500,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "open_passage_to_reception",
+      "type": "open",
+      "between": ["reception_passage", "reception"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 480,
+      "height_cm": 310
+    },
+    {
+      "id": "door_reception_to_ceo",
+      "type": "door",
+      "between": ["reception", "ceo_office"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "window_ceo_city",
+      "type": "window",
+      "between": ["ceo_office", "exterior_city"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 1480,
+      "height_cm": 260
+    }
+  ],
+  "ducts": [
+    {
+      "id": "duct_supply_to_break",
+      "from": "supply_closet",
+      "to": "break_room",
+      "axis": "y",
+      "start": { "x": 2100, "y": 430 },
+      "length_cm": 520,
+      "interior_width_cm": 100,
+      "interior_height_cm": 95,
+      "floor_offset_cm": 0
+    }
+  ],
+  "blockers": [
+    { "id": "collapse", "kind": "collapse", "room": "corridor_blocked", "depth_cm": 200 },
+    { "id": "elevator", "kind": "elevator_doors", "room": "elevator_lobby", "wall": "north", "width_cm": 140, "height_cm": 220 }
+  ],
+  "markers": [
+    { "id": "player_start", "kind": "player_start", "room": "supply_closet", "pos": { "x": 2100, "y": 150 }, "yaw_deg": 90 },
+
+    { "id": "ref_supply_closet", "kind": "reference_figure", "room": "supply_closet", "pos": { "x": 2300, "y": 380 } },
+    { "id": "ref_break_room", "kind": "reference_figure", "room": "break_room", "pos": { "x": 2400, "y": 1050 } },
+    { "id": "ref_corridor_main", "kind": "reference_figure", "room": "corridor_main", "pos": { "x": 1240, "y": 1500 } },
+    { "id": "ref_corridor_blocked", "kind": "reference_figure", "room": "corridor_blocked", "pos": { "x": 100, "y": 1500 } },
+    { "id": "ref_elevator_lobby", "kind": "reference_figure", "room": "elevator_lobby", "pos": { "x": 560, "y": 1060 } },
+    { "id": "ref_mens_restroom", "kind": "reference_figure", "room": "mens_restroom", "pos": { "x": 1900, "y": 1010 } },
+    { "id": "ref_womens_restroom", "kind": "reference_figure", "room": "womens_restroom", "pos": { "x": 1900, "y": 2270 } },
+    { "id": "ref_reception_passage", "kind": "reference_figure", "room": "reception_passage", "pos": { "x": 1420, "y": 2000 } },
+    { "id": "ref_office_2", "kind": "reference_figure", "room": "office_2", "pos": { "x": 560, "y": 2410 } },
+    { "id": "ref_office_1", "kind": "reference_figure", "room": "office_1", "pos": { "x": 1900, "y": 3020 } },
+    { "id": "ref_reception", "kind": "reference_figure", "room": "reception", "pos": { "x": 560, "y": 3160 } },
+    { "id": "ref_ceo_office", "kind": "reference_figure", "room": "ceo_office", "pos": { "x": 560, "y": 4920 } },
+    { "id": "ref_exterior_city", "kind": "reference_figure", "room": "exterior_city", "pos": { "x": 1240, "y": 5450 } },
+
+    { "id": "note_racks", "kind": "note", "room": "supply_closet", "pos": { "x": 2430, "y": 210 }, "text": "Supply racks along east wall; seated man leans on them (Gate 2)" },
+    { "id": "note_intern", "kind": "note", "room": "supply_closet", "pos": { "x": 2240, "y": 50 }, "text": "Young woman (intern) seated on floor against north wall (Gate 2)" },
+    { "id": "note_mop_bucket", "kind": "note", "room": "supply_closet", "pos": { "x": 2040, "y": 400 }, "text": "Mop + bucket in SW corner beside duct mouth (Gate 2)" },
+    { "id": "note_table", "kind": "note", "room": "break_room", "pos": { "x": 2240, "y": 1340 }, "text": "Round table + chairs mid-room, one chair pushed out (Gate 2)" },
+    { "id": "note_fridge", "kind": "note", "room": "break_room", "pos": { "x": 2400, "y": 1680 }, "text": "Fridge at south end of kitchenette run along east wall (Gate 2)" },
+    { "id": "note_guard", "kind": "note", "room": "corridor_main", "pos": { "x": 1880, "y": 1590 }, "text": "Dead security guard + shotgun pickup, between Break Room door and restroom doors (Gate 2)" },
+    { "id": "note_elevator", "kind": "note", "room": "elevator_lobby", "pos": { "x": 740, "y": 1050 }, "text": "Shut elevator doors 140x220 flush in north wall, labeled (blocker)" },
+    { "id": "note_collapse", "kind": "note", "room": "corridor_blocked", "pos": { "x": 300, "y": 1590 }, "text": "Rubble collapse floor-to-ceiling, 200 deep (blocker)" },
+    { "id": "note_toilets", "kind": "note", "room": "mens_restroom", "pos": { "x": 1560, "y": 1200 }, "text": "Toilet stalls along west wall (Gate 2)" },
+    { "id": "note_vanity", "kind": "note", "room": "womens_restroom", "pos": { "x": 1740, "y": 1800 }, "text": "Vanity along north wall; room sealed, interior for depth only (Gate 2)" },
+    { "id": "note_office_2_desk", "kind": "note", "room": "office_2", "pos": { "x": 740, "y": 2600 }, "text": "Office desk + chair (Gate 2); Demon #1 lair" },
+    { "id": "note_office_1_desk", "kind": "note", "room": "office_1", "pos": { "x": 1740, "y": 2750 }, "text": "Office desk + chair (Gate 2); optional side room" },
+    { "id": "note_secretary_desk", "kind": "note", "room": "reception", "pos": { "x": 1700, "y": 3350 }, "text": "Secretary desk east of the axis, chair side clear, abandoned mid-task (Gate 2)" },
+    { "id": "note_ceo_desk", "kind": "note", "room": "ceo_office", "pos": { "x": 800, "y": 4700 }, "text": "CEO desk + dead CEO west of the axis; keep desk west of x=1000 so it stays out of the doorway-to-window slot (Gate 2)" },
+    { "id": "note_couch_set", "kind": "note", "room": "ceo_office", "pos": { "x": 1760, "y": 4650 }, "text": "Couch set + coffee table in the lounge south of the screen wall (Gate 2)" },
+    { "id": "note_window", "kind": "note", "room": "ceo_office", "pos": { "x": 1240, "y": 4950 }, "text": "Money-shot window: full width 1480, sill 40, head 300; backdrop plane beyond (Gate 2/3)" }
+  ],
+  "checkpoints": [
+    { "id": "cp_start", "room": "supply_closet", "pos": { "x": 2100, "y": 150 }, "yaw_deg": 90 },
+    { "id": "cp_break_room", "room": "break_room", "pos": { "x": 2240, "y": 1590 }, "yaw_deg": 180 },
+    { "id": "cp_corridor_post_pickup", "room": "corridor_main", "pos": { "x": 1800, "y": 1590 }, "yaw_deg": 180 },
+    { "id": "cp_ceo_entry", "room": "reception", "pos": { "x": 1240, "y": 3750 }, "yaw_deg": 90 }
+  ],
+  "encounters": [
+    {
+      "id": "demon_1",
+      "room": "reception_passage",
+      "spawn": { "x": 1070, "y": 3000 },
+      "trigger_rect": { "x": 1000, "y": 2350, "w": 480, "h": 100 },
+      "player_approach": { "x": 1240, "y": 2400 },
+      "retreat_dir": "north",
+      "retreat_clear_cm": 600,
+      "strafe_clear_each_side_cm": 200,
+      "capsule_radius_cm": 45,
+      "capsule_height_cm": 220
+    },
+    {
+      "id": "demon_2",
+      "room": "ceo_office",
+      "spawn": { "x": 1900, "y": 4400 },
+      "trigger_rect": { "x": 500, "y": 4250, "w": 1480, "h": 100 },
+      "player_approach": { "x": 1240, "y": 4300 },
+      "retreat_dir": "west",
+      "retreat_clear_cm": 600,
+      "strafe_clear_each_side_cm": 200,
+      "capsule_radius_cm": 60,
+      "capsule_height_cm": 280
+    }
+  ],
+  "money_shot": {
+    "room": "ceo_office",
+    "window_wall": "south",
+    "entry_opening_id": "door_reception_to_ceo",
+    "dividing_wall": { "along": "x", "at_y": 4200, "from_x": 1550, "to_x": 1980, "height_cm": 310 },
+    "dwell_rect": { "x": 1040, "y": 4830, "w": 400, "h": 150 }
+  },
+  "critical_path": ["supply_closet", "break_room", "corridor_main", "reception_passage", "reception", "ceo_office"]
+}

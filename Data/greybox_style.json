@@ -1,0 +1,122 @@
+{
+  "_comment": "HELLFALL greybox styling. Every tint, light, label, marker and layout-spacing number used by Tools/ue/hf_geometry.py lives here; the scripts contain no styling literals. RGB values are linear 0-1. Geometry dimensions (walls, doors, ducts, figure size, label height/size for rooms) come from Data/metrics.json; player body values from Data/movement.json. Change here, rerun Tools/test_dry_run.ps1, then rebuild the map.",
+  "version": 1,
+  "tints": {
+    "_comment": "Each tint becomes ONE material asset /Game/Greybox/Materials/M_GB_<key>. 'opacity' < 1 makes the material translucent (markers and glass only).",
+    "wall": { "rgb": [0.55, 0.55, 0.55], "roughness": 0.9 },
+    "wall_sealed": { "rgb": [0.42, 0.40, 0.40], "roughness": 0.9 },
+    "wall_goal": { "rgb": [0.60, 0.56, 0.52], "roughness": 0.9 },
+    "ceiling": { "rgb": [0.72, 0.72, 0.72], "roughness": 0.9 },
+    "floor_carpet": { "rgb": [0.30, 0.32, 0.36], "roughness": 1.0 },
+    "floor_tile": { "rgb": [0.62, 0.64, 0.62], "roughness": 0.5 },
+    "floor_concrete": { "rgb": [0.42, 0.42, 0.40], "roughness": 0.95 },
+    "floor_metal": { "rgb": [0.45, 0.47, 0.50], "roughness": 0.4 },
+    "threshold": { "rgb": [0.38, 0.38, 0.36], "roughness": 0.9 },
+    "duct_metal": { "rgb": [0.50, 0.52, 0.56], "roughness": 0.35 },
+    "glass": { "rgb": [0.55, 0.75, 0.90], "roughness": 0.1, "opacity": 0.35 },
+    "mullion": { "rgb": [0.20, 0.20, 0.22], "roughness": 0.6 },
+    "locked_door": { "rgb": [0.45, 0.30, 0.20], "roughness": 0.7 },
+    "elevator": { "rgb": [0.35, 0.36, 0.40], "roughness": 0.3 },
+    "collapse": { "rgb": [0.36, 0.30, 0.26], "roughness": 1.0 },
+    "divider": { "rgb": [0.58, 0.55, 0.52], "roughness": 0.9 },
+    "figure": { "rgb": [0.95, 0.55, 0.15], "roughness": 0.8 },
+    "figure_head": { "rgb": [0.98, 0.70, 0.35], "roughness": 0.8 },
+    "checkpoint": { "rgb": [0.20, 0.80, 0.30], "roughness": 0.8 },
+    "encounter_trigger": { "rgb": [0.90, 0.20, 0.20], "roughness": 0.8, "opacity": 0.30 },
+    "encounter_lane": { "rgb": [0.95, 0.80, 0.20], "roughness": 0.8, "opacity": 0.30 },
+    "encounter_spawn": { "rgb": [0.60, 0.10, 0.60], "roughness": 0.8, "opacity": 0.45 },
+    "dwell": { "rgb": [0.20, 0.60, 0.95], "roughness": 0.8, "opacity": 0.30 },
+    "boundary": { "rgb": [1.0, 0.0, 1.0], "roughness": 1.0 }
+  },
+  "wall_tint_by_role": {
+    "_comment": "Room role -> wall tint key. Roles not listed use 'wall'.",
+    "sealed": "wall_sealed",
+    "goal": "wall_goal"
+  },
+  "labels": {
+    "_comment": "Room label size and height come from metrics.architecture.label_world_size_cm / label_height_above_floor_cm. Colors are linear RGB 0-1. double_sided spawns two TextRenders (yaw 0 and 180) so the text reads from both approach directions. wall_offset_cm = distance from a wall face for LOCKED / ELEVATOR / DUCT / WINDOW labels.",
+    "room": { "color_rgb": [1.0, 1.0, 1.0], "double_sided": true },
+    "element": { "size_cm": 25, "height_cm": 200, "color_rgb": [1.0, 0.85, 0.40], "double_sided": true },
+    "note": { "size_cm": 16, "height_cm": 140, "color_rgb": [0.55, 0.55, 0.55], "double_sided": false },
+    "marker": { "size_cm": 18, "height_cm": 60, "color_rgb": [0.60, 0.90, 0.60], "double_sided": true },
+    "wall_offset_cm": 40
+  },
+  "lights": {
+    "_comment": "One PointLight per room, MOVABLE so the greybox lights without a lighting build (iGPU: shadows off, counts small). Intensity is candela; these are greybox-visibility values, not Gate 3 mood. Attenuation = max(min_attenuation_radius_cm, attenuation_diagonal_factor * room diagonal).",
+    "drop_below_ceiling_cm": 30,
+    "min_attenuation_radius_cm": 800,
+    "attenuation_diagonal_factor": 0.9,
+    "cast_shadows": false,
+    "mobility": "MOVABLE",
+    "default": { "intensity_cd": 80.0, "temperature_k": 4000 },
+    "by_role": {
+      "start": { "intensity_cd": 40.0, "temperature_k": 3200 },
+      "transit": { "intensity_cd": 90.0, "temperature_k": 4200 },
+      "optional": { "intensity_cd": 60.0, "temperature_k": 4000 },
+      "dead_end": { "intensity_cd": 45.0, "temperature_k": 3600 },
+      "goal": { "intensity_cd": 120.0, "temperature_k": 3000 },
+      "sealed": { "intensity_cd": 25.0, "temperature_k": 4500 }
+    },
+    "duct": { "intensity_cd": 8.0, "temperature_k": 5000, "attenuation_radius_cm": 450, "drop_below_ceiling_cm": 8 }
+  },
+  "reference_figure": {
+    "_comment": "Body box = metrics width x depth x (height - head_cm); head cube of head_cm on top; total = metrics.reference_figure_height_cm exactly.",
+    "head_cm": 20,
+    "collision": true
+  },
+  "player_start": {
+    "_comment": "PlayerStart Z = movement.player.stand_height_cm / 2 + spawn_clearance_cm so the capsule bottom sits just above the floor.",
+    "spawn_clearance_cm": 5
+  },
+  "checkpoint_marker": { "size_cm": 80, "height_cm": 10 },
+  "encounter_marker": {
+    "_comment": "Translucent flat boxes, visible, no collision. lift_cm keeps them above the floor to avoid z-fighting. lane_width_cm is the drawn width of retreat/strafe lanes.",
+    "height_cm": 2,
+    "lift_cm": 1,
+    "lane_width_cm": 100
+  },
+  "dwell_marker": { "height_cm": 2, "lift_cm": 1 },
+  "collapse": {
+    "_comment": "Floor-to-ceiling rubble wedge: 'tiers' stacked boxes, each tier's depth = blocker.depth_cm * depth_fractions[tier], flush against the far wall. Bottom tier is deepest so the wedge leans away from the player. label_offset_cm = label distance in front of the wedge.",
+    "tiers": 3,
+    "depth_fractions": [1.0, 0.66, 0.33],
+    "label_offset_cm": 150
+  },
+  "window": {
+    "_comment": "Glass slab from metrics window_sill_height_cm to window_head_height_cm, split into panes by a mullion every mullion_spacing_cm.",
+    "mullion_spacing_cm": 150,
+    "mullion_width_cm": 10
+  },
+  "boundary": {
+    "_comment": "Invisible collision-only shell around the plan bounds: four walls + lid + bottom, plus a safety slab whose top is safety_slab_below_floor_cm under Z=0. Wall height from metrics.architecture.boundary_wall_height_cm.",
+    "padding_cm": 200,
+    "thickness_cm": 50,
+    "bottom_z_cm": -300,
+    "safety_slab_below_floor_cm": 50
+  },
+  "feel_gym": {
+    "_comment": "Layout of /Game/Maps/L_FeelGym. Stations are laid out left to right along plan x in rows; row k sits at y = row_y_cm[k]. The player starts at start_y_cm facing +y (Unreal +X). Element dimensions come from metrics.feel_gym; only spacing/layout lives here.",
+    "slab_w_cm": 6000,
+    "slab_d_cm": 4000,
+    "slab_floor_tint": "floor_concrete",
+    "start_y_cm": 300,
+    "station_rows": [["doorways", "corridors", "ceilings"], ["jump_ledges", "step_ramp", "crawl_tunnels"]],
+    "row_y_cm": [800, 2600],
+    "station_gap_cm": 220,
+    "element_gap_cm": 140,
+    "figure_gap_cm": 40,
+    "doorway_wall_width_cm": 400,
+    "doorway_wall_height_cm": 310,
+    "doorway_spacing_cm": 400,
+    "ledge_w_cm": 200,
+    "ledge_d_cm": 200,
+    "step_w_cm": 200,
+    "step_d_cm": 120,
+    "title_label_height_cm": 400,
+    "title_label_size_cm": 50,
+    "sun": { "intensity_lux": 5.0, "pitch_deg": -50, "yaw_deg": 35, "temperature_k": 6000, "cast_shadows": true },
+    "sky_light": { "intensity": 1.0 },
+    "enclosed_light": { "intensity_cd": 60.0, "temperature_k": 4200, "attenuation_radius_cm": 900 },
+    "tunnel_light": { "intensity_cd": 8.0, "temperature_k": 5000, "attenuation_radius_cm": 400 }
+  }
+}

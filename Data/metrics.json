@@ -1,0 +1,54 @@
+{
+  "_comment": "HELLFALL architecture metrics standard (Docs/METRICS.md is the prose twin). Units: cm. Player-body values live in Data/movement.json; this file holds everything the level generator builds to. Tools/ue/build_greybox.py and build_feel_gym.py read this file; nothing here is duplicated in a script.",
+  "version": 1,
+  "status": "DRAFT — frozen only after Gate 1 approval",
+  "architecture": {
+    "door_width_cm": 120,
+    "door_height_cm": 220,
+    "corridor_width_cm": 280,
+    "office_ceiling_height_cm": 310,
+    "wet_room_ceiling_height_cm": 280,
+    "min_room_footprint_cm": 400,
+    "wall_thickness_cm": 20,
+    "floor_slab_thickness_cm": 30,
+    "ceiling_slab_thickness_cm": 20,
+    "duct_interior_width_cm": 100,
+    "duct_interior_height_cm": 95,
+    "duct_wall_thickness_cm": 6,
+    "duct_length_cm": 500,
+    "window_sill_height_cm": 40,
+    "window_head_height_cm": 300,
+    "reference_figure_height_cm": 180,
+    "reference_figure_width_cm": 50,
+    "reference_figure_depth_cm": 30,
+    "label_height_above_floor_cm": 250,
+    "label_world_size_cm": 40,
+    "boundary_wall_height_cm": 600
+  },
+  "derived_rules": {
+    "_comment": "Checked by Tools/validate_floorplan.mjs. capsule_diameter = 2 * movement.player.capsule_radius_cm (72).",
+    "door_clear_width_min_cm": "capsule_diameter + 40 = 112",
+    "corridor_width_min_cm": "3 * capsule_diameter = 216",
+    "duct_passable_stance": "crawl only: duct_interior_height (95) must exceed crawl_height (64) and be below crouch_height (116)"
+  },
+  "encounter_space": {
+    "_comment": "Gate 2 acceptance (REQ-G2-004) but the rooms must be sized for it in Gate 1 so the greybox is never reopened.",
+    "retreat_path_min_cm": 600,
+    "strafe_each_side_min_cm": 200
+  },
+  "feel_gym": {
+    "door_widths_cm": [90, 110, 120, 140],
+    "door_height_cm": 220,
+    "corridor_widths_cm": [200, 260, 320],
+    "corridor_length_cm": 1000,
+    "ceiling_heights_cm": [270, 300, 350],
+    "ceiling_room_footprint_cm": 500,
+    "jump_ledge_heights_cm": [40, 60, 80, 100, 120],
+    "step_ramp_min_cm": 20,
+    "step_ramp_max_cm": 60,
+    "step_ramp_steps": 9,
+    "crawl_tunnel_heights_cm": [90, 100, 110],
+    "crawl_tunnel_width_cm": 100,
+    "crawl_tunnel_length_cm": 500
+  }
+}

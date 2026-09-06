@@ -1,0 +1,48 @@
+# HELLFALL - standard Unreal Engine ignore list (spec ground rule G-5).
+# Content/ IS tracked: the generated maps and greybox materials ride Git LFS (see .gitattributes).
+
+# Unreal build products and caches
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Packaged / staged builds go on GitHub Releases, never in the repo (G-5).
+# Build/<Platform>/Resources (icons, splash) and PakBlacklist files stay tracked; the directory
+# itself must be re-included before its contents, or git never descends into it.
+Build/*
+!Build/*/
+Build/*/**
+!Build/*/Resources/
+!Build/*/Resources/**
+!Build/*/PakBlacklist*.txt
+Builds/
+Packaged/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.sln
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.sdf
+*.suo
+*.xcodeproj
+*.xcworkspace
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs and OS noise
+*.log
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Per-user editor content (never shared)
+Content/Developers/
