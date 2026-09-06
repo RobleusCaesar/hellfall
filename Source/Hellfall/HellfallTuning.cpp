@@ -320,7 +320,8 @@ bool UHellfallTuning::LoadMovementJson(const FString& Path, FHellfallMovementTun
 			BadBinds.Add(Pair.Key + TEXT("=<not a string>"));
 			continue;
 		}
-		const FKey Key(FName(*KeyName));
+		// Assignment form: the direct-initialisation form is parsed as a function declaration (C2228/C2665).
+		const FKey Key = FKey(FName(*KeyName));
 		if (!Key.IsValid())
 		{
 			// FKey::IsValid() is false for names EKeys does not know (typo, e.g. "Space" instead of "SpaceBar").
