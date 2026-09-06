@@ -16,7 +16,7 @@ Walk a new developer from an empty map to a registered, playable level using onl
 | Feel gym generator | `Tools/ue/build_feel_gym.py` | Reads `Data/metrics.json` (`feel_gym` block) and emits `/Game/Maps/L_FeelGym`. |
 | Driver | `Tools/ue/run_editor_script.ps1 -Script <name>.py` | Runs a generator headless with `UnrealEditor-Cmd.exe -run=pythonscript`. `-NoCode` runs it against a temporary code-free twin project (`HellfallNoCode.uproject`, git-ignored, deleted afterwards) so maps can be generated before the C++ module is compiled. |
 | Validators | `Tools/validate_floorplan.mjs`, `Tools/check_manifest.mjs` | Run before any generation; fail loudly on schema, adjacency or metric violations. |
-| Generated output | `Content/Maps/L_ExecutiveFloor.umap`, `Content/Maps/L_FeelGym.umap`, `Content/Greybox/Materials/M_GB_*.uasset` (24 tints) | Output only (Git LFS), never hand-edited; both maps were first generated on UE 5.8.2 on 2026-09-06 with the driver above (249 and 171 actors). Committed with the first commit after the baseline `2c27652`, then re-committed at gate tags only. |
+| Generated output | `Content/Maps/L_ExecutiveFloor.umap`, `Content/Maps/L_FeelGym.umap`, `Content/Greybox/Materials/M_GB_*.uasset` (24 tints) | Output only (Git LFS), never hand-edited; both maps were generated on UE 5.8.2 on 2026-09-06 with the driver above (249 actors / 450,385 bytes and 171 actors / 313,898 bytes), **committed in `12faf06`** (LFS 26 objects / 894 KB) and **shipped in the gate-0 package** (`Hellfall-gate-0-Win64-Development.zip`, `BUILD.md` 1.3). Re-committed at gate tags only. |
 
 ## To be completed at Gate 6 (REQ-G6-006)
 

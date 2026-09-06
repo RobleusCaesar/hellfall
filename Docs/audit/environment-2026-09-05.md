@@ -28,6 +28,8 @@ Captured by script on 2026-09-05 before any project work. This is the machine th
 
 **Correction 2026-09-06:** .NET SDK 8.0.424 was already present at audit time (the row above is wrong; nothing was installed by the agent); Blender 5.2.1 was installed 2026-09-06; Unreal Engine 5.8.2 was installed 2026-09-06 by Rob through the Launcher; Visual Studio 2022 Build Tools are still not installed (two winget attempts on 2026-09-06 were cancelled at the UAC prompt, installer exit 1602). The live state is `BUILD.md` section 1; this file stays a dated snapshot.
 
+**Update 2026-09-06 (later the same day):** Visual Studio 2022 Build Tools 17.14.37614 (`VCTools` workload, MSVC 14.44.35207, Windows SDK 10.0.26100) and the .NET Framework 4.8.1 Developer Pack (`C:\Program Files (x86)\Windows Kits\NETFXSDK\4.8.1`, required by UE's `SwarmInterface` build rules) were installed on 2026-09-06; the C++ module compiled and the gate-0 package was built the same day (`BUILD.md` 1.3).
+
 ## Consequences
 - UE 5.8 Lumen requires NVIDIA RTX 2000+, AMD RX 6000+, or Intel Arc (Epic 5.8 hardware page). A Vega 8 iGPU does not qualify. Nanite requires SM6.6 atomics and is not viable at 60 fps on this GPU. **Default lighting path for this project is therefore static/baked lighting with no Lumen, no Nanite, no Virtual Shadow Maps**, recorded as a G-7 fallback decision in BUILD.md. If Rob's real review machine is a different, discrete-GPU machine, this decision is revisited before Gate 3.
 - Unreal Engine cannot be installed unattended by the agent: the Epic Games Launcher requires an interactive Epic account sign-in. See `Docs/TOOLCHAIN-SETUP.md` for the exact steps Rob performs once.
