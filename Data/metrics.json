@@ -1,7 +1,7 @@
 {
   "_comment": "HELLFALL architecture metrics standard (Docs/METRICS.md is the prose twin). Units: cm. Player-body values live in Data/movement.json; this file holds everything the level generator builds to. Tools/ue/build_greybox.py and build_feel_gym.py read this file; nothing here is duplicated in a script.",
   "version": 1,
-  "status": "DRAFT — frozen only after Gate 1 approval",
+  "status": "FROZEN - Gate 1 approved by Rob 2026-09-07",
   "architecture": {
     "door_width_cm": 120,
     "door_height_cm": 220,

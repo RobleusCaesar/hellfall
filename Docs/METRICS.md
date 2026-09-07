@@ -1,6 +1,6 @@
 # HELLFALL Metrics Standard (REQ-G1-002)
 
-**STATUS: DRAFT - to be validated in the feel gym; FROZEN header added at Gate 1 approval.**
+**STATUS: FROZEN - Gate 1 APPROVED by Rob on 2026-09-07 (gate-1 release). Values below are the build standard for every later gate; changing one requires Rob's written sign-off (change control, Docs/BUILD-PLAN.md).
 
 Units are centimetres, cm/s, seconds and degrees (G-2: 1 Unreal Unit = 1 cm). Every value below is read from a JSON file under `Data/` at build or run time; nothing is hard-coded in C++ or in the generators. Change the JSON, rebuild, no code edit (REQ-G1-003 acceptance 3). Source keys are given as `file : path`.
 
