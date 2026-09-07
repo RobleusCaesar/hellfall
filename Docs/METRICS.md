@@ -6,6 +6,8 @@ Units are centimetres, cm/s, seconds and degrees (G-2: 1 Unreal Unit = 1 cm). Ev
 
 The values are game-standard for first-person interiors and deliberately larger than real-world dimensions, because real dimensions feel cramped through a 90-degree game camera. Where a value sits inside the spec's starting range no justification beyond the one-line rationale is needed; the two additions that are not rows of the spec table (wet-room ceiling, crouch and crawl speeds) are marked as such.
 
+**Gate-1 floor (2026-09-06).** The 37-room law-firm floor in `Data/floorplan.json` (`Docs/FLOORPLAN.md`) is built to exactly these values, nothing in this file moved for it: every door is 120 x 220; all seven `corridor_*` rooms are 280 wide; ceilings are 310 in offices and corridors, 330 in the law library (the top of the spec's 300-330 range, one room, so a tall room reads as tall) and 280 in the two restrooms; the duct is 100 x 95, 520 face to face; walls are 20 and every interior is `50k - 20` on the 50 cm module. The two lobbies on the critical path (`west_lobby` 980 x 580, `gallery_west` 480 x 980) are deliberately wider than a corridor and are therefore held to the **room** rules (>= 400 x 400, 300-330 ceiling), not the corridor rules; the validator says so with an INFO line and only treats a transit room as a corridor when it is <= 320 wide. The feel gym adds one number, `feel_gym.hall_ceiling_cm` 450, the roof of the enclosed hall (it must clear the 370 top of the tallest station plus the 60 cm light drop); the `exploration_model` block is a pacing estimate, not a metric, and is not frozen with this table.
+
 ## 1. The spec's Metrics Standard, with chosen values
 
 | # | Metric | Spec starting range | Chosen | Rationale (one line) | Source |

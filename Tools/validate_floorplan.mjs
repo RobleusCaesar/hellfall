@@ -36,12 +36,15 @@ const SPEC = { corridorMin: 250, corridorMax: 320, ceilingMin: 300, ceilingMax: 
 //              + sum over enterable non-corridor rooms of (roomSpanFactor x shorter axis + roomOverheadCm))
 //             / walk speed (movement.player.walk_speed_cms) / 60 x dawdleFactor
 // WARN outside [minMinutes, maxMinutes]; never a FAIL (it is an estimate, Rob's walk is the referee).
-const EXPLORE = { corridorPasses: 2, roomSpanFactor: 2, roomOverheadCm: 300, dawdleFactor: 1.6, minMinutes: 8, maxMinutes: 12,
+// Constants live in Data/metrics.json "exploration_model" (gate-1); the defaults below only cover an older metrics file.
+const EXPLORE_DEFAULTS = { corridorPasses: 2, roomSpanFactor: 2, roomOverheadCm: 300, lookSecondsPerRoom: 12, pacingFactor: 1.3, minMinutes: 8, maxMinutes: 12,
   minScenes: 8 };
+let EXPLORE = { ...EXPLORE_DEFAULTS };
 
 const fails = [];
 const warns = [];
 const info = [];
+function infoLine(m) { info.push(m); }
 const fail = (m) => fails.push(m);
 const warn = (m) => warns.push(m);
 
@@ -69,6 +72,17 @@ if (!planPath || planPath.startsWith('--')) {
   process.exit(2);
 }
 const metrics = readJson(argValue('--metrics', path.join(REPO, 'Data', 'metrics.json')));
+{
+  const em = metrics.exploration_model || {};
+  EXPLORE = { ...EXPLORE_DEFAULTS,
+    corridorPasses: em.corridor_passes ?? EXPLORE_DEFAULTS.corridorPasses,
+    roomSpanFactor: em.room_span_factor ?? EXPLORE_DEFAULTS.roomSpanFactor,
+    roomOverheadCm: em.room_overhead_cm ?? EXPLORE_DEFAULTS.roomOverheadCm,
+    lookSecondsPerRoom: em.look_seconds_per_room ?? EXPLORE_DEFAULTS.lookSecondsPerRoom,
+    pacingFactor: em.pacing_factor ?? EXPLORE_DEFAULTS.pacingFactor,
+    minMinutes: em.target_minutes_min ?? EXPLORE_DEFAULTS.minMinutes,
+    maxMinutes: em.target_minutes_max ?? EXPLORE_DEFAULTS.maxMinutes };
+}
 const movement = readJson(argValue('--movement', path.join(REPO, 'Data', 'movement.json')));
 let fp;
 try { fp = readJson(planPath); } catch (e) { console.error(`FAIL 1. cannot read/parse ${planPath}: ${e.message}`); process.exit(1); }
@@ -124,9 +138,16 @@ const onCorridorToReceptionLeg = (id) => {
   const i = criticalPath.indexOf(id), a = criticalPath.indexOf('corridor_main'), b = criticalPath.indexOf('reception');
   return a >= 0 && b >= 0 && i > a && i < b;
 };
+// Gate-1 refinement: a transit room on that leg that is NOT corridor-narrow (shorter axis > corridor max) is a lobby /
+// gallery by design (fight pockets, wayfinding) - it is held to the room rules instead and reported as info, so a
+// wide passage can never pass silently as a corridor nor be rejected for being a lobby.
 const isCorridor = (r) => r.id.startsWith('corridor') ||
   (!REQUIRED_NON_CORRIDOR.includes(r.id) && r.role === 'transit' && isRect(r.rect) &&
-    (onCorridorToReceptionLeg(r.id) || Math.min(r.rect.w, r.rect.h) <= SPEC.corridorMax));
+    Math.min(r.rect.w, r.rect.h) <= SPEC.corridorMax);
+for (const r of rooms) {
+  if (isRect(r.rect) && !r.id.startsWith('corridor') && r.role === 'transit' && onCorridorToReceptionLeg(r.id) && !isCorridor(r))
+    infoLine(`transit room "${r.id}" (${r.rect.w}x${r.rect.h}) on the corridor->reception leg is a lobby, not a corridor: room rules apply`);
+}
 const isWet = (r) => /restroom|bathroom/.test(r.id);
 const validRooms = rooms.filter((r) => roomById.get(r.id) === r && isRect(r.rect) && isNum(r.ceiling_cm));
 // Backdrop room: non-enterable and reached only through windows (e.g. an "exterior_city" volume behind the
@@ -552,8 +573,11 @@ for (const e of encounters) {
   const los = segmentPassable(e.spawn.x, e.spawn.y, p.x, p.y);
   if (!los.ok) warn(`encounter "${e.id}": straight line spawn -> player_approach is blocked at (${los.x.toFixed(0)}, ${los.y.toFixed(0)}) (Gate 2 checks pathing properly)`);
   if (e.id === 'demon_1') {
-    if (!isCorridor(room)) warn(`demon_1 should be in a corridor room near office_2 (is in "${room.id}")`);
-    else if (!connections.some((c) => touches(c, room.id, 'office_2'))) warn(`demon_1's room "${room.id}" is not adjacent to office_2`);
+    // Spec: "Demon #1 as a capsule at the corridor near Office #2" - the room office_2's door opens into (a corridor_*
+    // room or a transit lobby that is part of the corridor cluster) qualifies; anything else is a WARN.
+    const adjacentToOffice2 = connections.some((c) => touches(c, room.id, 'office_2'));
+    if (!adjacentToOffice2) warn(`demon_1's room "${room.id}" is not adjacent to office_2 (spec: at the corridor near Office #2)`);
+    else if (!isCorridor(room) && !(room.role === 'transit' && cluster.has(room.id))) warn(`demon_1 should be in a corridor or transit lobby near office_2 (is in "${room.id}", role ${room.role})`);
   }
   if (e.id === 'demon_2' && room.id !== 'ceo_office') fail(`demon_2 must be inside ceo_office (is in "${room.id}")`);
 }
@@ -646,9 +670,11 @@ for (const r of validRooms) {
   else if (r.enterable !== false) { roomCm += EXPLORE.roomSpanFactor * Math.min(r.rect.w, r.rect.h) + EXPLORE.roomOverheadCm; roomCount++; }
 }
 const exploreCm = corridorCm * EXPLORE.corridorPasses + roomCm;
-const exploreMin = walkSpeed > 0 ? exploreCm / walkSpeed / 60 * EXPLORE.dawdleFactor : NaN;
+const lookSec = EXPLORE.lookSecondsPerRoom * roomCount;
+const exploreMin = walkSpeed > 0 ? (exploreCm / walkSpeed + lookSec) / 60 * EXPLORE.pacingFactor : NaN;
+const exploreDetail = `${corridorCount} corridors ${(corridorCm / 100).toFixed(0)} m x${EXPLORE.corridorPasses} + ${roomCount} rooms ${(roomCm / 100).toFixed(0)} m at ${walkSpeed} cm/s + ${EXPLORE.lookSecondsPerRoom} s look-around per room, x${EXPLORE.pacingFactor} pacing`;
 if (Number.isFinite(exploreMin) && (exploreMin < EXPLORE.minMinutes || exploreMin > EXPLORE.maxMinutes))
-  warn(`exploration estimate ${exploreMin.toFixed(1)} min is outside ${EXPLORE.minMinutes}-${EXPLORE.maxMinutes} min (corridors ${(corridorCm / 100).toFixed(0)} m x${EXPLORE.corridorPasses} + ${roomCount} rooms ${(roomCm / 100).toFixed(0)} m, at ${walkSpeed} cm/s x${EXPLORE.dawdleFactor})`);
+  warn(`exploration estimate ${exploreMin.toFixed(1)} min is outside ${EXPLORE.minMinutes}-${EXPLORE.maxMinutes} min (${exploreDetail})`);
 
 const centreOf = (r) => ({ x: r.rect.x + r.rect.w / 2, y: r.rect.y + r.rect.h / 2 });
 const rectCentre = (r) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
@@ -708,6 +734,6 @@ const bounds = validRooms.reduce((acc, r) => ({
 }), { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity });
 console.log(`PASS ${rel}: ${rooms.length} rooms, ${openings.length} openings, ${ducts.length} duct(s), ${blockers.length} blockers, ${markers.length} markers, ${checkpoints.length} checkpoints, ${encounters.length} encounters, ${scenes.length} scenes; ` +
   `plan bounds incl. walls ${bounds.x0}..${bounds.x1} x ${bounds.y0}..${bounds.y1} cm; critical path ${criticalPath.join(' -> ')}; ` +
-  `exploration ~${exploreMin.toFixed(1)} min (${corridorCount} corridors ${(corridorCm / 100).toFixed(0)} m x${EXPLORE.corridorPasses} + ${roomCount} rooms ${(roomCm / 100).toFixed(0)} m, ${walkSpeed} cm/s x${EXPLORE.dawdleFactor}); ` +
+  `exploration ~${exploreMin.toFixed(1)} min (${exploreDetail}); ` +
   `critical path walk ~${(criticalCm / 100).toFixed(0)} m over ${criticalLegs} leg(s), ${junctions.length} junction(s)${junctions.length ? ` (${junctions.join(', ')})` : ''}; ${warns.length} warning(s)`);
 process.exit(0);

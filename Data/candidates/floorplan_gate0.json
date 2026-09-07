@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "units": "cm",
+  "source_drawing": "SourceAssets/reference/game_layout.jpg",
+  "notes": "Final Gate 1 plan, synthesized from candidate B (50 cm grid, straight spine, axis-centred money shot), candidate C (Demon #1 staged as a corridor fight at the passage junction, prop-free axis strip, explicit prop footprints) and candidate A (drawing-proportion reads: near-square break room with counter east / fridge SE / table centred, women's room as a band under the corridor running east to the break-room wall line, restroom doors facing, vanity arrow landing in the men's room, sketch X positions kept as notes). Plan space per Docs/FLOORPLAN-SCHEMA.md: x right on the photo, y down toward the window; rects are interior clear dimensions; shared walls are exactly 20 cm. Grid rule: every room origin on the 50 cm grid, every interior dimension 50k-20 (280, 430, 480, 580, 780, 930, 980, 1080, 1480), every coordinate on 10. Design axis x = 1240 = centreline of corridor_south, of the reception->CEO door and of the window; the axis strip x 1100-1380 stays prop-free from the corridor junction (y 1450) to the glass (y 4580), the only Gate 1 object in it being the passage's reference figure against the passage's west wall (x 1105-1155, west of the 120 cm door slot). corridor_main is one straight 280 spine (x 500-1980) continued west by corridor_blocked (collapse 200 deep at its far end); elevator_lobby is an open 480 x 480 alcove north of the junction (shut doors 200 x 220 on its north wall); the men's and women's doors face each other across the spine at x 1740; the 980 x 780 break room closes the east end. corridor_south (280 x 930) drops from the junction to reception between office_2 (west; its door is on the CORRIDOR, 4 m west of the junction) and the women's band + office_1 (east). Demon #1: emerges from office_2's door on the dead-end side while the player stands at the junction; retreat EAST toward the break room (760 clear), dodge north into the alcove or south into the passage. Demon #2: lurks in the NE lounge pocket of the CEO office behind a 430 cm full-height screen wall 300 cm inside the door wall, hidden from both jambs and the door centre with >= 75 cm margin (proof in Docs/FLOORPLAN.md) and from the whole axis strip until y 3670; the trigger is the full-width strip y 3650-3750 (150-250 cm inside the door wall), which fires before the capsule clears the wall's free end from anywhere in the strip; player approach on the axis at y 3850 (40 cm past the wall plane), retreat WEST 700, strafe 300 each side. The dead CEO lies against the east wall 20 cm south of the idle capsule (x 1900-1980, y 3980-4060), inside the same hidden wedge. The window is authored as an opening of type window between ceo_office and 'exterior' (no backdrop room: nothing is built beyond the glass in Gate 1; the Gate 2 backdrop plane goes >= 300 cm behind it). Duct convention: start = centre-line point on the INTERIOR face of the closet's south wall; length_cm = face-to-face distance including both 20 cm walls (430 -> 950 = 520). Positions Rob drew that the spec moved (Demon #1 inside Office #2, Demon #2 in the reception half, dead guard inside the break room's NW corner, vanity in the men's SE corner) are recorded as note markers; the open questions for Rob are in Docs/FLOORPLAN.md.",
+  "rooms": [
+    {
+      "id": "supply_closet",
+      "label": "Supply Closet",
+      "rect": { "x": 2550, "y": 0, "w": 430, "h": 430 },
+      "ceiling_cm": 310,
+      "floor_finish": "concrete",
+      "enterable": true,
+      "role": "start"
+    },
+    {
+      "id": "break_room",
+      "label": "Break Room / Kitchenette",
+      "rect": { "x": 2000, "y": 950, "w": 980, "h": 780 },
+      "ceiling_cm": 310,
+      "floor_finish": "tile",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "corridor_main",
+      "label": "Main Corridor",
+      "rect": { "x": 500, "y": 1450, "w": 1480, "h": 280 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "corridor_blocked",
+      "label": "Collapsed Hallway",
+      "rect": { "x": 0, "y": 1450, "w": 480, "h": 280 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "dead_end"
+    },
+    {
+      "id": "elevator_lobby",
+      "label": "Elevator Lobby",
+      "rect": { "x": 1000, "y": 950, "w": 480, "h": 480 },
+      "ceiling_cm": 310,
+      "floor_finish": "tile",
+      "enterable": true,
+      "role": "dead_end"
+    },
+    {
+      "id": "mens_restroom",
+      "label": "Men's Restroom",
+      "rect": { "x": 1500, "y": 950, "w": 480, "h": 480 },
+      "ceiling_cm": 280,
+      "floor_finish": "tile",
+      "enterable": true,
+      "role": "optional"
+    },
+    {
+      "id": "womens_restroom",
+      "label": "Women's Restroom (LOCKED)",
+      "rect": { "x": 1400, "y": 1750, "w": 580, "h": 430 },
+      "ceiling_cm": 280,
+      "floor_finish": "tile",
+      "enterable": false,
+      "role": "sealed"
+    },
+    {
+      "id": "corridor_south",
+      "label": "Reception Passage",
+      "rect": { "x": 1100, "y": 1750, "w": 280, "h": 930 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "office_2",
+      "label": "Office #2",
+      "rect": { "x": 600, "y": 1750, "w": 480, "h": 930 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "optional"
+    },
+    {
+      "id": "office_1",
+      "label": "Office #1",
+      "rect": { "x": 1400, "y": 2200, "w": 480, "h": 480 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "optional"
+    },
+    {
+      "id": "reception",
+      "label": "Reception",
+      "rect": { "x": 500, "y": 2700, "w": 1480, "h": 780 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "transit"
+    },
+    {
+      "id": "ceo_office",
+      "label": "CEO Office",
+      "rect": { "x": 500, "y": 3500, "w": 1480, "h": 1080 },
+      "ceiling_cm": 310,
+      "floor_finish": "carpet",
+      "enterable": true,
+      "role": "goal"
+    }
+  ],
+  "openings": [
+    {
+      "id": "door_break_to_corridor",
+      "type": "door",
+      "between": ["break_room", "corridor_main"],
+      "wall": "west",
+      "center_along_wall_cm": 1590,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "door_mens_to_corridor",
+      "type": "door",
+      "between": ["mens_restroom", "corridor_main"],
+      "wall": "south",
+      "center_along_wall_cm": 1740,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "locked_door_womens_to_corridor",
+      "type": "locked_door",
+      "between": ["womens_restroom", "corridor_main"],
+      "wall": "north",
+      "center_along_wall_cm": 1740,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "open_corridor_to_blocked",
+      "type": "open",
+      "between": ["corridor_main", "corridor_blocked"],
+      "wall": "west",
+      "center_along_wall_cm": 1590,
+      "width_cm": 280,
+      "height_cm": 310
+    },
+    {
+      "id": "open_elevator_to_corridor",
+      "type": "open",
+      "between": ["elevator_lobby", "corridor_main"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 480,
+      "height_cm": 310
+    },
+    {
+      "id": "open_corridor_to_passage",
+      "type": "open",
+      "between": ["corridor_main", "corridor_south"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 280,
+      "height_cm": 310
+    },
+    {
+      "id": "door_office2_to_corridor",
+      "type": "door",
+      "between": ["office_2", "corridor_main"],
+      "wall": "north",
+      "center_along_wall_cm": 840,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "door_office1_to_passage",
+      "type": "door",
+      "between": ["office_1", "corridor_south"],
+      "wall": "west",
+      "center_along_wall_cm": 2320,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "open_passage_to_reception",
+      "type": "open",
+      "between": ["corridor_south", "reception"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 280,
+      "height_cm": 310
+    },
+    {
+      "id": "door_reception_to_ceo",
+      "type": "door",
+      "between": ["reception", "ceo_office"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 120,
+      "height_cm": 220
+    },
+    {
+      "id": "window_ceo_city",
+      "type": "window",
+      "between": ["ceo_office", "exterior"],
+      "wall": "south",
+      "center_along_wall_cm": 1240,
+      "width_cm": 1480,
+      "height_cm": 260
+    }
+  ],
+  "ducts": [
+    {
+      "id": "duct_supply_to_break",
+      "from": "supply_closet",
+      "to": "break_room",
+      "axis": "y",
+      "start": { "x": 2650, "y": 430 },
+      "length_cm": 520,
+      "interior_width_cm": 100,
+      "interior_height_cm": 95,
+      "floor_offset_cm": 0
+    }
+  ],
+  "blockers": [
+    { "id": "collapse", "kind": "collapse", "room": "corridor_blocked", "depth_cm": 200 },
+    { "id": "elevator", "kind": "elevator_doors", "room": "elevator_lobby", "wall": "north", "width_cm": 200, "height_cm": 220 }
+  ],
+  "markers": [
+    { "id": "player_start", "kind": "player_start", "room": "supply_closet", "pos": { "x": 2650, "y": 150 }, "yaw_deg": 90 },
+
+    { "id": "ref_supply_closet", "kind": "reference_figure", "room": "supply_closet", "pos": { "x": 2850, "y": 80 } },
+    { "id": "ref_break_room", "kind": "reference_figure", "room": "break_room", "pos": { "x": 2100, "y": 1050 } },
+    { "id": "ref_corridor_main", "kind": "reference_figure", "room": "corridor_main", "pos": { "x": 1600, "y": 1690 } },
+    { "id": "ref_corridor_blocked", "kind": "reference_figure", "room": "corridor_blocked", "pos": { "x": 350, "y": 1500 } },
+    { "id": "ref_elevator_lobby", "kind": "reference_figure", "room": "elevator_lobby", "pos": { "x": 1050, "y": 1000 } },
+    { "id": "ref_mens_restroom", "kind": "reference_figure", "room": "mens_restroom", "pos": { "x": 1800, "y": 1200 } },
+    { "id": "ref_womens_restroom", "kind": "reference_figure", "room": "womens_restroom", "pos": { "x": 1900, "y": 1800 } },
+    { "id": "ref_corridor_south", "kind": "reference_figure", "room": "corridor_south", "pos": { "x": 1130, "y": 2620 } },
+    { "id": "ref_office_2", "kind": "reference_figure", "room": "office_2", "pos": { "x": 1020, "y": 1810 } },
+    { "id": "ref_office_1", "kind": "reference_figure", "room": "office_1", "pos": { "x": 1840, "y": 2260 } },
+    { "id": "ref_reception", "kind": "reference_figure", "room": "reception", "pos": { "x": 560, "y": 2760 } },
+    { "id": "ref_ceo_office", "kind": "reference_figure", "room": "ceo_office", "pos": { "x": 560, "y": 3560 } },
+
+    { "id": "note_racks", "kind": "note", "room": "supply_closet", "pos": { "x": 2950, "y": 210 }, "text": "Supply racks along the EAST wall: footprint x 2920-2980 (60 deep), y 0-430 (full length), ~200 tall (Gate 2)" },
+    { "id": "note_seated_man", "kind": "note", "room": "supply_closet", "pos": { "x": 2860, "y": 300 }, "text": "Seated man on the floor, back against the rack face at x 2920; the blockout must contact the rack (Gate 2)" },
+    { "id": "note_intern", "kind": "note", "room": "supply_closet", "pos": { "x": 2580, "y": 200 }, "text": "Young woman (intern) seated on the floor, back against the WEST wall x 2550, north of the duct mouth (Gate 2)" },
+    { "id": "note_mop_bucket", "kind": "note", "room": "supply_closet", "pos": { "x": 2800, "y": 400 }, "text": "Mop + bucket against the south wall east of the duct mouth, footprint x 2760-2840, y 370-430; the mouth x 2600-2700 stays clear (Gate 2)" },
+
+    { "id": "note_counter", "kind": "note", "room": "break_room", "pos": { "x": 2940, "y": 1200 }, "text": "Kitchenette counter run along the EAST wall: footprint x 2920-2980 (60 deep), y 950-1500, from the north wall down as drawn; the duct mouth lands west of it at x 2600-2700 (Gate 2)" },
+    { "id": "note_fridge", "kind": "note", "room": "break_room", "pos": { "x": 2920, "y": 1670 }, "text": "Fridge in the SE corner at the lower end of the counter run: footprint x 2900-2980, y 1650-1730 (80 x 80 x 180) (Gate 2)" },
+    { "id": "note_table", "kind": "note", "room": "break_room", "pos": { "x": 2550, "y": 1340 }, "text": "Round table D120 + 4 chairs centred slightly east at (2550,1340); one chair pushed out toward the corridor door; keep the duct-mouth -> door diagonal walkable (Gate 2)" },
+    { "id": "note_guard_drawn", "kind": "note", "room": "break_room", "pos": { "x": 2100, "y": 1000 }, "text": "The sketch's 'Dead security guard' X is HERE (break room NW corner). Built position: corridor between the break-room door and the restroom doors per REQ-G2-003 - Rob to confirm intent" },
+
+    { "id": "note_guard", "kind": "note", "room": "corridor_main", "pos": { "x": 1930, "y": 1480 }, "text": "Dead security guard slumped against the NORTH wall in the corridor's NE corner, knees drawn up, feet at the east wall just north of the break-room door: footprint x 1880-1980, y 1450-1510 (100 x 60); shotgun-sized pickup beside his head at x 1800-1880, y 1450-1480, east of the men's door (x 1680-1800). Nothing south of y 1510 at x 1800-1980: the 220 cm of floor left there is above the 216 corridor minimum, so Demon #1's east retreat lane (y 1554-1626) is never pinched (Gate 2, REQ-G2-003)" },
+    { "id": "note_west_wall_dressing", "kind": "note", "room": "corridor_main", "pos": { "x": 740, "y": 1470 }, "text": "Gate 2 dressing for the blank north wall x 500-980 opposite Office #2's door: wall-mounted floor directory, fire-hose cabinet, fallen ceiling tiles, so the dead-end leg reads as an office corridor, not a tunnel" },
+    { "id": "note_demon1_arena", "kind": "note", "room": "corridor_main", "pos": { "x": 1000, "y": 1700 }, "text": "Demon #1 arena: emerges from Office #2's door (x 780-900, dead-end side) as the player reaches the passage junction; retreat EAST toward the break room (760 clear), dodge NORTH into the elevator alcove or SOUTH into the passage. No props in the spine x 500-2000 except the guard and his shotgun against the north wall's east end (y 1450-1510)" },
+
+    { "id": "note_collapse", "kind": "note", "room": "corridor_blocked", "pos": { "x": 350, "y": 1600 }, "text": "Rubble wedge 200 deep fills the WEST end x 0-200 floor to ceiling (blocker 'collapse'); 280 cm of floor stays walkable in front so it reads as a collapse, not a flush wall. Gate 2 dressing: ceiling debris, hanging cable" },
+
+    { "id": "note_elevator", "kind": "note", "room": "elevator_lobby", "pos": { "x": 1240, "y": 1000 }, "text": "Shut elevator doors 200 x 220 flush in the NORTH wall, centred x 1240 (blocker 'elevator'); Rob drew a ~350 cm door symbol just west of the passage. Gate 2 dressing: call button, dead floor indicator" },
+
+    { "id": "note_toilets", "kind": "note", "room": "mens_restroom", "pos": { "x": 1570, "y": 1200 }, "text": "Three toilet stalls along the WEST wall (drawn as stalls): footprint x 1500-1640, y 960-1400 (Gate 2)" },
+    { "id": "note_vanity_mens", "kind": "note", "room": "mens_restroom", "pos": { "x": 1900, "y": 1380 }, "text": "Vanity: the sketch's 'Vanity' arrow lands in THIS room's SE corner; footprint x 1830-1980 (150 deep), y 1030-1430 (400 long along the east wall). The schema reading put it in the women's room - Rob to confirm which (Gate 2)" },
+
+    { "id": "note_womens_sealed", "kind": "note", "room": "womens_restroom", "pos": { "x": 1690, "y": 1960 }, "text": "Sealed (locked_door on the corridor, facing the men's door at x 1740). Interior exists for depth only. Built as the long band under the corridor running east to the break-room wall line (x 2000) as drawn. Vanity along the east wall x 1900-1980 only if Rob says it is not the men's room's (Gate 2)" },
+
+    { "id": "note_demon1_drawn", "kind": "note", "room": "office_2", "pos": { "x": 660, "y": 1810 }, "text": "The sketch's 'Demon #1' X is HERE (Office #2 NW corner). Built: demon_1 spawns in the corridor at this office's door mouth (840,1640) and the fight is staged at the passage junction - Rob to confirm intent (lurks inside, charges out)" },
+    { "id": "note_office2_door", "kind": "note", "room": "office_2", "pos": { "x": 840, "y": 1900 }, "text": "Office #2's door is on the CORRIDOR (north wall, x 780-900), 4 m west of the junction, instead of the drawn passage wall, so Demon #1 gets a straight east retreat. One-field fallback: door on the east wall onto corridor_south at y ~1950 with the spawn at the passage mouth (open question 1 in Docs/FLOORPLAN.md)" },
+    { "id": "note_office_2_desk", "kind": "note", "room": "office_2", "pos": { "x": 700, "y": 2300 }, "text": "Office desk 160 x 80 + chair against the WEST wall: footprint x 620-780, y 2200-2360; keep the door approach x 780-900 clear. Dark room = Demon #1 lair (Gate 2)" },
+
+    { "id": "note_office_1_desk", "kind": "note", "room": "office_1", "pos": { "x": 1800, "y": 2460 }, "text": "Office desk 160 x 80 + chair against the EAST wall, facing the door: footprint x 1720-1880, y 2380-2540 (Gate 2); optional side room off the passage" },
+
+    { "id": "note_axis", "kind": "note", "room": "corridor_south", "pos": { "x": 1240, "y": 2200 }, "text": "AXIS STRIP x 1100-1380 is prop-free from the corridor junction (y 1450) through the CEO door to the glass (y 4580): 31 m straight, except the Gate 1 reference figure against this passage's west wall (x 1105-1155, 25 cm west of the door slot). The lit 120 cm CEO-door slot (x 1180-1300) subtends 3.6 deg from the junction and 8.5 deg from this passage's south mouth" },
+    { "id": "note_passage_dressing", "kind": "note", "room": "corridor_south", "pos": { "x": 1120, "y": 2000 }, "text": "Gate 2 dressing for the passage's blank walls (Office #2's back on the west, the women's room on the east until Office #1's door at y 2260-2380): wall art, a planter at the women's corner, ceiling damage, so 9.3 m of hallway reads as an office corridor" },
+
+    { "id": "note_secretary_desk", "kind": "note", "room": "reception", "pos": { "x": 1660, "y": 3020 }, "text": "Secretary desk 430 x 150 EAST of the axis: footprint x 1450-1880, y 2950-3100, chair on the SOUTH side facing the passage mouth, abandoned mid-task; keep the axis strip x 1100-1380 clear (Gate 2). Rob drew it on the centreline (open question 7)" },
+    { "id": "note_demon2_drawn", "kind": "note", "room": "reception", "pos": { "x": 1000, "y": 3080 }, "text": "The sketch's 'Demon #2 (bigger)' X is HERE (reception half, ~380 cm below the passage mouth). Built: demon_2 is reserved inside ceo_office per the schema - Rob to confirm" },
+
+    { "id": "note_screen_wall", "kind": "note", "room": "ceo_office", "pos": { "x": 1760, "y": 3760 }, "text": "Screen wall x 1550-1980 at y 3800 (300 cm inside the door wall), full height: hides the lounge pocket and Demon #2's spawn from the west jamb, the centre and the east jamb of the door (3-ray proof in Docs/FLOORPLAN.md) and from the whole axis strip until y 3670 (x 1100) / 3714 (axis) / 3757 (x 1380), which is why the trigger strip starts at y 3650; its free end sits at 45 deg from the door centre, so it never covers the glass" },
+    { "id": "note_dead_ceo", "kind": "note", "room": "ceo_office", "pos": { "x": 1940, "y": 4020 }, "text": "Dead CEO slumped against the EAST wall in the lounge pocket, 20 cm south of Demon #2's idle capsule: footprint x 1900-1980, y 3980-4060 (80 x 80). Hidden from all three doorway rays (west-jamb boundary at y 4060 is x > 1883, 17 cm margin by the conservative NW-corner test; the pocket is exposed for x < 1994 at y 4150, so the body cannot go deeper south), clear of the spawn -> approach line and of the couch set; discovered with Demon #2 (Gate 2). Rob's sketch has the X west of the CEO desk - open question 8" },
+    { "id": "note_couch_set", "kind": "note", "room": "ceo_office", "pos": { "x": 1780, "y": 4400 }, "text": "Couch set (two couches perpendicular + coffee table) in the lounge SE corner: footprint x 1600-1950, y 4250-4550; inside the doorway -> glass cone but below eye line (a 90 cm couch back at 760 cm hides only the bottom 17 cm of glass above the 40 cm sill across the east third, from the door centre), clear of Demon #2's spawn and of the dead CEO (Gate 2)" },
+    { "id": "note_ceo_desk", "kind": "note", "room": "ceo_office", "pos": { "x": 710, "y": 4400 }, "text": "CEO desk 380 x 200 (reception desk asset reused) WEST of the axis: footprint x 520-900, y 4300-4500, chair on the SOUTH (window) side x 630-790, y 4500-4570 so the CEO's back is to the window as drawn; clear of the dwell rect (x 940-1540) and of Demon #2's lanes (Gate 2)" },
+    { "id": "note_window", "kind": "note", "room": "ceo_office", "pos": { "x": 1240, "y": 4540 }, "text": "Money-shot window: full width 1480 (x 500-1980), sill 40, head 300 from metrics; burning-city placeholder plane >= 300 cm beyond the glass (Gate 2, REQ-G2-005)" }
+  ],
+  "checkpoints": [
+    { "id": "cp_start", "room": "supply_closet", "pos": { "x": 2650, "y": 150 }, "yaw_deg": 90 },
+    { "id": "cp_break_room", "room": "break_room", "pos": { "x": 2300, "y": 1590 }, "yaw_deg": 180 },
+    { "id": "cp_corridor_post_pickup", "room": "corridor_main", "pos": { "x": 1600, "y": 1500 }, "yaw_deg": 180 },
+    { "id": "cp_ceo_entry", "room": "ceo_office", "pos": { "x": 1100, "y": 3600 }, "yaw_deg": 90 }
+  ],
+  "encounters": [
+    {
+      "id": "demon_1",
+      "room": "corridor_main",
+      "spawn": { "x": 840, "y": 1640 },
+      "trigger_rect": { "x": 1100, "y": 1450, "w": 280, "h": 280 },
+      "player_approach": { "x": 1240, "y": 1590 },
+      "retreat_dir": "east",
+      "retreat_clear_cm": 700,
+      "strafe_clear_each_side_cm": 400,
+      "capsule_radius_cm": 45,
+      "capsule_height_cm": 220
+    },
+    {
+      "id": "demon_2",
+      "room": "ceo_office",
+      "spawn": { "x": 1900, "y": 3900 },
+      "trigger_rect": { "x": 500, "y": 3650, "w": 1480, "h": 100 },
+      "player_approach": { "x": 1240, "y": 3850 },
+      "retreat_dir": "west",
+      "retreat_clear_cm": 700,
+      "strafe_clear_each_side_cm": 300,
+      "capsule_radius_cm": 60,
+      "capsule_height_cm": 280
+    }
+  ],
+  "money_shot": {
+    "room": "ceo_office",
+    "window_wall": "south",
+    "entry_opening_id": "door_reception_to_ceo",
+    "dividing_wall": { "along": "x", "at_y": 3800, "from_x": 1550, "to_x": 1980, "height_cm": 310 },
+    "dwell_rect": { "x": 940, "y": 4430, "w": 600, "h": 150 }
+  },
+  "critical_path": ["supply_closet", "break_room", "corridor_main", "corridor_south", "reception", "ceo_office"]
+}

@@ -680,17 +680,42 @@ def _point_light(name: str, pos: Tuple[float, float, float], spec: Dict[str, Any
     )
 
 
-def _room_light(room: _Room, style: Dict[str, Any], folder: str) -> Light:
-    """One fill light per room at the room centre, hung drop_below_ceiling_cm under the ceiling (60: further from
-    the slab shrinks the ceiling hot spot); radius = max(min_attenuation_radius_cm, attenuation_diagonal_factor *
-    room diagonal) with the factor at 1.25 so the whole room sits inside the radius."""
+def _room_lights(room: _Room, style: Dict[str, Any], folder: str) -> List[Light]:
+    """Even fill lights for one room, hung drop_below_ceiling_cm under the ceiling (60: further from the slab shrinks
+    the ceiling hot spot).
+
+    Packaged-run finding 2026-09-06 (gate-1 sweep): ONE light per room with radius = 1.25 x room diagonal floods
+    the whole floor once rooms get long - a 44.8 m corridor got a 56 m radius fill light and every frame blew out
+    to white. So: the radius is clamped to lights.max_attenuation_radius_cm, and a room longer than
+    lights.light_spacing_cm along either axis gets a grid of lights at most that far apart (n = ceil(axis / spacing)
+    per axis, evenly spread), each covering its own cell with a little overlap. Names: Light_<room> for a single
+    light, Light_<room>_NN otherwise (row-major), so the manifest stays stable and readable.
+    """
     ls = style["lights"]
     spec = dict(ls["default"])
     spec.update(ls.get("by_role", {}).get(room.role, {}))
-    diag = math.hypot(room.w, room.h)
-    radius = max(float(ls["min_attenuation_radius_cm"]), float(ls["attenuation_diagonal_factor"]) * diag)
-    return _point_light("Light_%s" % room.id, (room.cx, room.cy, room.ceiling - float(ls["drop_below_ceiling_cm"])),
-                        spec, "lights.default/by_role.%s" % room.role, style, radius, folder, room.id)
+    spacing = float(ls["light_spacing_cm"])
+    nx = max(1, int(math.ceil(room.w / spacing)))
+    ny = max(1, int(math.ceil(room.h / spacing)))
+    cell_w, cell_h = room.w / nx, room.h / ny
+    # Radius: cover the cell diagonal with margin, but never below the minimum nor above the cap.
+    radius = float(ls["attenuation_diagonal_factor"]) * math.hypot(cell_w, cell_h)
+    radius = max(float(ls["min_attenuation_radius_cm"]), min(float(ls["max_attenuation_radius_cm"]), radius))
+    z = room.ceiling - float(ls["drop_below_ceiling_cm"])
+    out: List[Light] = []
+    for j in range(ny):
+        for i in range(nx):
+            cx = room.x + cell_w * (i + 0.5)
+            cy = room.y + cell_h * (j + 0.5)
+            name = "Light_%s" % room.id if nx * ny == 1 else "Light_%s_%02d" % (room.id, j * nx + i + 1)
+            out.append(_point_light(name, (r3(cx), r3(cy), z), spec, "lights.default/by_role.%s" % room.role, style,
+                                    radius, folder, room.id))
+    return out
+
+
+def _room_light(room: _Room, style: Dict[str, Any], folder: str) -> Light:
+    """Backward-compatible single light (the first of _room_lights); kept for callers that expect one Light."""
+    return _room_lights(room, style, folder)[0]
 
 
 def _room_viewer_points(fp: Dict[str, Any], rooms: Dict[str, _Room], footprints: List[_Footprint],
@@ -701,6 +726,7 @@ def _room_viewer_points(fp: Dict[str, Any], rooms: Dict[str, _Room], footprints:
                  (b) the centre of the opening (door / open / duct mouth) to the PREVIOUS room on critical_path;
                  (c) the centre of any door / open to a critical-path room, corridor rooms (corridor_*) first;
                  (d) the duct mouth on this room's own wall;
+                 (c') the centre of any door / open to any neighbouring room (corridor_*, then transit rooms first);
                  (e) none -> (None, fallback): the labels face -plan.y (yaw 270).
     Ties break on (mouth on this room's wall first, opening id) so the result is deterministic.
     """
@@ -752,6 +778,15 @@ def _room_viewer_points(fp: Dict[str, Any], rooms: Dict[str, _Room], footprints:
         if cands:
             f = cands[0][0]
             result[rid] = ((f.cx, f.cy), "duct_mouth:%s" % f.opening_id)
+            continue
+        # (c') gate-1 floors hang rooms off spurs that are not on the critical path: face the door / open to ANY
+        # neighbouring room, corridor_* and transit rooms first, so the label still reads from the way in.
+        cands = connections(rid, ("door", "open"))
+        if cands:
+            cands.sort(key=lambda c: (0 if c[1].startswith("corridor_") else (1 if c[1] in rooms and rooms[c[1]].role == "transit" else 2),
+                                      0 if c[0].room_a == rid else 1, c[0].opening_id))
+            f = cands[0][0]
+            result[rid] = ((f.cx, f.cy), "neighbour:%s" % f.opening_id)
             continue
         result[rid] = (None, "fallback:-plan.y")
         if rooms[rid].enterable:
@@ -807,7 +842,7 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                 floor_tint, True, True, F_FLOORS, rid))
         actors.append(_rect_box("Ceiling_%s" % rid, "ceiling", r.x, r.x + r.w, r.y, r.y + r.h, r.ceiling,
                                 r.ceiling + ceil_slab, _style_tint(style, "ceiling"), True, True, F_CEILINGS, rid))
-        actors.append(_room_light(r, style, F_LIGHTS))
+        actors.extend(_room_lights(r, style, F_LIGHTS))
         # Room labels are emitted after the openings and ducts exist: each one faces the room's entry point.
 
     # ---- openings -> footprints ---------------------------------------------------------

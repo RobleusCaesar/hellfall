@@ -3,35 +3,259 @@
   "version": 2,
   "tints": {
     "_comment": "Each tint becomes ONE material asset /Game/Greybox/Materials/M_GB_<key>. 'opacity' < 1 makes the material translucent (markers and glass only). 'surface_class' (floor | ceiling | wall | duct) picks the world-aligned texture recipe from surface_texture.classes; tints without it stay flat (markers, glass, figures, feature slabs). Materials are REBUILT from this table on every editor run (all expressions deleted, graph re-created), so a tint change here always reaches the map.",
-    "wall": { "rgb": [0.85, 0.84, 0.82], "roughness": 0.9, "surface_class": "wall" },
-    "wall_sealed": { "rgb": [0.74, 0.72, 0.72], "roughness": 0.9, "surface_class": "wall" },
-    "wall_goal": { "rgb": [0.86, 0.82, 0.76], "roughness": 0.9, "surface_class": "wall" },
-    "ceiling": { "rgb": [0.72, 0.72, 0.71], "roughness": 0.9, "surface_class": "ceiling" },
-    "floor_carpet": { "rgb": [0.52, 0.5, 0.47], "roughness": 1, "surface_class": "floor" },
-    "floor_tile": { "rgb": [0.6, 0.6, 0.58], "roughness": 0.5, "surface_class": "floor" },
-    "floor_concrete": { "rgb": [0.5, 0.49, 0.47], "roughness": 0.95, "surface_class": "floor" },
-    "floor_metal": { "rgb": [0.5, 0.52, 0.55], "roughness": 0.4, "surface_class": "floor" },
-    "threshold": { "rgb": [0.45, 0.44, 0.42], "roughness": 0.9, "surface_class": "floor" },
-    "duct_metal": { "rgb": [0.5, 0.52, 0.56], "roughness": 0.35, "surface_class": "duct" },
-    "glass": { "rgb": [0.55, 0.75, 0.9], "roughness": 0.1, "opacity": 0.35 },
-    "mullion": { "rgb": [0.2, 0.2, 0.22], "roughness": 0.6 },
-    "locked_door": { "rgb": [0.45, 0.3, 0.2], "roughness": 0.7 },
-    "elevator": { "rgb": [0.35, 0.36, 0.4], "roughness": 0.3 },
-    "collapse": { "rgb": [0.36, 0.3, 0.26], "roughness": 1 },
-    "divider": { "rgb": [0.82, 0.79, 0.75], "roughness": 0.9, "surface_class": "wall" },
-    "figure": { "rgb": [0.95, 0.55, 0.15], "roughness": 0.8 },
-    "figure_head": { "rgb": [0.98, 0.7, 0.35], "roughness": 0.8 },
-    "checkpoint": { "rgb": [0.2, 0.8, 0.3], "roughness": 0.8 },
-    "encounter_trigger": { "rgb": [0.9, 0.2, 0.2], "roughness": 0.8, "opacity": 0.3 },
-    "encounter_lane": { "rgb": [0.95, 0.8, 0.2], "roughness": 0.8, "opacity": 0.3 },
-    "encounter_spawn": { "rgb": [0.6, 0.1, 0.6], "roughness": 0.8, "opacity": 0.45 },
-    "dwell": { "rgb": [0.2, 0.6, 0.95], "roughness": 0.8, "opacity": 0.3 },
-    "scene_monster": { "rgb": [0.9, 0.25, 0.2], "roughness": 0.8, "opacity": 0.28 },
-    "scene_ambush": { "rgb": [0.95, 0.55, 0.15], "roughness": 0.8, "opacity": 0.28 },
-    "scene_scene": { "rgb": [0.6, 0.3, 0.8], "roughness": 0.8, "opacity": 0.28 },
-    "scene_pickup": { "rgb": [0.3, 0.85, 0.35], "roughness": 0.8, "opacity": 0.28 },
-    "scene_reveal": { "rgb": [0.25, 0.55, 0.95], "roughness": 0.8, "opacity": 0.28 },
-    "boundary": { "rgb": [1, 0, 1], "roughness": 1 }
+    "wall": {
+      "rgb": [
+        0.85,
+        0.84,
+        0.82
+      ],
+      "roughness": 0.9,
+      "surface_class": "wall"
+    },
+    "wall_sealed": {
+      "rgb": [
+        0.74,
+        0.72,
+        0.72
+      ],
+      "roughness": 0.9,
+      "surface_class": "wall"
+    },
+    "wall_goal": {
+      "rgb": [
+        0.86,
+        0.82,
+        0.76
+      ],
+      "roughness": 0.9,
+      "surface_class": "wall"
+    },
+    "ceiling": {
+      "rgb": [
+        0.72,
+        0.72,
+        0.71
+      ],
+      "roughness": 0.9,
+      "surface_class": "ceiling"
+    },
+    "floor_carpet": {
+      "rgb": [
+        0.52,
+        0.5,
+        0.47
+      ],
+      "roughness": 1,
+      "surface_class": "floor"
+    },
+    "floor_tile": {
+      "rgb": [
+        0.6,
+        0.6,
+        0.58
+      ],
+      "roughness": 0.5,
+      "surface_class": "floor"
+    },
+    "floor_concrete": {
+      "rgb": [
+        0.5,
+        0.49,
+        0.47
+      ],
+      "roughness": 0.95,
+      "surface_class": "floor"
+    },
+    "floor_metal": {
+      "rgb": [
+        0.5,
+        0.52,
+        0.55
+      ],
+      "roughness": 0.4,
+      "surface_class": "floor"
+    },
+    "threshold": {
+      "rgb": [
+        0.45,
+        0.44,
+        0.42
+      ],
+      "roughness": 0.9,
+      "surface_class": "floor"
+    },
+    "duct_metal": {
+      "rgb": [
+        0.5,
+        0.52,
+        0.56
+      ],
+      "roughness": 0.35,
+      "surface_class": "duct"
+    },
+    "glass": {
+      "rgb": [
+        0.55,
+        0.75,
+        0.9
+      ],
+      "roughness": 0.1,
+      "opacity": 0.35
+    },
+    "mullion": {
+      "rgb": [
+        0.2,
+        0.2,
+        0.22
+      ],
+      "roughness": 0.6
+    },
+    "locked_door": {
+      "rgb": [
+        0.45,
+        0.3,
+        0.2
+      ],
+      "roughness": 0.7
+    },
+    "elevator": {
+      "rgb": [
+        0.35,
+        0.36,
+        0.4
+      ],
+      "roughness": 0.3
+    },
+    "collapse": {
+      "rgb": [
+        0.36,
+        0.3,
+        0.26
+      ],
+      "roughness": 1
+    },
+    "divider": {
+      "rgb": [
+        0.82,
+        0.79,
+        0.75
+      ],
+      "roughness": 0.9,
+      "surface_class": "wall"
+    },
+    "figure": {
+      "rgb": [
+        0.95,
+        0.55,
+        0.15
+      ],
+      "roughness": 0.8
+    },
+    "figure_head": {
+      "rgb": [
+        0.98,
+        0.7,
+        0.35
+      ],
+      "roughness": 0.8
+    },
+    "checkpoint": {
+      "rgb": [
+        0.2,
+        0.8,
+        0.3
+      ],
+      "roughness": 0.8
+    },
+    "encounter_trigger": {
+      "rgb": [
+        0.9,
+        0.2,
+        0.2
+      ],
+      "roughness": 0.8,
+      "opacity": 0.3
+    },
+    "encounter_lane": {
+      "rgb": [
+        0.95,
+        0.8,
+        0.2
+      ],
+      "roughness": 0.8,
+      "opacity": 0.3
+    },
+    "encounter_spawn": {
+      "rgb": [
+        0.6,
+        0.1,
+        0.6
+      ],
+      "roughness": 0.8,
+      "opacity": 0.45
+    },
+    "dwell": {
+      "rgb": [
+        0.2,
+        0.6,
+        0.95
+      ],
+      "roughness": 0.8,
+      "opacity": 0.3
+    },
+    "scene_monster": {
+      "rgb": [
+        0.9,
+        0.25,
+        0.2
+      ],
+      "roughness": 0.8,
+      "opacity": 0.28
+    },
+    "scene_ambush": {
+      "rgb": [
+        0.95,
+        0.55,
+        0.15
+      ],
+      "roughness": 0.8,
+      "opacity": 0.28
+    },
+    "scene_scene": {
+      "rgb": [
+        0.6,
+        0.3,
+        0.8
+      ],
+      "roughness": 0.8,
+      "opacity": 0.28
+    },
+    "scene_pickup": {
+      "rgb": [
+        0.3,
+        0.85,
+        0.35
+      ],
+      "roughness": 0.8,
+      "opacity": 0.28
+    },
+    "scene_reveal": {
+      "rgb": [
+        0.25,
+        0.55,
+        0.95
+      ],
+      "roughness": 0.8,
+      "opacity": 0.28
+    },
+    "boundary": {
+      "rgb": [
+        1,
+        0,
+        1
+      ],
+      "roughness": 1
+    }
   },
   "surface_texture": {
     "_comment": "Rob (gate-0 review): 'a tiny amount of texture to floor, ceiling and walls so it is easier to see the difference'. Every tint with a surface_class gets base colour = lerp(tint, grid texture, strength) where the grid is sampled WORLD-ALIGNED (engine function WorldAlignedTexture, so scaled cubes keep one texel size; tile_cm = cm per texture repeat). Assets verified on disk 2026-09-06 under C:/Program Files/Epic Games/UE_5.8/Engine/Content/: Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture.uasset and EngineMaterials/T_Default_Material_Grid_M.uasset (the default-material grey grid, sRGB). Pin names are the function's input/output names (TextureObject, TextureSize, XYZ Texture). If either asset fails to load in the editor the emitter logs a warning and builds the flat material, so generation never fails. enabled=false keeps every material flat. strength 0-1; 0.12 = tiny.",
@@ -43,10 +267,26 @@
     "texture_asset": "/Engine/EngineMaterials/T_Default_Material_Grid_M",
     "default_strength": 0.12,
     "classes": {
-      "floor": { "tile_cm": 50, "strength": 0.14, "_comment": "carpet tile 50 cm" },
-      "ceiling": { "tile_cm": 60, "strength": 0.1, "_comment": "ceiling tile 60 cm" },
-      "wall": { "tile_cm": 100, "strength": 0.06, "_comment": "faint plaster / panel grid 100 cm" },
-      "duct": { "tile_cm": 25, "strength": 0.1, "_comment": "sheet-metal panels 25 cm" }
+      "floor": {
+        "tile_cm": 50,
+        "strength": 0.14,
+        "_comment": "carpet tile 50 cm"
+      },
+      "ceiling": {
+        "tile_cm": 60,
+        "strength": 0.1,
+        "_comment": "ceiling tile 60 cm"
+      },
+      "wall": {
+        "tile_cm": 100,
+        "strength": 0.06,
+        "_comment": "faint plaster / panel grid 100 cm"
+      },
+      "duct": {
+        "tile_cm": 25,
+        "strength": 0.1,
+        "_comment": "sheet-metal panels 25 cm"
+      }
     }
   },
   "wall_tint_by_role": {
@@ -58,45 +298,79 @@
     "_comment": "Room label size and height come from metrics.architecture.label_world_size_cm / label_height_above_floor_cm (the room label is clamped one text height below the room light: with lights.drop_below_ceiling_cm 60 a 310 cm room reads at 210, a 280 cm restroom at 180). Colors are linear RGB 0-1. Every label is ONE single-sided TextRender turned toward where the player reads it from (VERIFIED 5.8.2 packaged-run frames 2026-09-06: a TextRender reads from its local +X side and is mirrored from behind; the old double_sided 180-degree twin overlapped it into garbled glyphs, so double_sided is retired - do not set it). Room / note / marker labels face the room's entry point (player start; else the opening from the previous critical-path room, duct mouth included; else a door or open to a critical-path room, corridors first; else the duct mouth; else -plan.y), snapped to the nearest 90 deg only within 10 deg. Wall labels (LOCKED / ELEVATOR / DUCT / WINDOW WALL / COLLAPSED) face into the room; feel-gym labels face the start (-y). wall_offset_cm = distance from a wall face for the wall labels; LOCKED is placed on every enterable side of the door. note.wrap_chars = word-wrap width for NOTE labels (TextRender has no wrapping). notes_enabled=false skips EVERY note-style label (the Gate 2 intent notes and the scene description notes) - the coloured scene markers and their KIND: id labels stay.",
     "notes_enabled": true,
     "room": {
-      "color_rgb": [1, 1, 1]
+      "color_rgb": [
+        1,
+        1,
+        1
+      ]
     },
     "element": {
       "size_cm": 25,
       "height_cm": 200,
-      "color_rgb": [1, 0.85, 0.4]
+      "color_rgb": [
+        1,
+        0.85,
+        0.4
+      ]
     },
     "note": {
       "size_cm": 11,
       "height_cm": 140,
-      "color_rgb": [0.38, 0.38, 0.38],
+      "color_rgb": [
+        0.38,
+        0.38,
+        0.38
+      ],
       "wrap_chars": 48
     },
     "marker": {
       "size_cm": 18,
       "height_cm": 60,
-      "color_rgb": [0.6, 0.9, 0.6]
+      "color_rgb": [
+        0.6,
+        0.9,
+        0.6
+      ]
     },
     "wall_offset_cm": 40
   },
   "lights": {
-    "_comment": "One PointLight per room as an EVEN FILL light, MOVABLE so the greybox lights without a lighting build (iGPU: shadows off, counts small). Packaged-run finding 2026-09-06: ceiling-hung inverse-square candela lights blew the ceiling around each fixture out to white while the walls read flat tan, and auto-exposure swallowed a 12.5x candela change - so every point light (rooms, duct, feel-gym hall and stations) has inverse-square falloff OFF, a unitless intensity_unitless (ELightUnits::Unitless; intensity_cd is retired and the generator refuses it), falloff_exponent (2.0; per-spec override allowed) and hangs drop_below_ceiling_cm under the ceiling (60: further from the slab shrinks the hot spot). Attenuation = max(min_attenuation_radius_cm, attenuation_diagonal_factor * room diagonal); the factor 1.25 puts the whole room inside the radius. Greybox-visibility values so Rob can judge space, not Gate 3 mood; temperature_k stays per role.",
+    "_comment": "One PointLight per room as an EVEN FILL light, MOVABLE so the greybox lights without a lighting build (iGPU: shadows off, counts small). Packaged-run finding 2026-09-06: ceiling-hung inverse-square candela lights blew the ceiling around each fixture out to white while the walls read flat tan, and auto-exposure swallowed a 12.5x candela change - so every point light (rooms, duct, feel-gym hall and stations) has inverse-square falloff OFF, a unitless intensity_unitless (ELightUnits::Unitless; intensity_cd is retired and the generator refuses it), falloff_exponent (2.0; per-spec override allowed) and hangs drop_below_ceiling_cm under the ceiling (60: further from the slab shrinks the hot spot). Lights per room: a grid at most light_spacing_cm apart along each axis (ceil(axis/spacing) per axis); radius = clamp(attenuation_diagonal_factor x cell diagonal, min_attenuation_radius_cm, max_attenuation_radius_cm). Gate-1 sweep finding 2026-09-06: one light per room with radius 1.25 x room diagonal gave a 44.8 m corridor a 56 m light and blew the whole floor out to white - hence the spacing and the cap. Greybox-visibility values so Rob can judge space, not Gate 3 mood; temperature_k stays per role. Second gate-1 sweep: overlap of 2-3 grid lights blew corridors out under the fixed exposure, so intensities were cut to ~65% and the radius clamped to 500-800 (= spacing), and auto exposure was re-enabled in Config/DefaultEngine.ini.",
     "drop_below_ceiling_cm": 60,
-    "min_attenuation_radius_cm": 800,
-    "attenuation_diagonal_factor": 1.25,
+    "min_attenuation_radius_cm": 500,
+    "attenuation_diagonal_factor": 1,
     "falloff_exponent": 2,
     "cast_shadows": false,
     "mobility": "MOVABLE",
     "default": {
-      "intensity_unitless": 6,
+      "intensity_unitless": 4,
       "temperature_k": 4000
     },
     "by_role": {
-      "start": { "intensity_unitless": 5, "temperature_k": 3200 },
-      "transit": { "intensity_unitless": 6, "temperature_k": 4200 },
-      "optional": { "intensity_unitless": 5, "temperature_k": 4000 },
-      "dead_end": { "intensity_unitless": 4, "temperature_k": 3600 },
-      "goal": { "intensity_unitless": 7, "temperature_k": 3000 },
-      "sealed": { "intensity_unitless": 3, "temperature_k": 4500 }
+      "start": {
+        "intensity_unitless": 3.3,
+        "temperature_k": 3200
+      },
+      "transit": {
+        "intensity_unitless": 3.9,
+        "temperature_k": 4200
+      },
+      "optional": {
+        "intensity_unitless": 3.3,
+        "temperature_k": 4000
+      },
+      "dead_end": {
+        "intensity_unitless": 2.6,
+        "temperature_k": 3600
+      },
+      "goal": {
+        "intensity_unitless": 4.6,
+        "temperature_k": 3000
+      },
+      "sealed": {
+        "intensity_unitless": 2,
+        "temperature_k": 4500
+      }
     },
     "duct": {
       "intensity_unitless": 3,
@@ -104,7 +378,9 @@
       "temperature_k": 5000,
       "attenuation_radius_cm": 450,
       "drop_below_ceiling_cm": 8
-    }
+    },
+    "max_attenuation_radius_cm": 800,
+    "light_spacing_cm": 800
   },
   "reference_figure": {
     "_comment": "Body box = metrics width x depth x (height - head_cm); head cube of head_cm on top; total = metrics.reference_figure_height_cm exactly.",
@@ -147,7 +423,11 @@
   "collapse": {
     "_comment": "Floor-to-ceiling rubble wedge: 'tiers' stacked boxes, each tier's depth = blocker.depth_cm * depth_fractions[tier], flush against the far wall. Bottom tier is deepest so the wedge leans away from the player. label_offset_cm = label distance in front of the wedge.",
     "tiers": 3,
-    "depth_fractions": [1, 0.66, 0.33],
+    "depth_fractions": [
+      1,
+      0.66,
+      0.33
+    ],
     "label_offset_cm": 150
   },
   "window": {
@@ -172,10 +452,21 @@
     "hall_light_spacing_cm": 800,
     "start_y_cm": 300,
     "station_rows": [
-      ["doorways", "corridors", "ceilings"],
-      ["jump_ledges", "step_ramp", "crawl_tunnels"]
+      [
+        "doorways",
+        "corridors",
+        "ceilings"
+      ],
+      [
+        "jump_ledges",
+        "step_ramp",
+        "crawl_tunnels"
+      ]
     ],
-    "row_y_cm": [800, 2600],
+    "row_y_cm": [
+      800,
+      2600
+    ],
     "station_gap_cm": 220,
     "element_gap_cm": 140,
     "figure_gap_cm": 40,
