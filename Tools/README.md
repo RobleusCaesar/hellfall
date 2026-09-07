@@ -11,9 +11,9 @@ Tools/
   ue/build_feel_gym.py      /Game/Maps/L_FeelGym from Data/metrics.json "feel_gym"        (REQ-G1-004)
   ue/run_editor_script.ps1  runs a .py inside UnrealEditor-Cmd (commandlet or full editor); code-free twin when the C++ is not built
   ue/_engine.ps1            dot-sourced helper: engine/Python/node resolution, live-tailing process runner, twin writer
-  validate_floorplan.mjs    node: schema + geometry + adjacency + money-shot checks on a floor plan
-  check_manifest.mjs        node: overlap / boundary / money-shot checks on a dry-run manifest
-  test_dry_run.ps1          engine-free regression: determinism + all checkers (run this before every commit)
+  validate_floorplan.mjs    node: schema + geometry + adjacency + scenes + money-shot checks, exploration estimate
+  check_manifest.mjs        node: overlap / boundary / enclosure / money-shot checks on a dry-run manifest
+  test_dry_run.ps1          engine-free regression: py_compile, determinism, all checkers, scenes smoke (run before every commit)
   generate_project_files.ps1, build_editor.ps1, package.ps1, release.ps1, setup_toolchain.ps1
   glb_audit.mjs             asset audit (Gate 2 prep; leave as is)
   blender/                  Gate 4 asset pipeline (empty until then)
@@ -39,10 +39,11 @@ the packaged game need the compiled module (Visual Studio Build Tools).
 2. Edit the data, never the map:
    * body & controls -> `Data/movement.json` (read by `UHellfallTuning` at runtime; a packaged build picks it up from `Hellfall\Data\`)
    * architecture numbers (door, corridor, ceilings, duct, wall, figure) -> `Data/metrics.json`
-   * room rects, openings, duct, markers, encounters, money shot -> `Data/floorplan.json` (schema: `Docs/FLOORPLAN-SCHEMA.md`)
-   * tints, light intensities, label sizes, marker sizes, feel-gym spacing -> `Data/greybox_style.json`
-3. `Tools\test_dry_run.ps1` - must print `all steps passed`. It runs the generator twice (identical SHA256 = deterministic),
-   validates the plan, checks the manifests for overlaps and the money-shot framing. Fix until green.
+   * room rects, openings, duct, markers, encounters, money shot, **scenes** -> `Data/floorplan.json` (schema: `Docs/FLOORPLAN-SCHEMA.md`)
+   * tints, surface texture, light intensities, label sizes, `notes_enabled`, marker sizes, feel-gym hall/spacing -> `Data/greybox_style.json`
+3. `Tools\test_dry_run.ps1` - must print `all steps passed`. It compiles every editor script, runs the generator twice
+   (identical SHA256 = deterministic), validates the plan (adjacency, scenes, exploration estimate), checks both manifests
+   for overlaps, enclosure and the money-shot framing, and smoke-tests the scenes path with 8 generated slots. Fix until green.
    Every step's tool output goes to the host; a step passes only when its body returns a trailing `$true`, so a failing
    validator or generator really fails the run (`-Floorplan Saved\narrow.json` is the standing negative check: exit 1).
 4. With the engine installed: `Tools\ue\run_editor_script.ps1 -Script build_greybox.py` and
@@ -107,10 +108,44 @@ the start (-y). The manifest records `yaw_plan_deg`, `viewer_plan` and `facing` 
 ceiling out around each fixture while auto-exposure swallowed a 12.5x candela change, so every point light is an even fill light:
 `use_inverse_squared_falloff` off, `lights.*.intensity_unitless`, `falloff_exponent` 2, hung 60 cm below the ceiling; the manifest
 carries `inverse_squared`, `falloff_exponent` and `intensity_units` for each light.
+* **Scenes** (gate-1 brief: staging slots for monsters and set pieces; `floorplan.json : scenes`, schema in
+  `Docs/FLOORPLAN-SCHEMA.md`): per scene a translucent floor marker tinted by kind (monster red, ambush orange, scene purple,
+  pickup green, reveal blue), a `KIND: id` label at 60 cm facing the room's entry point, a grey note with the description
+  (word-wrapped; off when `labels.notes_enabled` is false) and, for a `facing_deg` on a 90-degree multiple, a thin tick strip from
+  the rect centre in that direction. Folder `Greybox/Scenes`, no collision; `meta.scenes` in the manifest. Unknown kind or a rect
+  outside its room is a generator error (the validator catches both first).
+* **Notes** are small and quiet (`labels.note`: 11 cm glyphs, dark grey) and `labels.notes_enabled: false` removes every
+  note-style label (Gate 2 intent notes and scene descriptions) for a clean screenshot pass; `meta.notes_enabled` records it.
 * **Boundary**: seven hidden collision-only boxes (4 walls + lid + bottom + safety slab 50 cm under the floor).
 * `validate_geometry` refuses to emit when visible collision boxes overlap (> 0.5 cm), when a hole is not exactly its
   requested size (probes just outside every edge must be solid, inside must be empty), when a room lacks its figure/label/light,
   or when a room perimeter has a gap.
+
+### Surface texture (gate-1 brief: "a tiny amount of texture to floor, ceiling and walls")
+
+`Data/greybox_style.json : surface_texture` + a `surface_class` (floor | ceiling | wall | duct) on each architectural tint.
+Every such material's base colour is `lerp(tint, grid, strength)` where `grid` is the engine's default-material grey grid
+(`/Engine/EngineMaterials/T_Default_Material_Grid_M`) sampled through the engine function
+`/Engine/Functions/Engine_MaterialFunctions01/Texturing/WorldAlignedTexture` (both verified on disk under
+`C:\Program Files\Epic Games\UE_5.8\Engine\Content\` on 2026-09-06), so the grid is projected in world space and every
+scaled cube keeps one texel size. Per class: floor 50 cm tile at strength 0.14 (carpet tile), ceiling 60 cm at 0.10 (ceiling
+tile), wall 100 cm at 0.06 (faint plaster grid), duct 25 cm at 0.10 (sheet metal). Markers, glass, figures, the locked door,
+elevator doors and the collapse stay flat. Tints were re-balanced at the same time so edges read: floors darkest (~0.5 grey-warm),
+ceilings 0.72, walls lightest (~0.85). `surface_texture.enabled: false` keeps every material flat.
+
+The dry-run manifest carries the recipe per tint under `materials` (asset path, rgb, roughness, blend, and the texture block with
+function/texture paths, pin names, tile size and strength), so the lead can inspect it without the editor. In the editor
+(`hf_common.UnrealEmitter._ensure_materials`) every `M_GB_<key>` is **rebuilt from the recipe on each run** (existing asset reused,
+all expressions deleted, graph re-created; gate-0's flat materials would otherwise stay flat forever). Graph:
+`Constant3Vector(tint) -> Lerp.A`, `TextureObject(grid) -> WorldAlignedTexture.TextureObject`, `Constant(tile_cm) -> .TextureSize`,
+`WorldAlignedTexture."XYZ Texture" -> Lerp.B`, `Constant(strength) -> Lerp.Alpha`, `Lerp -> Base Color`; roughness / opacity as before.
+The function-call node is set with `set_material_function()` (a `UFUNCTION(BlueprintCallable)` in 5.8's
+`MaterialExpressionMaterialFunctionCall.h`, which populates the pins - the non-exposed `UpdateFromFunctionResource` is what it
+calls internally) and wired with `MaterialEditingLibrary.connect_material_expressions(from, out_name, to, in_name)`, which matches
+function-call inputs by name without the type postfix. **Fallback:** if either asset fails to load, `set_material_function`
+returns False or any pin name does not connect, the emitter logs a warning, removes the orphan nodes and builds that material flat;
+the run result prints `materials_textured` / `materials_flat_fallback`. The whole path carries one `TODO(VERIFY 5.8)`: the first
+live editor run must show every architectural tint under `materials_textured`.
 
 Actor names are deterministic (`Wall_break_room_west_01`, `Header_door_break_to_corridor`, `Duct_duct_supply_to_break_floor`,
 `Collapse_collapse_02`, `Figure_ref_break_room_body`, `Light_ceo_office`, ...) and sorted by (folder, name).
@@ -122,7 +157,14 @@ corridors 200/260/320 (10 m, ceiling 310), rooms 5 x 5 m at ceilings 270/300/350
 (each separated by `element_gap_cm` of floor so it is jumped onto from the ground, not walked up as a staircase),
 a 9-step ramp with risers 20 -> 60 (each labelled), crawl tunnels 90/100/110 high. A 180 cm figure stands beside every element,
 every element is labelled with its dimension, the player starts at the near edge facing the stations (+X).
-Sun + sky light plus point lights inside enclosed pieces.
+
+**Enclosed hall (gate-1 brief: "add ceiling and walls, this is an internal map").** The slab is wrapped in 20 cm walls
+(`metrics.architecture.wall_thickness_cm`) and roofed at `metrics.feel_gym.hall_ceiling_cm` (450) - the ceiling-height rooms,
+corridors and tunnels keep their own lower ceilings inside it. No sun, no sky light (the old `feel_gym.sun` / `sky_light` style
+keys are refused). Fill lighting = the station lights as before plus `feel_gym.hall_light` even-fill point lights on a grid no
+coarser than `hall_light_spacing_cm` (800 -> 8 x 6 = 48 lights, hung 60 cm under the hall ceiling; raise the spacing if the iGPU
+minds). The generator refuses a hall ceiling that does not clear the tallest station top (370) plus the light drop. Folder
+`FeelGym/Hall`; `meta.hall` records the numbers. Labels unchanged.
 
 ## Validators
 
@@ -139,12 +181,28 @@ encounters: declared retreat/strafe distances >= metrics minimums AND the lanes 
 through rooms and door/open footprints; locked doors, windows, walls, collapse and the dividing wall block);
 no authored opening overlaps a duct mouth (the generator would otherwise fail later with a less helpful message);
 money shot: window wall opposite the entry door, exterior, dwell rect inside and within 150 cm of the window, dividing
-wall partial and off the door-centre -> window-centre sightline.
+wall partial and off the door-centre -> window-centre sightline; **scenes** (optional array): snake_case unique id, existing
+room, rect inside that room, known kind (monster | ambush | scene | pickup | reveal), numeric facing_deg; WARN when fewer
+than 8 scenes, when a description is missing or a scene sits in a non-enterable room.
+
+The PASS line also carries the gate-1 pacing numbers: **exploration estimate** =
+(corridor centre lines [`corridor_*` rooms, longer axis] x 2 + per enterable non-corridor room (2 x shorter axis + 300)) /
+`movement.player.walk_speed_cms` / 60 x 1.6, WARN outside 8-12 minutes; the **critical-path walk** (centre to centre through
+the connecting door/open centre, or both duct mouths + tube); and the **junction count** (critical-path `corridor_*` rooms with
+>= 3 passable connections). The gate-0 plan reads ~1.2 min / 49 m / 2 junctions.
 
 `check_manifest.mjs`: pairwise AABB overlap of visible collision boxes (tolerance 0.5 cm, kinds `collapse`/`boundary`
-whitelisted), unique names, UE transform consistency, hidden boundary present, and the **money shot**: from the CEO door
-centre at eye height looking at the window, the horizontal angle the window subtends; PASS when the part inside the
-90 deg FOV covers >= 60 %.
+whitelisted), unique names, UE transform consistency, hidden boundary present, **enclosure** and the **money shot**: from the
+CEO door centre at eye height looking at the window, the horizontal angle the window subtends; PASS when the part inside the
+90 deg FOV covers >= 60 %. Marker kinds (no collision) are ignored by every check.
+
+**Enclosure** (gate-1 brief): for every visible `floor` slab - the 12 office rooms and the gym hall slab alike - the tallest
+`ceiling` box over it sets the height H; a ceiling must cover the whole floor rect at H + 1 cm (25 cm sample grid); and each of
+the four sides, probed 1 cm outside the floor edge every 5 cm along and every 10 cm up to H, must be solid (a visible collision
+box other than the hidden boundary) or inside an authored hole from `meta.openings` (doors, opens, duct mouths, windows,
+infilled locked / elevator doors, grown 1 cm). An uncovered run wider than 30 cm on any z row is a FAIL naming the floor,
+side, width, span and height. Proven negative on 2026-09-06: removing one break-room wall -> `775 cm gap`; removing the gym's
+hall ceiling -> `41840 sample(s) uncovered`; removing a hall wall -> `4395 cm gap`.
 
 ## Engine scripts (need UE 5.8)
 
@@ -169,13 +227,18 @@ Engine resolution (`_engine.ps1`), first hit wins and the winning source is prin
 * Maps are **recreated** (asset deleted, `LevelEditorSubsystem.new_level`) instead of cleaned in place, for determinism;
   if the target is the currently loaded world the emitter falls back to destroying all actors in it.
 * Lights are **MOVABLE**: no lighting build in the commandlet, cheap on the iGPU with shadows off. Gate 3 redoes lighting anyway.
-* One material asset per tint key under `/Game/Greybox/Materials/M_GB_<key>`; translucent for markers and glass; reused if present.
+* One material asset per tint key under `/Game/Greybox/Materials/M_GB_<key>`; translucent for markers and glass. The asset is
+  reused if present but its graph is **rebuilt every run** from the style recipe (see "Surface texture" above), including the
+  blend mode, so a tint edit or the new texture always reaches the map.
 * Labels are single `TextRenderActor`s, yawed so the readable face (local +X) points at the label's viewer point. Colours are
   passed as `unreal.Color(r=, g=, b=, a=)` keywords: `FColor` is declared B, G, R, A, so positional arguments would swap red and blue.
 * Symbols exercised by the 2026-09-06 commandlet runs (materials incl. translucent, static mesh component, text render,
-  point light candela units) and the packaged-run frames (TextRender readable side) are marked `VERIFIED 5.8.2`; what remains
-  carries `TODO(VERIFY 5.8)` (sky-light recapture, the fill-light property names `use_inverse_squared_falloff` /
-  `light_falloff_exponent` / `LightUnits.UNITLESS`) and uses the most conservative call.
+  point light candela units) and the packaged-run frames (TextRender readable side) are marked `VERIFIED 5.8.2`; symbols checked
+  against the installed 5.8 headers/sources but not yet run (`delete_all_material_expressions`, `delete_material_expression`,
+  `set_material_function`, `connect_material_expressions` pin matching, `BlendMode.BLEND_OPAQUE`) are marked `VERIFIED 5.8 header`;
+  what remains carries `TODO(VERIFY 5.8)` (sky-light recapture, the fill-light property names `use_inverse_squared_falloff` /
+  `light_falloff_exponent` / `LightUnits.UNITLESS`, the first live run of the textured material graph) and uses the most
+  conservative call with a flat fallback.
 
 ## Adding a new element type
 

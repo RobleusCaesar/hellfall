@@ -620,6 +620,20 @@ F_LIGHTS = "Greybox/Lights"
 F_MARKERS = "Greybox/Markers"
 F_BOUNDARY = "Greybox/Boundary"
 F_PLAYER = "Greybox/PlayerStart"
+F_SCENES = "Greybox/Scenes"
+
+
+def _notes_enabled(style: Dict[str, Any]) -> bool:
+    """labels.notes_enabled (default True): False skips every note-style label (Gate 2 notes, scene descriptions)."""
+    return bool(style["labels"].get("notes_enabled", True))
+
+
+def _wrap_note(text: str, style: Dict[str, Any]) -> str:
+    """Deterministic word wrap at labels.note.wrap_chars (TextRenderComponent cannot wrap)."""
+    wrap_chars = int(style["labels"]["note"].get("wrap_chars", 0))
+    if wrap_chars > 0 and text:
+        return "\n".join(textwrap.wrap(text, width=wrap_chars))
+    return text
 
 
 def _figure_boxes(name_base: str, x: float, y: float, metrics: Dict[str, Any], style: Dict[str, Any],
@@ -1180,12 +1194,12 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
             figures_by_room[room.id] = figures_by_room.get(room.id, 0) + 1
             actors.extend(_figure_boxes(m["id"], px, py, metrics, style, F_FIGURES, room.id))
         elif kind == "note":
-            # TextRenderComponent has no word wrap: a 300-character note at 16 cm glyphs would be a 25 m line
+            # TextRenderComponent has no word wrap: a 300-character note at 11 cm glyphs would be a 17 m line
             # through the neighbouring rooms.  Wrap deterministically at labels.note.wrap_chars (style).
-            note_text = str(m.get("text", ""))
-            wrap_chars = int(style["labels"]["note"].get("wrap_chars", 0))
-            if wrap_chars > 0 and note_text:
-                note_text = "\n".join(textwrap.wrap(note_text, width=wrap_chars))
+            # labels.notes_enabled false -> no note labels at all (Rob reviews from screenshots; notes are Gate 2 intent).
+            if not _notes_enabled(style):
+                continue
+            note_text = _wrap_note(str(m.get("text", "")), style)
             actors.append(_make_label("Label_note_%s" % m["id"], px, py, "NOTE: %s" % note_text, "note", style, metrics,
                                       F_LABELS, room.id, **room_facing(room.id, px, py)))
         else:
@@ -1257,6 +1271,64 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                                   "%s APPROACH\nretreat %s %d / strafe %d" % (eid, rd, int(rl), int(sl)), "marker", style, metrics,
                                   F_LABELS, room.id, **room_facing(room.id, ax, ay)))
 
+    # ---- scenes: staging slots (review markers only: translucent, no collision) ------------------------
+    # Docs/FLOORPLAN-SCHEMA.md "Scene": {id, room, kind, rect, facing_deg, description}.  Per scene a kind-tinted
+    # floor marker, a "KIND: id" label at scene_marker.label_height_cm facing the room's entry point, a note-style
+    # description (skipped when labels.notes_enabled is false) and, for axis-aligned facings, a tick strip.
+    sm = style["scene_marker"]
+    s_lift = float(sm["lift_cm"])
+    s_h = float(sm["height_cm"])
+    scene_meta: List[Dict[str, Any]] = []
+    scene_ids: set = set()
+    for s in fp.get("scenes", []) or []:
+        sid = str(s.get("id", ""))
+        if not sid:
+            raise GeometryError("scene without id: %r" % (s,))
+        if sid in scene_ids:
+            raise GeometryError("duplicate scene id %r" % sid)
+        scene_ids.add(sid)
+        room = rooms.get(s.get("room", ""))
+        if room is None:
+            raise GeometryError("scene %r: unknown room %r" % (sid, s.get("room")))
+        kind = str(s.get("kind", ""))
+        tint_key = sm["kinds"].get(kind)
+        if tint_key is None:
+            raise GeometryError("scene %r: unknown kind %r (style scene_marker.kinds: %s)" % (sid, kind, ", ".join(sorted(sm["kinds"]))))
+        rc = s["rect"]
+        sx0, sy0 = float(rc["x"]), float(rc["y"])
+        sx1, sy1 = sx0 + float(rc["w"]), sy0 + float(rc["h"])
+        if not (room.contains(sx0, sy0, EPS) and room.contains(sx1, sy1, EPS)):
+            raise GeometryError("scene %r: rect (%s,%s %sx%s) is not inside room %r" % (sid, rc["x"], rc["y"], rc["w"], rc["h"], room.id))
+        actors.append(_rect_box("Marker_scene_%s" % sid, "marker", sx0, sx1, sy0, sy1, s_lift, s_lift + s_h,
+                                _style_tint(style, tint_key), False, True, F_SCENES, room.id))
+        scx, scy = (sx0 + sx1) / 2.0, (sy0 + sy1) / 2.0
+        actors.append(_make_label("Label_scene_%s" % sid, scx, scy, "%s: %s" % (kind.upper(), sid), "marker", style, metrics,
+                                  F_SCENES, room.id, z_override=float(sm["label_height_cm"]), **room_facing(room.id, scx, scy)))
+        desc = str(s.get("description", "") or "")
+        if desc and _notes_enabled(style):
+            actors.append(_make_label("Label_scene_%s_note" % sid, scx, scy, "SCENE %s: %s" % (sid, _wrap_note(desc, style)),
+                                      "note", style, metrics, F_SCENES, room.id, **room_facing(room.id, scx, scy)))
+        facing = float(s.get("facing_deg", 90.0)) % 360.0
+        tick = None
+        if abs(facing - round(facing / 90.0) * 90.0) < EPS:
+            # Axis-aligned facing -> a thin strip from the rect centre toward the facing direction, one marker
+            # height above the marker so the two never z-fight.  Non-axis facings are recorded in meta only.
+            tw = float(sm["tick_width_cm"])
+            tl = float(sm["tick_length_fraction"]) * min(sx1 - sx0, sy1 - sy0)
+            dx, dy = math.cos(math.radians(facing)), math.sin(math.radians(facing))
+            ex, ey = scx + dx * tl, scy + dy * tl
+            tx0, tx1 = sorted([scx, ex])
+            ty0, ty1 = sorted([scy, ey])
+            if abs(dx) < EPS:
+                tx0, tx1 = scx - tw / 2.0, scx + tw / 2.0
+            else:
+                ty0, ty1 = scy - tw / 2.0, scy + tw / 2.0
+            actors.append(_rect_box("Marker_scene_%s_facing" % sid, "marker", tx0, tx1, ty0, ty1, s_lift + s_h, s_lift + 2.0 * s_h,
+                                    _style_tint(style, tint_key), False, True, F_SCENES, room.id))
+            tick = [r3(tx0), r3(ty0), r3(tx1 - tx0), r3(ty1 - ty0)]
+        scene_meta.append({"id": sid, "room": room.id, "kind": kind, "rect_plan": [r3(sx0), r3(sy0), r3(sx1 - sx0), r3(sy1 - sy0)],
+                           "facing_deg": r3(facing), "tint": tint_key, "facing_tick": tick, "description": desc})
+
     # ---- boundary shell ------------------------------------------------------------------------
     actors.extend(_boundary_boxes(actors, metrics, style, F_BOUNDARY))
 
@@ -1273,6 +1345,8 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
                       "z_bottom": r3(f.z_bottom), "z_top": r3(f.z_top)} for f in sorted(footprints, key=lambda f: f.opening_id)],
         "ducts": duct_meta,
         "money_shot": money_meta,
+        "scenes": scene_meta,
+        "notes_enabled": _notes_enabled(style),
         "metrics_version": metrics.get("version"),
         "floorplan_version": fp.get("version"),
         "floorplan_temporary": bool(fp.get("_temporary", False)),
@@ -1488,6 +1562,7 @@ G_LABELS = "FeelGym/Labels"
 G_LIGHTS = "FeelGym/Lights"
 G_BOUNDARY = "FeelGym/Boundary"
 G_PLAYER = "FeelGym/PlayerStart"
+G_HALL = "FeelGym/Hall"
 
 
 
@@ -1499,7 +1574,9 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
     The player starts at start_y_cm facing +plan.y (= Unreal +X) and walks forward into the rows, so every
     gym label is single-sided with yaw 270 (readable from the -y side the player approaches from); labels inside
     a station (the ceiling rooms' inside label) face the station's north entrance the same way.  Enclosed pieces
-    get the same even fill point lights as the office (_point_light); the sun and sky light stay (outdoor gym).
+    get the same even fill point lights as the office (_point_light).  Since the gate-1 brief the gym is an
+    ENCLOSED HALL: 20 cm walls around the slab, a ceiling at metrics.feel_gym.hall_ceiling_cm, a grid of hall
+    fill lights and no sun / sky light (Rob: "this is an internal map").
     """
     metrics = inputs["metrics"]
     style = inputs["style"]
@@ -1710,7 +1787,10 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
     if max_y > slab_d + EPS:
         raise GeometryError("feel gym stations need %.0f cm along y but slab_d_cm is %.0f" % (max_y, slab_d))
 
-    # ---- slab, start, sun, sky, boundary ----------------------------------------------------------------
+    # ---- slab, start, hall (walls + ceiling + fill lights), boundary -----------------------------------
+    # Gate-1 brief (Rob: "add ceiling and walls, this is an internal map"): the gym is an enclosed hall, no sun,
+    # no sky.  Stations keep their own lower ceilings inside it; the hall ceiling must clear the tallest station
+    # top plus the light drop so every hall fill light hangs in free air.
     actors.append(_rect_box("Gym_floor_slab", "floor", 0.0, slab_w, 0.0, slab_d, -floor_slab, 0.0, _style_tint(style, gs["slab_floor_tint"]), True, True, G_FLOOR))
     stand_h = float(movement["player"]["stand_height_cm"])
     spawn_z = stand_h / 2.0 + float(style["player_start"]["spawn_clearance_cm"])
@@ -1719,15 +1799,36 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
     toggle_key = str(movement.get("binds", {}).get("toggle_feel_gym", "?"))
     actors.append(title("Title_gym", slab_w / 2.0, start_y + elem_gap,
                         "FEEL GYM\nwalk forward (+X) to each station; %s returns to the office" % toggle_key))
-    sun = gs["sun"]
-    sky_z = float(arch["boundary_wall_height_cm"])
-    actors.append(Light(name="Gym_sun", pos_plan=(slab_w / 2.0, slab_d / 2.0, sky_z), intensity=float(sun["intensity_lux"]),
-                        temperature_k=float(sun["temperature_k"]), attenuation_radius_cm=0.0, folder=G_LIGHTS, light_type="directional",
-                        cast_shadows=bool(sun["cast_shadows"]), mobility=str(style["lights"]["mobility"]),
-                        pitch_deg=float(sun["pitch_deg"]), yaw_deg=float(sun["yaw_deg"]), intensity_units="lux"))
-    actors.append(Light(name="Gym_sky", pos_plan=(slab_w / 2.0, slab_d / 2.0, sky_z), intensity=float(gs["sky_light"]["intensity"]),
-                        temperature_k=0.0, attenuation_radius_cm=0.0, folder=G_LIGHTS, light_type="sky", cast_shadows=False,
-                        mobility=str(style["lights"]["mobility"]), intensity_units="scalar"))
+    for legacy in ("sun", "sky_light"):
+        if legacy in gs:
+            raise GeometryError("greybox_style.feel_gym.%s was retired 2026-09-06 (the gym is an enclosed hall, no sun/sky); remove it" % legacy)
+    if "hall_ceiling_cm" not in gym:
+        raise GeometryError("metrics.feel_gym.hall_ceiling_cm is required (height of the enclosed gym hall)")
+    hall_h = float(gym["hall_ceiling_cm"])
+    tallest = max(b.max_plan[2] for b in actors if isinstance(b, Box))
+    if hall_h - light_drop <= tallest + EPS:
+        raise GeometryError("metrics.feel_gym.hall_ceiling_cm %.0f is too low: the tallest station reaches %.0f and the hall lights hang %.0f below the ceiling"
+                            % (hall_h, tallest, light_drop))
+    hall_wall = _style_tint(style, gs["hall_wall_tint"])
+    hall_ceil = _style_tint(style, gs["hall_ceiling_tint"])
+    hz0, hz1 = -floor_slab, hall_h + ceil_slab
+    actors.append(_rect_box("Gym_hall_wall_north", "wall", -t, slab_w + t, -t, 0.0, hz0, hz1, hall_wall, True, True, G_HALL))
+    actors.append(_rect_box("Gym_hall_wall_south", "wall", -t, slab_w + t, slab_d, slab_d + t, hz0, hz1, hall_wall, True, True, G_HALL))
+    actors.append(_rect_box("Gym_hall_wall_west", "wall", -t, 0.0, 0.0, slab_d, hz0, hz1, hall_wall, True, True, G_HALL))
+    actors.append(_rect_box("Gym_hall_wall_east", "wall", slab_w, slab_w + t, 0.0, slab_d, hz0, hz1, hall_wall, True, True, G_HALL))
+    actors.append(_rect_box("Gym_hall_ceiling", "ceiling", 0.0, slab_w, 0.0, slab_d, hall_h, hall_h + ceil_slab, hall_ceil, True, True, G_HALL))
+    spacing = float(gs["hall_light_spacing_cm"])
+    if spacing <= 0:
+        raise GeometryError("greybox_style.feel_gym.hall_light_spacing_cm must be > 0")
+    n_x = max(1, int(math.ceil(slab_w / spacing - EPS)))
+    n_y = max(1, int(math.ceil(slab_d / spacing - EPS)))
+    hall_light_spec = gs["hall_light"]
+    for j in range(n_y):
+        for i in range(n_x):
+            lx = (i + 0.5) * slab_w / n_x
+            ly = (j + 0.5) * slab_d / n_y
+            actors.append(_point_light("Gym_light_hall_%02d_%02d" % (j + 1, i + 1), (lx, ly, hall_h - light_drop), hall_light_spec,
+                                       "feel_gym.hall_light", style, float(hall_light_spec["attenuation_radius_cm"]), G_LIGHTS))
     actors.extend(_boundary_boxes(actors, metrics, style, G_BOUNDARY))
 
     actors = _finalize(actors)
@@ -1735,6 +1836,9 @@ def build_feel_gym(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]
         "map_kind": "feel_gym",
         "plan_bounds": plan_bounds(actors),
         "stations": stations,
+        "hall": {"interior": [r3(slab_w), r3(slab_d)], "ceiling_cm": r3(hall_h), "wall_thickness_cm": r3(t),
+                 "fill_lights": [n_x, n_y], "fill_light_spacing_cm": [r3(slab_w / n_x), r3(slab_d / n_y)],
+                 "tallest_station_top_cm": r3(tallest)},
         "metrics_version": metrics.get("version"),
         "warnings": warnings,
         "_footprints": [],

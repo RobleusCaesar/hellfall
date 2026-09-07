@@ -32,9 +32,62 @@ from typing import Any, Dict, List, Optional
 import hf_geometry as hg
 
 MANIFEST_FORMAT = "hellfall-greybox-manifest"
-MANIFEST_VERSION = 1
+MANIFEST_VERSION = 2   # 2 (2026-09-06): + "materials" (per-tint recipe incl. the surface texture)
 MATERIAL_ROOT = "/Game/Greybox/Materials"
 CUBE_ASSET = "/Engine/BasicShapes/Cube"   # 100 cm engine cube with simple box collision
+
+
+# --------------------------------------------------------------------------------------
+# Material recipes (pure: shared by the manifest and the Unreal emitter)
+# --------------------------------------------------------------------------------------
+
+def material_recipes(style: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """tint key -> recipe dict, a pure function of Data/greybox_style.json.
+
+    recipe = {"asset", "rgb", "roughness", "opacity", "blend", "texture"} where "texture" is None (flat) or
+    {"function_asset", "function_input_texture", "function_input_size", "function_output", "texture_asset",
+     "surface_class", "tile_cm", "strength"} - the world-aligned grid mixed into the base colour by
+    ``lerp(tint, grid, strength)``.  Raises GeometryError on a tint whose surface_class is not in
+    surface_texture.classes so a typo in the style is caught by the dry run, not by the editor.
+    """
+    tex = style.get("surface_texture") or {}
+    enabled = bool(tex.get("enabled", False))
+    classes = tex.get("classes") or {}
+    out: Dict[str, Dict[str, Any]] = {}
+    for key in sorted(style["tints"]):
+        if key.startswith("_"):
+            continue
+        spec = style["tints"][key]
+        opacity = float(spec.get("opacity", 1.0))
+        recipe: Dict[str, Any] = {
+            "asset": "%s/M_GB_%s" % (MATERIAL_ROOT, key),
+            "rgb": [hg.r3(float(c)) for c in spec["rgb"]],
+            "roughness": hg.r3(float(spec.get("roughness", 0.9))),
+            "opacity": hg.r3(opacity),
+            "blend": "translucent" if opacity < 1.0 else "opaque",
+            "texture": None,
+        }
+        cls = spec.get("surface_class")
+        if cls is not None:
+            if cls not in classes:
+                raise hg.GeometryError("greybox_style.json tint %r: surface_class %r is not in surface_texture.classes (%s)"
+                                       % (key, cls, ", ".join(sorted(classes)) or "none"))
+            if opacity < 1.0:
+                raise hg.GeometryError("greybox_style.json tint %r: translucent tints cannot carry a surface_class" % key)
+            if enabled:
+                c = classes[cls]
+                recipe["texture"] = {
+                    "function_asset": str(tex["function_asset"]),
+                    "function_input_texture": str(tex.get("function_input_texture", "TextureObject")),
+                    "function_input_size": str(tex.get("function_input_size", "TextureSize")),
+                    "function_output": str(tex.get("function_output", "XYZ Texture")),
+                    "texture_asset": str(tex["texture_asset"]),
+                    "surface_class": str(cls),
+                    "tile_cm": hg.r3(float(c["tile_cm"])),
+                    "strength": hg.r3(min(1.0, max(0.0, float(c.get("strength", tex.get("default_strength", 0.12)))))),
+                }
+        out[key] = recipe
+    return out
 
 
 # --------------------------------------------------------------------------------------
@@ -69,12 +122,15 @@ def default_manifest_path(map_path: str) -> str:
 # --------------------------------------------------------------------------------------
 
 class ManifestEmitter:
-    def __init__(self, out_path: str):
+    def __init__(self, out_path: str, style: Optional[Dict[str, Any]] = None):
         self.out_path = out_path
         self.map_path = ""
         self.meta: Dict[str, Any] = {}
         self.sources: Dict[str, str] = {}
         self.actors: List[Dict[str, Any]] = []
+        # The material recipe per tint (incl. the surface-texture wiring) so the lead can inspect what the
+        # editor run will build without opening Unreal.
+        self.materials: Dict[str, Dict[str, Any]] = material_recipes(style) if style else {}
 
     def begin(self, map_path: str, meta: Dict[str, Any], sources: Dict[str, str]) -> None:
         self.map_path = map_path
@@ -93,6 +149,7 @@ class ManifestEmitter:
             "sources": self.sources,
             "meta": self.meta,
             "summary": _summary_from_dicts(self.actors),
+            "materials": self.materials,
             "actors": self.actors,
         }
 
@@ -105,7 +162,9 @@ class ManifestEmitter:
         with open(self.out_path, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
             fh.write("\n")
-        return {"mode": "dry-run", "manifest": self.out_path, "actors": len(self.actors)}
+        textured = sorted(k for k, r in self.materials.items() if r.get("texture"))
+        return {"mode": "dry-run", "manifest": self.out_path, "actors": len(self.actors),
+                "materials": len(self.materials), "materials_textured": textured, "materials_flat_fallback": []}
 
 
 def _summary_from_dicts(actors: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -145,13 +204,15 @@ class UnrealEmitter:
       (REQ-G1-007: no complex/per-triangle collision on architecture).
     """
 
-    def __init__(self, tint_table: Dict[str, Dict[str, Any]]):
+    def __init__(self, style: Dict[str, Any]):
         import unreal  # lazy: only available inside the editor
         self.unreal = unreal
-        self.tints = tint_table
+        self.recipes = material_recipes(style)     # pure; raises GeometryError on a bad surface_class
         self.map_path = ""
         self.meta: Dict[str, Any] = {}
         self.materials: Dict[str, Any] = {}
+        self.materials_textured: List[str] = []    # tint keys whose grid texture was wired
+        self.materials_flat_fallback: List[str] = []   # tint keys that wanted a texture but fell back to flat
         self.cube = None
         self.count = 0
         self.actor_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -223,18 +284,32 @@ class UnrealEmitter:
         if not u.EditorLoadingAndSavingUtils.save_map(world, self.map_path):
             raise RuntimeError("save_map(%s) failed" % self.map_path)
         u.EditorAssetLibrary.save_directory(MATERIAL_ROOT, only_if_is_dirty=True, recursive=True)
-        return {"mode": "unreal", "map": self.map_path, "actors": self.count, "materials": len(self.materials)}
+        return {"mode": "unreal", "map": self.map_path, "actors": self.count, "materials": len(self.materials),
+                "materials_textured": sorted(self.materials_textured),
+                "materials_flat_fallback": sorted(self.materials_flat_fallback)}
 
     # ---- materials --------------------------------------------------------------------------
     def _ensure_materials(self) -> None:
+        """One material asset per tint, REBUILT from the recipe on every run.
+
+        The gate-0 run created flat materials under /Game/Greybox/Materials; a reuse-if-present rule would keep
+        them flat forever, so every run deletes the expressions and re-creates the graph (the asset itself is
+        reused so references in other maps survive).  Graph:
+
+            Constant3Vector(tint) --A--> Lerp --> Base Color          (flat: Constant3Vector -> Base Color)
+            TextureObject(grid) --TextureObject--> WorldAlignedTexture --XYZ Texture--> B
+            Constant(tile_cm)   --TextureSize---->                    Constant(strength) --> Alpha
+            Constant(roughness) --> Roughness;  translucent: Constant(opacity) --> Opacity, two-sided
+
+        Any texture problem (asset missing, function pin renamed) is logged and that material is built flat, so
+        generation never fails on the texture (Tools/README.md, "Surface texture").
+        """
         u = self.unreal
         mel = u.MaterialEditingLibrary
         eal = u.EditorAssetLibrary
         tools = u.AssetToolsHelpers.get_asset_tools()
-        for key in sorted(self.tints):
-            if key.startswith("_"):
-                continue
-            spec = self.tints[key]
+        for key in sorted(self.recipes):
+            recipe = self.recipes[key]
             name = "M_GB_%s" % key
             path = "%s/%s" % (MATERIAL_ROOT, name)
             mat = u.load_asset(path) if eal.does_asset_exist(path) else None
@@ -242,25 +317,121 @@ class UnrealEmitter:
                 mat = tools.create_asset(name, MATERIAL_ROOT, u.Material, u.MaterialFactoryNew())
                 if mat is None:
                     raise RuntimeError("create_asset failed for %s" % path)
-                r, g, b = [float(c) for c in spec["rgb"]]
-                color = mel.create_material_expression(mat, u.MaterialExpressionConstant3Vector, -400, 0)
-                color.set_editor_property("constant", u.LinearColor(r, g, b, 1.0))
-                mel.connect_material_property(color, "", u.MaterialProperty.MP_BASE_COLOR)
-                rough = mel.create_material_expression(mat, u.MaterialExpressionConstant, -400, 200)
-                rough.set_editor_property("r", float(spec.get("roughness", 0.9)))
-                mel.connect_material_property(rough, "", u.MaterialProperty.MP_ROUGHNESS)
-                opacity = float(spec.get("opacity", 1.0))
-                if opacity < 1.0:
-                    # VERIFIED 5.8.2: Material.blend_mode + BlendMode.BLEND_TRANSLUCENT (glass/marker materials
-                    # were created by the 2026-09-06 run; a wrong name would have raised and printed FAILED).
-                    mat.set_editor_property("blend_mode", u.BlendMode.BLEND_TRANSLUCENT)
-                    mat.set_editor_property("two_sided", True)
-                    op = mel.create_material_expression(mat, u.MaterialExpressionConstant, -400, 400)
-                    op.set_editor_property("r", opacity)
-                    mel.connect_material_property(op, "", u.MaterialProperty.MP_OPACITY)
-                mel.recompile_material(mat)
-                eal.save_asset(path, only_if_is_dirty=False)
+            else:
+                # VERIFIED 5.8 header: UMaterialEditingLibrary::DeleteAllMaterialExpressions(UMaterial*) (MaterialEditingLibrary.h:150).
+                mel.delete_all_material_expressions(mat)
+            r, g, b = [float(c) for c in recipe["rgb"]]
+            color = mel.create_material_expression(mat, u.MaterialExpressionConstant3Vector, -700, 0)
+            color.set_editor_property("constant", u.LinearColor(r, g, b, 1.0))
+            base = color
+            tex = recipe.get("texture")
+            if tex:
+                textured = self._textured_base(mat, color, tex, key)
+                if textured is not None:
+                    base = textured
+                    self.materials_textured.append(key)
+                else:
+                    self.materials_flat_fallback.append(key)
+            mel.connect_material_property(base, "", u.MaterialProperty.MP_BASE_COLOR)
+            rough = mel.create_material_expression(mat, u.MaterialExpressionConstant, -700, 200)
+            rough.set_editor_property("r", float(recipe["roughness"]))
+            mel.connect_material_property(rough, "", u.MaterialProperty.MP_ROUGHNESS)
+            opacity = float(recipe["opacity"])
+            if opacity < 1.0:
+                # VERIFIED 5.8.2: Material.blend_mode + BlendMode.BLEND_TRANSLUCENT (glass/marker materials
+                # were created by the 2026-09-06 run; a wrong name would have raised and printed FAILED).
+                mat.set_editor_property("blend_mode", u.BlendMode.BLEND_TRANSLUCENT)
+                mat.set_editor_property("two_sided", True)
+                op = mel.create_material_expression(mat, u.MaterialExpressionConstant, -700, 400)
+                op.set_editor_property("r", opacity)
+                mel.connect_material_property(op, "", u.MaterialProperty.MP_OPACITY)
+            else:
+                # A tint that used to be translucent must come back opaque (the asset is reused, not recreated).
+                # VERIFIED 5.8 header: EBlendMode::BLEND_Opaque (EngineTypes.h:247) -> Python BlendMode.BLEND_OPAQUE.
+                mat.set_editor_property("blend_mode", u.BlendMode.BLEND_OPAQUE)
+                mat.set_editor_property("two_sided", False)
+            mel.recompile_material(mat)
+            eal.save_asset(path, only_if_is_dirty=False)
             self.materials[key] = mat
+        if self.materials_flat_fallback:
+            u.log_warning("[hellfall] surface texture unavailable for: %s (built flat; see warnings above)"
+                          % ", ".join(sorted(self.materials_flat_fallback)))
+
+    def _textured_base(self, mat: Any, color: Any, tex: Dict[str, Any], key: str) -> Any:
+        """Wire the world-aligned grid and return the Lerp expression to feed Base Color, or None to fall back flat.
+
+        Pin facts checked against the installed 5.8 sources (2026-09-06):
+        * UMaterialExpressionMaterialFunctionCall::SetMaterialFunction is UFUNCTION(BlueprintCallable)
+          (MaterialExpressionMaterialFunctionCall.h:157) -> Python ``set_material_function``; it fills the
+          node's FunctionInputs/Outputs from the function resource (SetMaterialFunctionEx), which is what the
+          non-exposed UpdateFromFunctionResource() would do.
+        * UMaterialEditingLibrary::ConnectMaterialExpressions matches a function-call input by its name WITHOUT
+          the type postfix (GetInputNameWithType(idx, false), MaterialEditingLibrary.cpp:61-64) and an output by
+          Outputs[i].OutputName - so "TextureObject" / "TextureSize" / "XYZ Texture" as authored in the style.
+        * UMaterialExpressionTextureBase::Texture is BlueprintReadWrite (MaterialExpressionTextureBase.h:27-28);
+          Lerp inputs are the FExpressionInput UPROPERTYs A / B / Alpha; Constant.R is "r".
+        The WorldAlignedTexture asset's name table lists TextureObject, TextureSize, WorldPosition,
+        ProjectionTransitionContrast and the four "* Texture" outputs (binary grep of the .uasset).
+        """
+        u = self.unreal
+        mel = u.MaterialEditingLibrary
+        created: List[Any] = []
+
+        def bail(why: str) -> None:
+            u.log_warning("[hellfall] M_GB_%s: %s - building the flat material instead" % (key, why))
+            for e in created:
+                try:
+                    # VERIFIED 5.8 header: DeleteMaterialExpression(UMaterial*, UMaterialExpression*) (MaterialEditingLibrary.h:154).
+                    mel.delete_material_expression(mat, e)
+                except Exception as exc:  # pragma: no cover - cleanup is best effort
+                    u.log_warning("[hellfall] M_GB_%s: could not remove orphan expression: %s" % (key, exc))
+
+        try:
+            fn_asset = u.load_asset(tex["function_asset"])
+            tex_asset = u.load_asset(tex["texture_asset"])
+        except Exception as exc:  # load_asset can raise on a malformed path
+            bail("asset load raised %s" % exc)
+            return None
+        if fn_asset is None:
+            bail("material function %s did not load" % tex["function_asset"])
+            return None
+        if tex_asset is None:
+            bail("texture %s did not load" % tex["texture_asset"])
+            return None
+        try:
+            tex_obj = mel.create_material_expression(mat, u.MaterialExpressionTextureObject, -1300, 250)
+            created.append(tex_obj)
+            tex_obj.set_editor_property("texture", tex_asset)
+            size = mel.create_material_expression(mat, u.MaterialExpressionConstant, -1300, 450)
+            created.append(size)
+            size.set_editor_property("r", float(tex["tile_cm"]))
+            call = mel.create_material_expression(mat, u.MaterialExpressionMaterialFunctionCall, -1000, 250)
+            created.append(call)
+            # TODO(VERIFY 5.8): first live run - set_material_function must return True and populate the pins.
+            if not call.set_material_function(fn_asset):
+                bail("set_material_function(%s) returned False" % tex["function_asset"])
+                return None
+            lerp = mel.create_material_expression(mat, u.MaterialExpressionLinearInterpolate, -450, 100)
+            created.append(lerp)
+            alpha = mel.create_material_expression(mat, u.MaterialExpressionConstant, -700, 300)
+            created.append(alpha)
+            alpha.set_editor_property("r", float(tex["strength"]))
+            wires = [
+                (tex_obj, "", call, tex["function_input_texture"]),
+                (size, "", call, tex["function_input_size"]),
+                (color, "", lerp, "A"),
+                (call, tex["function_output"], lerp, "B"),
+                (alpha, "", lerp, "Alpha"),
+            ]
+            for src, out_name, dst, in_name in wires:
+                if not mel.connect_material_expressions(src, out_name, dst, in_name):
+                    bail("cannot connect %s.%r -> %s.%r (pin name changed?)" % (
+                        src.get_class().get_name(), out_name, dst.get_class().get_name(), in_name))
+                    return None
+        except Exception as exc:  # noqa: BLE001 - the texture is optional polish; never fail the build for it
+            bail("texture graph raised %s: %s" % (type(exc).__name__, exc))
+            return None
+        return lerp
 
     # ---- emit -----------------------------------------------------------------------------------
     def emit(self, actor: hg.Actor) -> None:
@@ -422,9 +593,9 @@ def run_build(kind: str, map_path: str, inputs: Dict[str, Any], dry_run: bool, o
     if kind == "feel_gym":
         sources.pop("floorplan", None)
     if dry_run:
-        emitter: Any = ManifestEmitter(out_path or default_manifest_path(map_path))
+        emitter: Any = ManifestEmitter(out_path or default_manifest_path(map_path), inputs["style"])
     else:
-        emitter = UnrealEmitter(inputs["style"]["tints"])
+        emitter = UnrealEmitter(inputs["style"])
     emitter.begin(map_path, meta, sources)
     for a in actors:
         emitter.emit(a)
@@ -451,6 +622,10 @@ def print_result(result: Dict[str, Any]) -> None:
     pb = result.get("plan_bounds") or {}
     if pb:
         print("  plan bounds (cm): min %s max %s" % (pb["min_plan"], pb["max_plan"]))
+    if "materials" in result:
+        print("  materials: %d (textured: %s)" % (result["materials"], ", ".join(result.get("materials_textured") or []) or "none"))
+        if result.get("materials_flat_fallback"):
+            print("  WARN materials built flat (texture unavailable): %s" % ", ".join(result["materials_flat_fallback"]))
     if result["warnings"]:
         print("  warnings:")
         for w in result["warnings"]:

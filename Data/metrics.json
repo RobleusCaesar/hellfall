@@ -49,6 +49,8 @@
     "step_ramp_steps": 9,
     "crawl_tunnel_heights_cm": [90, 100, 110],
     "crawl_tunnel_width_cm": 100,
-    "crawl_tunnel_length_cm": 500
+    "crawl_tunnel_length_cm": 500,
+    "hall_ceiling_cm": 450,
+    "_hall_comment": "Gate-1 brief: the feel gym is an enclosed hall (walls from architecture.wall_thickness_cm, this ceiling over the whole slab; station rooms keep their own lower ceilings inside it). Must clear the tallest station top (350 room + 20 slab = 370) plus greybox_style.lights.drop_below_ceiling_cm (60) so the hall fill lights hang in free air."
   }
 }

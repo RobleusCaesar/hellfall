@@ -37,7 +37,8 @@ So a player standing at the CEO office door and facing +X looks straight at the 
   "checkpoints":[ Checkpoint ],
   "encounters": [ Encounter ],
   "money_shot": MoneyShot,
-  "critical_path": [ "room_id", ... ]   // ordered, must start at supply_closet and end at ceo_office
+  "critical_path": [ "room_id", ... ],  // ordered, must start at supply_closet and end at ceo_office
+  "scenes":     [ Scene ]               // OPTIONAL (gate 1): reserved staging slots, see "Scene" below
 }
 ```
 
@@ -145,6 +146,47 @@ Required ids: `demon_1` (corridor near `office_2`), `demon_2` (inside `ceo_offic
   "dwell_rect": { "x":..., "y":..., "w":..., "h":... }   // 5-second dwell zone in front of the window
 }
 ```
+
+### Scene (gate-1 brief: "a bit of a maze ... where we can ultimately stage different monsters and scenes")
+
+A reserved staging slot. Scenes are **review markers only** — no collision, no gameplay — so Rob can see where a beat is planned while he walks the greybox; later gates replace them with real spawns, triggers and props.
+
+```jsonc
+{
+  "id": "sc_copy_room_lurker",          // snake_case, unique across scenes
+  "room": "copy_room",                  // the room whose rect contains the slot
+  "kind": "monster",                    // monster | ambush | scene | pickup | reveal
+  "rect": { "x": 1200, "y": 2350, "w": 150, "h": 150 },   // plan space, must lie inside the room's rect
+  "facing_deg": 180,                    // plan yaw (0 = +x right of the photo, 90 = +y toward the window): the direction the staged thing faces / the player is expected to arrive from
+  "description": "Lurker behind the copier; charges when the player reaches the paper shelves."   // free text, word-wrapped in the greybox
+}
+```
+
+Kinds and what the generator draws (`Data/greybox_style.json : scene_marker`, tints `scene_<kind>`):
+
+| kind | colour | meaning |
+|---|---|---|
+| `monster` | red | a demon or other hostile stands / spawns here |
+| `ambush` | orange | a hostile bursts out of hiding here (door, ceiling tile, cabinet) |
+| `scene` | purple | a scripted set piece or corpse tableau |
+| `pickup` | green | an item the player collects (shotgun, shells, key) |
+| `reveal` | blue | a sightline / vista the player is meant to notice (window, corridor end) |
+
+Per scene the greybox gets: a translucent floor marker over `rect` in the kind's colour; a label `KIND: id` at `scene_marker.label_height_cm` (60 cm) facing the room's entry point like every other label in the room; a smaller grey note with the description (skipped when `labels.notes_enabled` is false); and, when `facing_deg` is a multiple of 90, a thin tick strip from the rect centre toward the facing direction. Everything lands in the `Greybox/Scenes` outliner folder. The manifest records every scene under `meta.scenes` (`rect_plan`, `facing_deg`, `tint`, `facing_tick`).
+
+Validator (`Tools/validate_floorplan.mjs`): the array is optional; when present every scene needs a snake_case unique `id`, an existing `room`, a `rect` inside that room, a known `kind` and a numeric `facing_deg`; a missing description or a scene in a non-enterable room is a WARN. **Fewer than 8 scenes is a WARN** (the gate-1 brief reserves at least eight slots). Scene rects may overlap each other, encounter lanes and checkpoints — they are markers. `Tools/check_manifest.mjs` ignores marker kinds entirely.
+
+## Exploration estimate (validator, gate-1 brief: "about 10 minutes to explore and play")
+
+`Tools/validate_floorplan.mjs` prints, in its PASS line, an exploration estimate and WARNs outside 8–12 minutes:
+
+```
+minutes = ( Σ corridor centre-line lengths (rooms whose id starts with corridor_, longer axis) × 2
+          + Σ over enterable non-corridor rooms of (2 × shorter axis + 300) )
+          / walk speed (movement.player.walk_speed_cms) / 60 × 1.6
+```
+
+It also prints the critical-path walking length (centre to centre between consecutive `critical_path` rooms, routed through the connecting door/open centre, or through both duct mouths and the tube) and the number of **junctions** on the critical path (a `corridor_*` room with ≥ 3 passable connections: door, open or duct). The gate-0 plan scores about 1.2 minutes and 2 junctions; the legal-office floor is expected to land in the 8–12 band.
 
 ## Fixed adjacency (from the spec — the validator enforces this)
 

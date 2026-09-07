@@ -26,10 +26,18 @@ const ROLES = ['start', 'transit', 'optional', 'dead_end', 'goal', 'sealed'];
 const MARKER_KINDS = ['player_start', 'reference_figure', 'note'];
 const BLOCKER_KINDS = ['collapse', 'elevator_doors'];
 const PASSABLE_TYPES = ['door', 'open'];
+const SCENE_KINDS = ['monster', 'ambush', 'scene', 'pickup', 'reveal'];   // Docs/FLOORPLAN-SCHEMA.md "Scene"
 
 // Metrics Standard spec ranges (Docs/BUILD-PLAN.md table).
 const SPEC = { corridorMin: 250, corridorMax: 320, ceilingMin: 300, ceilingMax: 330, wetCeilingMin: 270,
   ductLenMin: 300, ductLenMax: 800, smallRoomMin: 300, dwellMaxDistance: 150 };
+// Exploration-time estimate (gate-1 brief: "about 10 minutes to explore and play"), agreed formula:
+//   minutes = (sum(corridor centre lines, longer axis of corridor_* rooms) x corridorPasses
+//              + sum over enterable non-corridor rooms of (roomSpanFactor x shorter axis + roomOverheadCm))
+//             / walk speed (movement.player.walk_speed_cms) / 60 x dawdleFactor
+// WARN outside [minMinutes, maxMinutes]; never a FAIL (it is an estimate, Rob's walk is the referee).
+const EXPLORE = { corridorPasses: 2, roomSpanFactor: 2, roomOverheadCm: 300, dawdleFactor: 1.6, minMinutes: 8, maxMinutes: 12,
+  minScenes: 8 };
 
 const fails = [];
 const warns = [];
@@ -78,6 +86,7 @@ if (fp.units !== 'cm') fail(`units must be "cm" (got ${JSON.stringify(fp.units)}
 for (const k of ['rooms', 'openings', 'ducts', 'blockers', 'markers', 'checkpoints', 'encounters', 'critical_path']) {
   if (!Array.isArray(fp[k])) fail(`top-level "${k}" must be an array`);
 }
+if (fp.scenes !== undefined && !Array.isArray(fp.scenes)) fail('top-level "scenes" must be an array when present');
 if (!fp.money_shot || typeof fp.money_shot !== 'object') fail('top-level "money_shot" must be an object');
 const rooms = Array.isArray(fp.rooms) ? fp.rooms : [];
 const openings = Array.isArray(fp.openings) ? fp.openings : [];
@@ -87,6 +96,7 @@ const markers = Array.isArray(fp.markers) ? fp.markers : [];
 const checkpoints = Array.isArray(fp.checkpoints) ? fp.checkpoints : [];
 const encounters = Array.isArray(fp.encounters) ? fp.encounters : [];
 const criticalPath = Array.isArray(fp.critical_path) ? fp.critical_path : [];
+const scenes = Array.isArray(fp.scenes) ? fp.scenes : [];
 const ms = fp.money_shot && typeof fp.money_shot === 'object' ? fp.money_shot : {};
 
 // ---- 2. rooms ----------------------------------------------------------------------------------
@@ -609,6 +619,67 @@ if (d1 && d2 && isNum(d1.capsule_radius_cm) && isNum(d2.capsule_radius_cm) && !(
   if (segmentHitsRect(door, wc, wallRect)) fail(`money_shot.dividing_wall crosses the sightline from the door centre (${door.x}, ${door.y}) to the window centre (${wc.x}, ${wc.y})`);
 })();
 
+// ---- 11. scenes (optional staging slots for monsters / ambushes / set pieces; Docs/FLOORPLAN-SCHEMA.md "Scene") -----
+const rectInside = (a, b) => a.x >= b.x - 1e-6 && a.y >= b.y - 1e-6 && a.x + a.w <= b.x + b.w + 1e-6 && a.y + a.h <= b.y + b.h + 1e-6;
+const sceneIds = new Set();
+for (const s of scenes) {
+  if (!isStr(s.id) || !snake.test(s.id)) { fail(`scene id ${JSON.stringify(s.id)} must be snake_case`); continue; }
+  if (sceneIds.has(s.id)) fail(`duplicate scene id "${s.id}"`);
+  sceneIds.add(s.id);
+  const room = roomById.get(s.room);
+  if (!room) { fail(`scene "${s.id}": unknown room "${s.room}"`); continue; }
+  if (!SCENE_KINDS.includes(s.kind)) fail(`scene "${s.id}": kind must be ${SCENE_KINDS.join('|')} (got ${JSON.stringify(s.kind)})`);
+  if (!isRect(s.rect)) fail(`scene "${s.id}": rect must be {x,y,w,h} with w,h > 0`);
+  else if (isRect(room.rect) && !rectInside(s.rect, room.rect)) fail(`scene "${s.id}": rect (${s.rect.x}, ${s.rect.y}, ${s.rect.w} x ${s.rect.h}) is not inside room "${room.id}"`);
+  if (!isNum(s.facing_deg)) fail(`scene "${s.id}": facing_deg must be a number (plan yaw: 0 = +x, 90 = +y toward the window)`);
+  if (!isStr(s.description)) warn(`scene "${s.id}" has no description`);
+  if (room.enterable === false) warn(`scene "${s.id}" sits in the non-enterable room "${room.id}"`);
+}
+if (scenes.length < EXPLORE.minScenes) warn(`${scenes.length} scene(s) declared; the gate-1 brief reserves at least ${EXPLORE.minScenes} staging slots ("scenes" array, Docs/FLOORPLAN-SCHEMA.md)`);
+
+// ---- 12. exploration estimate, critical-path walk, junctions (gate-1 brief: ~10 minutes, a bit of a maze) ---------
+const walkSpeed = movement.player.walk_speed_cms;
+const isCorridorId = (r) => r.id.startsWith('corridor_');
+let corridorCm = 0, roomCm = 0, corridorCount = 0, roomCount = 0;
+for (const r of validRooms) {
+  if (isCorridorId(r)) { corridorCm += Math.max(r.rect.w, r.rect.h); corridorCount++; }
+  else if (r.enterable !== false) { roomCm += EXPLORE.roomSpanFactor * Math.min(r.rect.w, r.rect.h) + EXPLORE.roomOverheadCm; roomCount++; }
+}
+const exploreCm = corridorCm * EXPLORE.corridorPasses + roomCm;
+const exploreMin = walkSpeed > 0 ? exploreCm / walkSpeed / 60 * EXPLORE.dawdleFactor : NaN;
+if (Number.isFinite(exploreMin) && (exploreMin < EXPLORE.minMinutes || exploreMin > EXPLORE.maxMinutes))
+  warn(`exploration estimate ${exploreMin.toFixed(1)} min is outside ${EXPLORE.minMinutes}-${EXPLORE.maxMinutes} min (corridors ${(corridorCm / 100).toFixed(0)} m x${EXPLORE.corridorPasses} + ${roomCount} rooms ${(roomCm / 100).toFixed(0)} m, at ${walkSpeed} cm/s x${EXPLORE.dawdleFactor})`);
+
+const centreOf = (r) => ({ x: r.rect.x + r.rect.w / 2, y: r.rect.y + r.rect.h / 2 });
+const rectCentre = (r) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 });
+const dist = (p, q) => Math.hypot(q.x - p.x, q.y - p.y);
+function ductMouthCentre(d, roomId) {
+  const m = ductMouthFootprints.find((f) => f.id === d.id && f.room === roomId);
+  return m ? rectCentre(footprintRect(roomById.get(m.room), m.side, m.lateral, 2 * m.half)) : null;
+}
+// Centre-to-centre walk between consecutive critical-path rooms, routed through their connecting opening (door/open
+// centre) or, for the duct, both mouths and the tube between them.
+let criticalCm = 0, criticalLegs = 0;
+for (let i = 0; i + 1 < criticalPath.length; i++) {
+  const a = roomById.get(criticalPath[i]), b = roomById.get(criticalPath[i + 1]);
+  if (!a || !b || !isRect(a.rect) || !isRect(b.rect)) continue;
+  const o = validOpenings.find((x) => PASSABLE_TYPES.includes(x.type) && x.between.length > 1 && touches({ a: x.between[0], b: x.between[1] }, a.id, b.id));
+  if (o) {
+    const oc = rectCentre(footprintRect(roomById.get(o.between[0]), o.wall, o.center_along_wall_cm, o.width_cm));
+    criticalCm += dist(centreOf(a), oc) + dist(oc, centreOf(b)); criticalLegs++;
+    continue;
+  }
+  const d = ducts.filter((x) => isStr(x.id)).find((x) => touches({ a: x.from, b: x.to }, a.id, b.id));
+  const ma = d ? ductMouthCentre(d, a.id) : null, mb = d ? ductMouthCentre(d, b.id) : null;
+  if (ma && mb) { criticalCm += dist(centreOf(a), ma) + dist(ma, mb) + dist(mb, centreOf(b)); criticalLegs++; }
+}
+// A junction = a corridor room on the critical path with >= 3 passable connections (door / open / duct).
+const junctions = criticalPath.filter((id) => {
+  const r = roomById.get(id);
+  if (!r || !isCorridorId(r)) return false;
+  return connections.filter((c) => (c.a === id || c.b === id) && (PASSABLE_TYPES.includes(c.type) || c.type === 'duct')).length >= 3;
+});
+
 function segmentHitsRect(p, q, r) { // Liang-Barsky slab test
   let t0 = 0, t1 = 1;
   const dx = q.x - p.x, dy = q.y - p.y;
@@ -635,6 +706,8 @@ const bounds = validRooms.reduce((acc, r) => ({
   x0: Math.min(acc.x0, r.rect.x - t), y0: Math.min(acc.y0, r.rect.y - t),
   x1: Math.max(acc.x1, r.rect.x + r.rect.w + t), y1: Math.max(acc.y1, r.rect.y + r.rect.h + t),
 }), { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity });
-console.log(`PASS ${rel}: ${rooms.length} rooms, ${openings.length} openings, ${ducts.length} duct(s), ${blockers.length} blockers, ${markers.length} markers, ${checkpoints.length} checkpoints, ${encounters.length} encounters; ` +
-  `plan bounds incl. walls ${bounds.x0}..${bounds.x1} x ${bounds.y0}..${bounds.y1} cm; critical path ${criticalPath.join(' -> ')}; ${warns.length} warning(s)`);
+console.log(`PASS ${rel}: ${rooms.length} rooms, ${openings.length} openings, ${ducts.length} duct(s), ${blockers.length} blockers, ${markers.length} markers, ${checkpoints.length} checkpoints, ${encounters.length} encounters, ${scenes.length} scenes; ` +
+  `plan bounds incl. walls ${bounds.x0}..${bounds.x1} x ${bounds.y0}..${bounds.y1} cm; critical path ${criticalPath.join(' -> ')}; ` +
+  `exploration ~${exploreMin.toFixed(1)} min (${corridorCount} corridors ${(corridorCm / 100).toFixed(0)} m x${EXPLORE.corridorPasses} + ${roomCount} rooms ${(roomCm / 100).toFixed(0)} m, ${walkSpeed} cm/s x${EXPLORE.dawdleFactor}); ` +
+  `critical path walk ~${(criticalCm / 100).toFixed(0)} m over ${criticalLegs} leg(s), ${junctions.length} junction(s)${junctions.length ? ` (${junctions.join(', ')})` : ''}; ${warns.length} warning(s)`);
 process.exit(0);
