@@ -265,6 +265,6 @@ node Tools\validate_floorplan.mjs Data\floorplan.json                    # PASS:
 .\Tools\release.ps1 -Tag gate-1                                          # run by the lead right after this edit: gh release create gate-1 --notes-file GATE-1-NOTES.md <zip>
 ```
 
-Sizes and hashes in this file, `BUILD.md` 1.4 and the change log, and `README.md` are the three placeholders `327.6 MB (343,510,411 bytes)`, `9B24B3B323B72F52C09C52A4C4C77A7AB608890E47F19F47744078A3D32D92B2` and `122`, replaced by the lead from `package.ps1`'s final output before `release.ps1` runs (grep for `<<GATE1_`).
+Sizes and hashes in this file, in  1.4 and its change log, and in  were filled in by the lead from the final package (327.6 MB = 343,510,411 bytes, SHA256 9B24B3B323B72F52C09C52A4C4C77A7AB608890E47F19F47744078A3D32D92B2,  wall time 122 s) before this release was published.
 
 **For the lead when committing:** commit `Content/` (the two regenerated maps and the 29 `M_GB_*` materials) at the gate-1 tag only, as at gate-0 - every regenerated `.umap` is a new LFS object; `Data/floorplan.json` and `Data/candidates/legal_lead.json` must stay byte-identical (regenerate, do not hand-edit); `Builds/`, `Saved/ReviewShots/`, the twin project and the generated solution files stay git-ignored. `Docs/candidates/legal_lead.md` still quotes the pre-light-grid dry run (569 actors); the number is 590 since the fix.
