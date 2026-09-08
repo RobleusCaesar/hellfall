@@ -32,9 +32,10 @@ from typing import Any, Dict, List, Optional
 import hf_geometry as hg
 
 MANIFEST_FORMAT = "hellfall-greybox-manifest"
-MANIFEST_VERSION = 2   # 2 (2026-09-06): + "materials" (per-tint recipe incl. the surface texture)
+MANIFEST_VERSION = 3   # 2 (2026-09-06): + "materials"; 3 (2026-09-07, Gate 2): + "cylinder" actors, box yaw_plan_deg, meta.blockout, recipe emissive
 MATERIAL_ROOT = "/Game/Greybox/Materials"
 CUBE_ASSET = "/Engine/BasicShapes/Cube"   # 100 cm engine cube with simple box collision
+CYLINDER_ASSET = "/Engine/BasicShapes/Cylinder"   # 100 cm diameter x 100 cm tall engine cylinder (Gate-2 demon blockouts)
 
 
 # --------------------------------------------------------------------------------------
@@ -44,11 +45,13 @@ CUBE_ASSET = "/Engine/BasicShapes/Cube"   # 100 cm engine cube with simple box c
 def material_recipes(style: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """tint key -> recipe dict, a pure function of Data/greybox_style.json.
 
-    recipe = {"asset", "rgb", "roughness", "opacity", "blend", "texture"} where "texture" is None (flat) or
+    recipe = {"asset", "rgb", "roughness", "opacity", "blend", "emissive", "texture"} where "texture" is None (flat) or
     {"function_asset", "function_input_texture", "function_input_size", "function_output", "texture_asset",
      "surface_class", "tile_cm", "strength"} - the world-aligned grid mixed into the base colour by
-    ``lerp(tint, grid, strength)``.  Raises GeometryError on a tint whose surface_class is not in
-    surface_texture.classes so a typo in the style is caught by the dry run, not by the editor.
+    ``lerp(tint, grid, strength)``.  "emissive" (Gate 2, backdrop_fire) is a multiplier: > 0 wires
+    ``rgb * emissive`` into Emissive Color so the placeholder fire plane reads bright without a light.
+    Raises GeometryError on a tint whose surface_class is not in surface_texture.classes so a typo in the
+    style is caught by the dry run, not by the editor.
     """
     tex = style.get("surface_texture") or {}
     enabled = bool(tex.get("enabled", False))
@@ -65,6 +68,7 @@ def material_recipes(style: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
             "roughness": hg.r3(float(spec.get("roughness", 0.9))),
             "opacity": hg.r3(opacity),
             "blend": "translucent" if opacity < 1.0 else "opaque",
+            "emissive": hg.r3(max(0.0, float(spec.get("emissive", 0.0)))),
             "texture": None,
         }
         cls = spec.get("surface_class")
@@ -172,6 +176,8 @@ def _summary_from_dicts(actors: List[Dict[str, Any]]) -> Dict[str, Any]:
     for a in actors:
         if a["type"] == "box":
             key = "box:%s" % a["kind"]
+        elif a["type"] == "cylinder":
+            key = "cylinder:%s" % a["kind"]
         elif a["type"] == "label":
             key = "label:%s" % a["style"]
         elif a["type"] == "light":
@@ -214,6 +220,7 @@ class UnrealEmitter:
         self.materials_textured: List[str] = []    # tint keys whose grid texture was wired
         self.materials_flat_fallback: List[str] = []   # tint keys that wanted a texture but fell back to flat
         self.cube = None
+        self.cylinder = None      # loaded lazily: only a blockout build spawns cylinders
         self.count = 0
         self.actor_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
         self.level_sub = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
@@ -336,6 +343,17 @@ class UnrealEmitter:
             rough = mel.create_material_expression(mat, u.MaterialExpressionConstant, -700, 200)
             rough.set_editor_property("r", float(recipe["roughness"]))
             mel.connect_material_property(rough, "", u.MaterialProperty.MP_ROUGHNESS)
+            emissive = float(recipe.get("emissive", 0.0))
+            if emissive > 0.0:
+                # Gate-2 backdrop_fire: an unlit orange plane beyond the window. Constant3Vector(rgb * emissive) ->
+                # Emissive Color.  TODO(VERIFY 5.8): MaterialProperty.MP_EMISSIVE_COLOR is the reflected name of
+                # EMaterialProperty::MP_EmissiveColor; a rename only loses the glow (logged), never the build.
+                try:
+                    glow = mel.create_material_expression(mat, u.MaterialExpressionConstant3Vector, -700, 600)
+                    glow.set_editor_property("constant", u.LinearColor(r * emissive, g * emissive, b * emissive, 1.0))
+                    mel.connect_material_property(glow, "", u.MaterialProperty.MP_EMISSIVE_COLOR)
+                except Exception as exc:  # noqa: BLE001 - the glow is polish; the tint still renders lit
+                    u.log_warning("[hellfall] M_GB_%s: emissive not wired (%s: %s) - flat lit colour instead" % (key, type(exc).__name__, exc))
             opacity = float(recipe["opacity"])
             if opacity < 1.0:
                 # VERIFIED 5.8.2: Material.blend_mode + BlendMode.BLEND_TRANSLUCENT (glass/marker materials
@@ -437,6 +455,8 @@ class UnrealEmitter:
     def emit(self, actor: hg.Actor) -> None:
         if isinstance(actor, hg.Box):
             self._emit_box(actor)
+        elif isinstance(actor, hg.Cylinder):
+            self._emit_cylinder(actor)
         elif isinstance(actor, hg.Label):
             self._emit_label(actor)
         elif isinstance(actor, hg.Light):
@@ -454,34 +474,53 @@ class UnrealEmitter:
         return self.unreal.Rotator(roll=0.0, pitch=float(pitch), yaw=float(yaw))
 
     def _emit_box(self, box: hg.Box) -> None:
-        u = self.unreal
+        # A yawed footprint (Gate-2 blockouts) is the engine cube turned by the footprint yaw (manifest ue.rotation).
         tr = hg.box_ue_transform(box)
-        actor = self.actor_sub.spawn_actor_from_class(u.StaticMeshActor, self._vec(tr["location"]), self._rot(0.0))
+        self._spawn_shape(box.name, self.cube, tr, box.tint_key, box.collision, box.visible, box.folder)
+
+    def _emit_cylinder(self, cyl: hg.Cylinder) -> None:
+        u = self.unreal
+        if self.cylinder is None:
+            self.cylinder = u.load_asset(CYLINDER_ASSET)
+            if self.cylinder is None:
+                raise RuntimeError("cannot load %s" % CYLINDER_ASSET)
+        tr = hg.cylinder_ue_transform(cyl)   # scale (2r/100, 2r/100, h/100), centre at h/2 - the engine cylinder is origin-centred
+        self._spawn_shape(cyl.name, self.cylinder, tr, cyl.tint_key, cyl.collision, cyl.visible, cyl.folder)
+
+    def _spawn_shape(self, name: str, mesh: Any, tr: Dict[str, Any], tint_key: str, collision: bool, visible: bool, folder: str) -> None:
+        u = self.unreal
+        actor = self.actor_sub.spawn_actor_from_class(u.StaticMeshActor, self._vec(tr["location"]), self._rot(tr["rotation"][2]))
         if actor is None:
-            raise RuntimeError("spawn failed for %s" % box.name)
-        actor.set_actor_label(box.name)
+            raise RuntimeError("spawn failed for %s" % name)
+        actor.set_actor_label(name)
         smc = actor.static_mesh_component   # VERIFIED 5.8.2: BlueprintReadOnly UPROPERTY StaticMeshComponent (StaticMeshActor.h)
         if smc is None:
             smc = actor.get_component_by_class(u.StaticMeshComponent)
         # StaticMeshActor spawns with STATIC mobility; set_static_mesh is allowed on static components in
         # the editor (the runtime restriction does not apply here).  We set it explicitly anyway.
         smc.set_mobility(u.ComponentMobility.STATIC)
-        if not smc.set_static_mesh(self.cube):
-            raise RuntimeError("set_static_mesh failed for %s" % box.name)
+        if not smc.set_static_mesh(mesh):
+            raise RuntimeError("set_static_mesh failed for %s" % name)
         actor.set_actor_scale3d(self._vec(tr["scale"]))
-        mat = self.materials.get(box.tint_key)
+        mat = self.materials.get(tint_key)
         if mat is not None:
             smc.set_material(0, mat)
-        if box.collision:
+        if collision:
             smc.set_collision_profile_name("BlockAll")
             smc.set_collision_enabled(u.CollisionEnabled.QUERY_AND_PHYSICS)
         else:
             smc.set_collision_profile_name("NoCollision")
             smc.set_collision_enabled(u.CollisionEnabled.NO_COLLISION)
-        if not box.visible:
+        if not visible:
+            # Collision-only shapes (the boundary shell) are hidden EVERYWHERE, not only in game: with hidden-in-game
+            # alone the editor viewport (and any editor screenshot taken without Game View) still drew the magenta
+            # Boundary_south slab between the money-shot window and the Gate-2 backdrop (review finding 2026-09-07).
+            # Component visibility is saved with the map and leaves collision untouched.  TODO(VERIFY 5.8): first live
+            # run - the shell must be absent from the viewport and the packaged run must still block at the perimeter.
             actor.set_actor_hidden_in_game(True)
+            smc.set_visibility(False)
             smc.set_cast_shadow(False)
-        actor.set_folder_path(u.Name(box.folder))
+        actor.set_folder_path(u.Name(folder))
         self.count += 1
 
     def _emit_label(self, label: hg.Label) -> None:
@@ -605,6 +644,8 @@ def run_build(kind: str, map_path: str, inputs: Dict[str, Any], dry_run: bool, o
     result["warnings"] = warnings
     result["kind"] = kind
     result["selftest"] = "ok" if dry_run else "skipped (editor build)"
+    if kind == "greybox":
+        result["blockout"] = meta.get("blockout")   # None = greybox-only build (no Data/blockout.json)
     return result
 
 
@@ -622,6 +663,15 @@ def print_result(result: Dict[str, Any]) -> None:
     pb = result.get("plan_bounds") or {}
     if pb:
         print("  plan bounds (cm): min %s max %s" % (pb["min_plan"], pb["max_plan"]))
+    if result.get("kind") == "greybox":
+        bo = result.get("blockout")
+        if bo:
+            counts = bo.get("counts", {})
+            print("  blockout : %s -> %s" % (bo.get("source", "?"), ", ".join("%s %d" % (k, v) for k, v in sorted(counts.items()))))
+            if bo.get("slots_unused"):
+                print("  blockout : unused asset slots: %s" % ", ".join(bo["slots_unused"]))
+        else:
+            print("  blockout : none (greybox-only build; Data/blockout.json is auto-loaded for Data/floorplan.json only - pass --blockout <file> for another plan)")
     if "materials" in result:
         print("  materials: %d (textured: %s)" % (result["materials"], ", ".join(result.get("materials_textured") or []) or "none"))
         if result.get("materials_flat_fallback"):

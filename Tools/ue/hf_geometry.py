@@ -45,6 +45,7 @@ DEFAULT_FLOORPLAN = os.path.join(DATA_DIR, "floorplan.json")
 DEFAULT_METRICS = os.path.join(DATA_DIR, "metrics.json")
 DEFAULT_STYLE = os.path.join(DATA_DIR, "greybox_style.json")
 DEFAULT_MOVEMENT = os.path.join(DATA_DIR, "movement.json")
+DEFAULT_BLOCKOUT = os.path.join(DATA_DIR, "blockout.json")   # Gate 2; optional (absent = greybox-only build)
 
 SIDES = ("north", "south", "west", "east")
 OPPOSITE = {"north": "south", "south": "north", "west": "east", "east": "west"}
@@ -62,6 +63,9 @@ HOLE_FILL_KINDS = {
 # Box kinds excluded from the pairwise overlap check (stacked on purpose / hidden shell).
 OVERLAP_WHITELIST_KINDS = {"collapse", "boundary"}
 
+# Visible box kinds that live OUTSIDE the boundary shell and the plan bounds (Gate-2 backdrop beyond the window).
+BOUNDARY_EXEMPT_KINDS = {"backdrop"}
+
 EPS = 1e-6
 
 
@@ -75,10 +79,91 @@ class GeometryError(Exception):
 
 @dataclass(frozen=True)
 class Box:
+    """An axis-aligned or yawed cuboid.  ``yaw_plan_deg`` (Gate 2 blockouts) turns the footprint about z in
+    plan space: ``w`` runs along (cos yaw, sin yaw), ``d`` along (-sin yaw, cos yaw); 0 = the classic
+    axis-aligned box.  ``min_plan`` / ``max_plan`` are the (conservative) AABB, ``corners_plan`` the exact
+    footprint, and the overlap / containment tests below use the exact footprint (SAT) so an angled desk
+    is never reported as touching a neighbour it does not touch.
+    """
     name: str
     kind: str
     center_plan: Tuple[float, float, float]   # x, y, z (centre)
-    size: Tuple[float, float, float]          # w (along plan x), d (along plan y), h (along z)
+    size: Tuple[float, float, float]          # w (along local x), d (along local y), h (along z)
+    tint_key: str
+    collision: bool
+    visible: bool
+    folder: str
+    room: str = ""
+    yaw_plan_deg: float = 0.0                 # footprint rotation in plan space (0 = w along +plan.x)
+
+    @property
+    def axis_aligned(self) -> bool:
+        return abs(self.yaw_plan_deg % 90.0) < 1e-9 or abs(self.yaw_plan_deg % 90.0 - 90.0) < 1e-9
+
+    @property
+    def half_extents_plan(self) -> Tuple[float, float]:
+        """Half extents of the footprint's AABB along plan x / y (exact for yaw multiples of 90)."""
+        w, d, _ = self.size
+        c = abs(math.cos(math.radians(self.yaw_plan_deg)))
+        s = abs(math.sin(math.radians(self.yaw_plan_deg)))
+        return (w / 2.0 * c + d / 2.0 * s, w / 2.0 * s + d / 2.0 * c)
+
+    @property
+    def min_plan(self) -> Tuple[float, float, float]:
+        cx, cy, cz = self.center_plan
+        hx, hy = self.half_extents_plan
+        return (cx - hx, cy - hy, cz - self.size[2] / 2.0)
+
+    @property
+    def max_plan(self) -> Tuple[float, float, float]:
+        cx, cy, cz = self.center_plan
+        hx, hy = self.half_extents_plan
+        return (cx + hx, cy + hy, cz + self.size[2] / 2.0)
+
+    def corners_plan(self) -> List[Tuple[float, float]]:
+        """The four footprint corners (plan x, y), counter-clockwise in plan space."""
+        cx, cy, _ = self.center_plan
+        w, d, _ = self.size
+        ux, uy = math.cos(math.radians(self.yaw_plan_deg)), math.sin(math.radians(self.yaw_plan_deg))
+        vx, vy = -uy, ux
+        out = []
+        for sw, sd in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+            out.append((cx + sw * ux * w / 2.0 + sd * vx * d / 2.0, cy + sw * uy * w / 2.0 + sd * vy * d / 2.0))
+        return out
+
+    def contains_point(self, p: Tuple[float, float, float], tol: float = 0.0) -> bool:
+        cz = self.center_plan[2]
+        h = self.size[2]
+        if not (cz - h / 2.0 - tol <= p[2] <= cz + h / 2.0 + tol):
+            return False
+        if self.axis_aligned:
+            lo = self.min_plan
+            hi = self.max_plan
+            return lo[0] - tol <= p[0] <= hi[0] + tol and lo[1] - tol <= p[1] <= hi[1] + tol
+        # local frame test for a yawed footprint
+        cx, cy, _ = self.center_plan
+        w, d, _ = self.size
+        ux, uy = math.cos(math.radians(self.yaw_plan_deg)), math.sin(math.radians(self.yaw_plan_deg))
+        dx, dy = p[0] - cx, p[1] - cy
+        lu = dx * ux + dy * uy
+        lv = -dx * uy + dy * ux
+        return abs(lu) <= w / 2.0 + tol and abs(lv) <= d / 2.0 + tol
+
+
+@dataclass(frozen=True)
+class Cylinder:
+    """A scaled /Engine/BasicShapes/Cylinder (100 cm diameter x 100 cm tall, centred on its origin).
+
+    Gate 2 uses it for the two demon capsules (REQ-G2-003): radius / height from Data/blockout.json, standing on
+    the floor at the encounter spawn, NO collision so the lane checks stay honest.  ``center_plan`` is the
+    centre of the cylinder (z = height / 2).  The manifest type is "cylinder"; hf_common.UnrealEmitter scales
+    the engine cylinder by (2r/100, 2r/100, h/100).
+    """
+    name: str
+    kind: str
+    center_plan: Tuple[float, float, float]
+    radius_cm: float
+    height_cm: float
     tint_key: str
     collision: bool
     visible: bool
@@ -86,21 +171,18 @@ class Box:
     room: str = ""
 
     @property
+    def size(self) -> Tuple[float, float, float]:
+        return (2.0 * self.radius_cm, 2.0 * self.radius_cm, self.height_cm)
+
+    @property
     def min_plan(self) -> Tuple[float, float, float]:
         cx, cy, cz = self.center_plan
-        w, d, h = self.size
-        return (cx - w / 2.0, cy - d / 2.0, cz - h / 2.0)
+        return (cx - self.radius_cm, cy - self.radius_cm, cz - self.height_cm / 2.0)
 
     @property
     def max_plan(self) -> Tuple[float, float, float]:
         cx, cy, cz = self.center_plan
-        w, d, h = self.size
-        return (cx + w / 2.0, cy + d / 2.0, cz + h / 2.0)
-
-    def contains_point(self, p: Tuple[float, float, float], tol: float = 0.0) -> bool:
-        lo = self.min_plan
-        hi = self.max_plan
-        return all(lo[i] - tol <= p[i] <= hi[i] + tol for i in range(3))
+        return (cx + self.radius_cm, cy + self.radius_cm, cz + self.height_cm / 2.0)
 
 
 @dataclass(frozen=True)
@@ -168,7 +250,7 @@ class PlayerStart:
     room: str = ""
 
 
-Actor = Any  # Box | Label | Light | PlayerStart
+Actor = Any  # Box | Cylinder | Label | Light | PlayerStart
 
 
 # --------------------------------------------------------------------------------------
@@ -226,20 +308,58 @@ def _selftest() -> None:
         (label_yaw_facing((5.0, 5.0), (5.0, 5.0)), 270.0, "coincident viewer falls back to 270"),
         (plan_yaw_to_ue_yaw(270.0), 180.0, "plan 270 -> UE 180"),
         (plan_yaw_to_ue_yaw(0.0), -90.0, "plan 0 -> UE -90"),
+        (footprint_yaw_to_ue_yaw(0.0), 0.0, "footprint yaw 0 -> UE 0"),
+        (footprint_yaw_to_ue_yaw(270.0), -90.0, "footprint yaw 270 -> UE -90"),
     ]
     for got, want, what in checks:
         if abs(float(got) - want) > 1e-3:
             raise GeometryError("selftest: %s (got %s, want %s)" % (what, got, want))
+    # Footprint geometry: a 200 x 100 box yawed 90 spans 100 along x / 200 along y; SAT overlap vs a neighbour.
+    b90 = Box("t", "t", (0.0, 0.0, 50.0), (200.0, 100.0, 100.0), "", False, False, "", yaw_plan_deg=90.0)
+    if abs(b90.max_plan[0] - 50.0) > 1e-6 or abs(b90.max_plan[1] - 100.0) > 1e-6:
+        raise GeometryError("selftest: yawed box AABB wrong: %s" % (b90.max_plan,))
+    other = Box("o", "o", (100.0, 0.0, 50.0), (100.0, 100.0, 100.0), "", False, False, "")
+    if _boxes_overlap(b90, other, 0.5):
+        raise GeometryError("selftest: flush boxes must not overlap")
+    b45 = Box("t45", "t", (0.0, 0.0, 50.0), (200.0, 20.0, 100.0), "", False, False, "", yaw_plan_deg=45.0)
+    far = Box("far", "o", (60.0, -60.0, 50.0), (40.0, 40.0, 100.0), "", False, False, "")
+    if _boxes_overlap(b45, far, 0.5):
+        raise GeometryError("selftest: SAT must clear a box beside a 45-degree bar (AABBs overlap, footprints do not)")
+    if not b45.contains_point((70.0, 70.0, 50.0)) or b45.contains_point((70.0, -70.0, 50.0)):
+        raise GeometryError("selftest: yawed contains_point wrong")
+
+
+def footprint_yaw_to_ue_yaw(yaw_plan_deg: float) -> float:
+    """UE yaw of a FOOTPRINT rotation (not a facing): plan space and UE turn the same way (plan +x -> +y is
+    UE -Y -> +X, both a +90 turn), so a box footprint yawed by t in plan is the engine cube yawed by t.  The
+    -90 offset in plan_yaw_to_ue_yaw belongs to facings only (their reference direction differs).  Result in
+    (-180, 180]."""
+    yaw = float(yaw_plan_deg) % 360.0
+    if yaw > 180.0:
+        yaw -= 360.0
+    return r3(yaw)
 
 
 def box_ue_transform(box: Box) -> Dict[str, Any]:
-    """Location/rotation/scale for a 100 cm engine cube. Scale.X spans plan.y (depth), Scale.Y spans plan.x (width)."""
+    """Location/rotation/scale for a 100 cm engine cube. Scale.X spans local d (plan.y when unrotated), Scale.Y
+    spans local w (plan.x when unrotated); the footprint yaw becomes the actor yaw (footprint_yaw_to_ue_yaw)."""
     cx, cy, cz = box.center_plan
     w, d, h = box.size
     return {
         "location": list(plan_to_ue(cx, cy, cz)),
-        "rotation": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, footprint_yaw_to_ue_yaw(box.yaw_plan_deg)],
         "scale": [r3(d / 100.0), r3(w / 100.0), r3(h / 100.0)],
+    }
+
+
+def cylinder_ue_transform(cyl: Cylinder) -> Dict[str, Any]:
+    """Location/scale for the 100 x 100 engine cylinder: uniform XY scale 2r/100, Z scale h/100, centre at h/2."""
+    cx, cy, cz = cyl.center_plan
+    s = r3(2.0 * cyl.radius_cm / 100.0)
+    return {
+        "location": list(plan_to_ue(cx, cy, cz)),
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [s, s, r3(cyl.height_cm / 100.0)],
     }
 
 
@@ -256,7 +376,24 @@ def actor_to_manifest(a: Actor) -> Dict[str, Any]:
             "visible": a.visible,
             "center_plan": [r3(v) for v in a.center_plan],
             "size_plan": [r3(v) for v in a.size],
+            "yaw_plan_deg": r3(a.yaw_plan_deg),
             "ue": box_ue_transform(a),
+        }
+    if isinstance(a, Cylinder):
+        return {
+            "type": "cylinder",
+            "name": a.name,
+            "kind": a.kind,
+            "folder": a.folder,
+            "room": a.room,
+            "tint": a.tint_key,
+            "collision": a.collision,
+            "visible": a.visible,
+            "center_plan": [r3(v) for v in a.center_plan],
+            "radius_cm": r3(a.radius_cm),
+            "height_cm": r3(a.height_cm),
+            "size_plan": [r3(v) for v in a.size],
+            "ue": cylinder_ue_transform(a),
         }
     if isinstance(a, Label):
         x, y, z = a.pos_plan
@@ -321,12 +458,19 @@ def load_json(path: str) -> Dict[str, Any]:
 def load_inputs(floorplan_path: str = DEFAULT_FLOORPLAN,
                 metrics_path: str = DEFAULT_METRICS,
                 style_path: str = DEFAULT_STYLE,
-                movement_path: str = DEFAULT_MOVEMENT) -> Dict[str, Any]:
-    return {
+                movement_path: str = DEFAULT_MOVEMENT,
+                blockout_path: Optional[str] = "auto") -> Dict[str, Any]:
+    """Load every JSON input.  ``blockout_path`` (Gate 2): "auto" loads Data/blockout.json when it exists AND
+    ``floorplan_path`` is the default Data/floorplan.json (the blockout is authored against that plan's rooms,
+    encounters and dwell rect; a candidate / fixture plan builds greybox-only), and stays silent otherwise;
+    None / "" never loads one; an explicit path must exist.  ``inputs["blockout"]`` is the parsed file or None;
+    ``paths["blockout"]`` is present only when loaded."""
+    inputs: Dict[str, Any] = {
         "floorplan": load_json(floorplan_path),
         "metrics": load_json(metrics_path),
         "style": load_json(style_path),
         "movement": load_json(movement_path),
+        "blockout": None,
         "paths": {
             "floorplan": _rel(floorplan_path),
             "metrics": _rel(metrics_path),
@@ -334,6 +478,16 @@ def load_inputs(floorplan_path: str = DEFAULT_FLOORPLAN,
             "movement": _rel(movement_path),
         },
     }
+    if blockout_path == "auto":
+        # Review finding 2026-09-07: auto-loading for EVERY plan made `--floorplan Data/candidates/X.json` fail on
+        # "blockout prop ...: unknown room" instead of testing the plan; the default plan is the only one it fits.
+        blockout_path = DEFAULT_BLOCKOUT if (os.path.isfile(DEFAULT_BLOCKOUT) and _same_file(floorplan_path, DEFAULT_FLOORPLAN)) else None
+    elif blockout_path and not os.path.isfile(blockout_path):
+        raise GeometryError("blockout file not found: %s" % blockout_path)
+    if blockout_path:
+        inputs["blockout"] = load_json(blockout_path)
+        inputs["paths"]["blockout"] = _rel(blockout_path)
+    return inputs
 
 
 def _rel(path: str) -> str:
@@ -343,6 +497,15 @@ def _rel(path: str) -> str:
     except ValueError:
         rel = path
     return rel.replace("\\", "/")
+
+
+def _same_file(a: str, b: str) -> bool:
+    """True when both paths name the same existing file (os.path.samefile; a missing file falls back to a
+    normalised absolute-path compare so the caller's own "not found" error wins)."""
+    try:
+        return os.path.samefile(a, b)
+    except OSError:
+        return os.path.normcase(os.path.abspath(a)) == os.path.normcase(os.path.abspath(b))
 
 
 # --------------------------------------------------------------------------------------
@@ -1364,6 +1527,14 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
         scene_meta.append({"id": sid, "room": room.id, "kind": kind, "rect_plan": [r3(sx0), r3(sy0), r3(sx1 - sx0), r3(sy1 - sy0)],
                            "facing_deg": r3(facing), "tint": tint_key, "facing_tick": tick, "description": desc})
 
+    # ---- Gate 2 blockouts (optional Data/blockout.json) ---------------------------------------------
+    blockout_meta: Optional[Dict[str, Any]] = None
+    if inputs.get("blockout") is not None:
+        bo_actors, blockout_meta = _blockout_actors(fp, rooms, footprints, opening_by_id, style, metrics, movement,
+                                                    inputs["blockout"], inputs["paths"].get("blockout", ""),
+                                                    room_facing, warnings)
+        actors.extend(bo_actors)
+
     # ---- boundary shell ------------------------------------------------------------------------
     actors.extend(_boundary_boxes(actors, metrics, style, F_BOUNDARY))
 
@@ -1381,6 +1552,7 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
         "ducts": duct_meta,
         "money_shot": money_meta,
         "scenes": scene_meta,
+        "blockout": blockout_meta,
         "notes_enabled": _notes_enabled(style),
         "metrics_version": metrics.get("version"),
         "floorplan_version": fp.get("version"),
@@ -1392,6 +1564,454 @@ def build_greybox(inputs: Dict[str, Any]) -> Tuple[List[Actor], Dict[str, Any]]:
     return actors, meta
 
 
+# --------------------------------------------------------------------------------------
+# Gate 2 blockouts (Data/blockout.json; schema in Docs/FLOORPLAN-SCHEMA.md "Blockout data")
+# --------------------------------------------------------------------------------------
+
+F_BO_PROPS = "Blockout/Props"
+F_BO_CHARS = "Blockout/Characters"
+F_BO_PICKUPS = "Blockout/Pickups"
+F_BO_DEMONS = "Blockout/Demons"
+F_BO_VOLUMES = "Blockout/Volumes"
+F_BO_BACKDROP = "Blockout/Backdrop"
+
+BLOCKOUT_POSES = ("seated", "prone", "slumped")
+BLOCKOUT_MOUNTS = ("floor", "wall", "ceiling")
+DEMON_FOOTPRINT_H = 10.0    # cm: the Demon_<id>_footprint marker slab under each demon cylinder (z 0..10), REQ-G2-003 AC1
+
+
+def _fp_axes(yaw_deg: float) -> Tuple[float, float, float, float]:
+    """Unit axes of a footprint yawed by yaw_deg in plan space: (ux, uy) carries w, (vx, vy) carries d."""
+    ux, uy = math.cos(math.radians(yaw_deg)), math.sin(math.radians(yaw_deg))
+    return ux, uy, -uy, ux
+
+
+def _half_along(w: float, d: float, yaw_deg: float, nx: float, ny: float) -> float:
+    """Half extent of a w x d footprint yawed by yaw_deg, measured along the unit direction (nx, ny)."""
+    ux, uy, vx, vy = _fp_axes(yaw_deg)
+    return abs(ux * nx + uy * ny) * w / 2.0 + abs(vx * nx + vy * ny) * d / 2.0
+
+
+def _wall_face(room: _Room, side: str) -> float:
+    """Plan coordinate of a room wall's INTERIOR face (y for north/south, x for west/east); the 20 cm wall
+    itself lies beyond it, so a footprint whose face sits here touches the wall box exactly (0 cm overlap)."""
+    return {"north": room.y, "south": room.y + room.h, "west": room.x, "east": room.x + room.w}[side]
+
+
+def _snap_to_wall(room: _Room, side: str, cx: float, cy: float, half_n: float) -> Tuple[float, float]:
+    """Move a footprint centre along the wall normal so its near face is flush with the interior wall face."""
+    nx, ny = _side_normal(side)
+    face = _wall_face(room, side)
+    if side in ("north", "south"):
+        return cx, face - ny * half_n
+    return face - nx * half_n, cy
+
+
+def _bo_size(item: Dict[str, Any], what: str, default: Optional[Sequence[float]] = None) -> Tuple[float, float, float]:
+    sz = item.get("size")
+    if sz is None:
+        if default is None:
+            raise GeometryError("%s: size {w, d, h} is required" % what)
+        w, d, h = (float(v) for v in default)
+    else:
+        try:
+            w, d, h = float(sz["w"]), float(sz["d"]), float(sz["h"])
+        except (KeyError, TypeError, ValueError):
+            raise GeometryError("%s: size must be {w, d, h} in cm (got %r)" % (what, sz))
+    if w <= 0 or d <= 0 or h <= 0:
+        raise GeometryError("%s: size must be positive (got %s x %s x %s)" % (what, w, d, h))
+    return w, d, h
+
+
+def _bo_pos(item: Dict[str, Any], what: str) -> Tuple[float, float]:
+    pos = item.get("pos")
+    try:
+        return float(pos["x"]), float(pos["y"])
+    except (KeyError, TypeError, ValueError):
+        raise GeometryError("%s: pos must be {x, y} in plan cm (got %r)" % (what, pos))
+
+
+def _blockout_actors(fp: Dict[str, Any], rooms: Dict[str, _Room], footprints: List[_Footprint],
+                     opening_by_id: Dict[str, Dict[str, Any]], style: Dict[str, Any], metrics: Dict[str, Any],
+                     movement: Dict[str, Any], bo: Dict[str, Any], source_rel: str, room_facing: Any,
+                     warnings: List[str]) -> Tuple[List[Actor], Dict[str, Any]]:
+    """Gate 2 (REQ-G2-002..005): turn Data/blockout.json into labelled boxes, cylinders and volumes.
+
+    * props -> tinted boxes by kind WITH collision; ``mount: wall`` snaps the footprint flush against the named
+      wall's interior face (pos is ignored along the wall normal); ``mount: ceiling`` hangs it flush under the
+      ceiling; floor items sit at z 0 (a non-zero z_cm is an error: nothing floats).
+    * characters -> boxes WITH collision; ``yaw_deg`` is the FACING, w runs across the body, d front-to-back;
+      ``contact: wall:<side>`` turns the character to face away from that wall and puts its back flush on it,
+      ``contact: prop:<id>`` puts its back flush on the prop's footprint face behind it (computed from the prop's
+      corners), ``floor`` leaves it where authored.  Default sizes per pose from greybox_style.blockout.
+    * pickups -> box WITH collision + a translucent halo box (no collision) enclosing it with pickup_halo_margin_cm
+      of clearance on every side, at least pickup_halo_cm per edge, yawed with it, when ``halo`` is true.
+    * demons -> a Cylinder per encounter at the encounter spawn, NO collision (lane checks stay honest); when the
+      demon carries ``footprint_cm`` (the audited mesh w x d, REQ-G2-003 AC1) a translucent NO-collision marker box
+      ``Demon_<id>_footprint`` (w x d x 10 cm, z 0..10, tint blockout.demon_footprint_tint) lies under the cylinder,
+      yawed so the mesh faces the encounter's player_approach (w = the wing span ACROSS the facing, like a
+      character; yaw 0 when there is no approach), and the label gains ", footprint w x d".  Being collision-free
+      and in Blockout/Demons it is a marker: no corridor / lane / overlap rule counts it (check_manifest ignores it).
+    * triggers / dwell -> translucent boxes over encounters[].trigger_rect / money_shot.dwell_rect, no collision.
+    * backdrop -> a large box beyond_window_cm behind the money-shot window, outside the boundary shell.
+    * one small "<label> <w> x <d> x <h>" label per item, label_lift_cm above it, facing the room's entry point like
+      every other label - or on the item face nearest that point at eye height when the top is too close to the ceiling.
+    Hard data errors raise GeometryError (Tools/validate_blockout.mjs reports them first, with more context);
+    placement snaps are recorded as warnings when they move an item further than blockout.rules.snap_warn_cm.
+    """
+    if "blockout" not in style:
+        raise GeometryError("greybox_style.json has no 'blockout' section (needed to build Data/blockout.json)")
+    bs = style["blockout"]
+    if int(bo.get("version", 0)) != 1:
+        raise GeometryError("blockout.json version must be 1 (got %r)" % (bo.get("version"),))
+    if bo.get("units", "cm") != "cm":
+        raise GeometryError("blockout.json units must be 'cm'")
+    slots = bo.get("asset_slots") or {}
+    if not isinstance(slots, dict):
+        raise GeometryError("blockout.json asset_slots must be an object keyed by SM_/SK_ name")
+    kind_tints = bs["kind_tints"]
+    lift = float(bs["label_lift_cm"])
+    snap_warn = float(bs["rules"]["snap_warn_cm"])
+    actors: List[Actor] = []
+    counts: Dict[str, int] = {"props": 0, "characters": 0, "pickups": 0, "halos": 0, "demons": 0, "demon_footprints": 0, "triggers": 0,
+                              "dwell": 0, "backdrop": 0, "labels": 0, "labels_on_face": 0}
+    used_slots: set = set()
+    ids: set = set()
+
+    def check_id(item: Dict[str, Any], what: str) -> str:
+        iid = str(item.get("id", "") or "")
+        if not iid:
+            raise GeometryError("blockout %s without id: %r" % (what, item))
+        if iid in ids:
+            raise GeometryError("duplicate blockout id %r" % iid)
+        ids.add(iid)
+        return iid
+
+    def check_room(item: Dict[str, Any], what: str) -> _Room:
+        room = rooms.get(str(item.get("room", "")))
+        if room is None:
+            raise GeometryError("blockout %s: unknown room %r" % (what, item.get("room")))
+        return room
+
+    def check_slot(item: Dict[str, Any], what: str) -> Optional[str]:
+        slot = item.get("slot")
+        if slot is None:
+            return None
+        if slot not in slots:
+            raise GeometryError("blockout %s: slot %r is not in asset_slots" % (what, slot))
+        used_slots.add(str(slot))
+        return str(slot)
+
+    def dim_text(label: str, w: float, d: float, h: float) -> str:
+        return "%s %d x %d x %d" % (label, int(round(w)), int(round(d)), int(round(h)))
+
+    label_size = float(_label_style(style, "blockout", metrics)["size_cm"])
+    eye_z = float(movement["player"]["eye_height_stand_cm"])
+
+    def item_label(name: str, text: str, room: _Room, shape: Actor, folder: str) -> Label:
+        """The item's dimension label, label_lift_cm above its top and centred on it.  When that text would enter
+        the ceiling slab (a 300 cm demon under a 310 ceiling, a ceiling-mounted cabinet) the label moves onto the
+        item face nearest the room's entry point, label_lift_cm off that face at standing eye height, clamped
+        inside the room - review finding 2026-09-07: Label_demon_demon_2 sat at z 315 inside the 310..330 slab."""
+        counts["labels"] += 1
+        x, y = shape.center_plan[0], shape.center_plan[1]
+        top = shape.center_plan[2] + shape.size[2] / 2.0
+        z = top + lift
+        if z + label_size / 2.0 <= room.ceiling - EPS:
+            return _make_label(name, x, y, text, "blockout", style, metrics, folder, room.id, z_override=z,
+                               **room_facing(room.id, x, y))
+        vp = room_facing(room.id, x, y).get("viewer_plan")
+        dx, dy = (0.0, -1.0) if vp is None else (float(vp[0]) - x, float(vp[1]) - y)
+        norm = math.hypot(dx, dy)
+        dx, dy = (0.0, -1.0) if norm < EPS else (dx / norm, dy / norm)
+        reach = shape.radius_cm if isinstance(shape, Cylinder) else _half_along(shape.size[0], shape.size[1], shape.yaw_plan_deg, dx, dy)
+        fx = min(max(x + dx * (reach + lift), room.x + lift), room.x + room.w - lift)
+        fy = min(max(y + dy * (reach + lift), room.y + lift), room.y + room.h - lift)
+        counts["labels_on_face"] += 1
+        return _make_label(name, fx, fy, text, "blockout", style, metrics, folder, room.id,
+                           z_override=min(eye_z, room.ceiling - lift - label_size / 2.0), **room_facing(room.id, fx, fy))
+
+    # ---- props ----------------------------------------------------------------------------------
+    prop_boxes: Dict[str, Box] = {}
+    for p in bo.get("props") or []:
+        pid = check_id(p, "prop")
+        what = "prop %r" % pid
+        room = check_room(p, what)
+        slot = check_slot(p, what)
+        kind = str(p.get("kind", "generic"))
+        if kind not in kind_tints:
+            raise GeometryError("%s: kind %r is not one of %s" % (what, kind, ", ".join(sorted(kind_tints))))
+        tint = _style_tint(style, kind_tints[kind])
+        w, d, h = _bo_size(p, what)
+        yaw = float(p.get("yaw_deg", 0.0)) % 360.0
+        x, y = _bo_pos(p, what)
+        mount = str(p.get("mount", "floor"))
+        if mount not in BLOCKOUT_MOUNTS:
+            raise GeometryError("%s: mount must be floor | wall | ceiling (got %r)" % (what, mount))
+        z0 = float(p.get("z_cm", 0.0))
+        if mount == "floor" and abs(z0) > EPS:
+            raise GeometryError("%s: mount floor with z_cm %s - floor items sit at z 0, nothing floats" % (what, z0))
+        if mount == "wall":
+            side = str(p.get("wall", ""))
+            if side not in SIDES:
+                raise GeometryError("%s: mount wall needs wall = north | south | west | east (got %r)" % (what, p.get("wall")))
+            nx, ny = _side_normal(side)
+            x, y = _snap_to_wall(room, side, x, y, _half_along(w, d, yaw, nx, ny))
+        elif mount == "ceiling":
+            want = room.ceiling - h
+            if "z_cm" in p and abs(float(p["z_cm"]) - want) > EPS:
+                warnings.append("%s: mount ceiling: z_cm %s replaced by %s (flush under the %s ceiling)" % (what, p["z_cm"], r3(want), room.id))
+            z0 = want
+        if z0 < -EPS:
+            raise GeometryError("%s: z_cm %s is below the floor" % (what, z0))
+        if z0 + h > room.ceiling + EPS:
+            raise GeometryError("%s: top %s is above the %s ceiling %s" % (what, r3(z0 + h), room.id, room.ceiling))
+        box = Box("Prop_%s" % pid, "prop", (x, y, z0 + h / 2.0), (w, d, h), tint, True, True, F_BO_PROPS, room.id, yaw_plan_deg=yaw)
+        actors.append(box)
+        prop_boxes[pid] = box
+        actors.append(item_label("Label_prop_%s" % pid, dim_text(str(p.get("label", pid)), w, d, h), room, box, F_BO_PROPS))
+        counts["props"] += 1
+
+    # ---- characters -------------------------------------------------------------------------------
+    defaults = bs["character_default_size_cm"]
+    char_tint = _style_tint(style, bs["character_tint"])
+    for c in bo.get("characters") or []:
+        cid = check_id(c, "character")
+        what = "character %r" % cid
+        room = check_room(c, what)
+        check_slot(c, what)
+        pose = str(c.get("pose", "seated"))
+        if pose not in BLOCKOUT_POSES:
+            raise GeometryError("%s: pose must be seated | prone | slumped (got %r)" % (what, pose))
+        if pose not in defaults:
+            raise GeometryError("greybox_style.blockout.character_default_size_cm has no entry for pose %r" % pose)
+        w, d, h = _bo_size(c, what, default=defaults[pose])
+        facing = float(c.get("yaw_deg", 0.0)) % 360.0
+        x0, y0 = _bo_pos(c, what)
+        x, y = x0, y0
+        contact = str(c.get("contact", "floor"))
+        if contact.startswith("wall:"):
+            side = contact[5:]
+            if side not in SIDES:
+                raise GeometryError("%s: contact %r - wall side must be north | south | west | east" % (what, contact))
+            nx, ny = _side_normal(side)
+            want = math.degrees(math.atan2(-ny, -nx)) % 360.0        # face away from the wall
+            if abs(((facing - want) + 180.0) % 360.0 - 180.0) > 1e-6:
+                warnings.append("%s: yaw_deg %s turned to %s so its back is flush with the %s wall" % (what, r3(facing), r3(want), side))
+                facing = want
+            x, y = _snap_to_wall(room, side, x, y, d / 2.0)
+        elif contact.startswith("prop:"):
+            pid = contact[5:]
+            prop = prop_boxes.get(pid)
+            if prop is None:
+                raise GeometryError("%s: contact prop %r is not a prop in this blockout" % (what, pid))
+            if prop.room != room.id:
+                raise GeometryError("%s: contact prop %r is in room %r, not %r" % (what, pid, prop.room, room.id))
+            fx, fy = math.cos(math.radians(facing)), math.sin(math.radians(facing))
+            px, py = -fy, fx
+            corners = prop.corners_plan()
+            back = max(cx * fx + cy * fy for cx, cy in corners)           # prop face behind the character
+            lat = x * px + y * py
+            pp = [cx * px + cy * py for cx, cy in corners]
+            if min(max(pp), lat + w / 2.0) - max(min(pp), lat - w / 2.0) <= EPS:
+                raise GeometryError("%s: does not lean on prop %r (no overlap across the facing)" % (what, pid))
+            shift = (back + d / 2.0) - (x * fx + y * fy)
+            x, y = x + fx * shift, y + fy * shift
+        elif contact != "floor":
+            raise GeometryError("%s: contact must be floor | wall:<side> | prop:<id> (got %r)" % (what, contact))
+        moved = math.hypot(x - x0, y - y0)
+        if moved > snap_warn:
+            warnings.append("%s: moved %.1f cm onto its contact surface (%s); author pos (%s, %s) instead of (%s, %s)"
+                            % (what, moved, contact, r3(x), r3(y), r3(x0), r3(y0)))
+        if h > room.ceiling + EPS:
+            raise GeometryError("%s: height %s exceeds the %s ceiling %s" % (what, h, room.id, room.ceiling))
+        # Box footprint: w across the body = the box's local x, so the footprint yaw is the facing - 90.
+        box = Box("Char_%s" % cid, "character", (x, y, h / 2.0), (w, d, h), char_tint, True, True, F_BO_CHARS, room.id,
+                  yaw_plan_deg=(facing - 90.0) % 360.0)
+        actors.append(box)
+        actors.append(item_label("Label_char_%s" % cid, dim_text(str(c.get("label", cid)), w, d, h), room, box, F_BO_CHARS))
+        counts["characters"] += 1
+
+    # ---- pickups ------------------------------------------------------------------------------------
+    pickup_tint = _style_tint(style, bs["pickup_tint"])
+    halo_tint = _style_tint(style, bs["halo_tint"])
+    halo_cm = float(bs["pickup_halo_cm"])                 # minimum halo edge
+    halo_margin = float(bs["pickup_halo_margin_cm"])      # clearance around the item on every side
+    for k in bo.get("pickups") or []:
+        kid = check_id(k, "pickup")
+        what = "pickup %r" % kid
+        room = check_room(k, what)
+        check_slot(k, what)
+        w, d, h = _bo_size(k, what)
+        yaw = float(k.get("yaw_deg", 0.0)) % 360.0
+        x, y = _bo_pos(k, what)
+        pick = Box("Pickup_%s" % kid, "pickup", (x, y, h / 2.0), (w, d, h), pickup_tint, True, True, F_BO_PICKUPS, room.id, yaw_plan_deg=yaw)
+        actors.append(pick)
+        tallest: Actor = pick
+        if bool(k.get("halo", False)):
+            # The halo ENCLOSES the item: pickup_halo_margin_cm of clearance on every side, never smaller than the
+            # pickup_halo_cm cube, yawed with the pickup (a bare 60 cube left 30 cm of the 120 cm shotgun sticking
+            # out at each end - review finding 2026-09-07).
+            hw = max(w + 2.0 * halo_margin, halo_cm)
+            hd = max(d + 2.0 * halo_margin, halo_cm)
+            hh = max(h + 2.0 * halo_margin, halo_cm)
+            halo = Box("Halo_%s" % kid, "halo", (x, y, hh / 2.0), (hw, hd, hh), halo_tint, False, True, F_BO_PICKUPS, room.id, yaw_plan_deg=yaw)
+            actors.append(halo)
+            tallest = halo
+            counts["halos"] += 1
+        actors.append(item_label("Label_pickup_%s" % kid, dim_text(str(k.get("label", kid)), w, d, h), room, tallest, F_BO_PICKUPS))
+        counts["pickups"] += 1
+
+    # ---- demons (cylinders at the encounter spawn) ----------------------------------------------------------
+    demon_tint = _style_tint(style, bs["demon_tint"])
+    enc_by_id = {str(e.get("id", "")): e for e in fp.get("encounters", [])}
+    for dm in bo.get("demons") or []:
+        did = check_id(dm, "demon")
+        what = "demon %r" % did
+        eid = str(dm.get("encounter", ""))
+        enc = enc_by_id.get(eid)
+        if enc is None:
+            raise GeometryError("%s: encounter %r is not in the floor plan" % (what, eid))
+        slot = check_slot(dm, what)
+        room = rooms.get(str(enc.get("room", "")))
+        if room is None:
+            raise GeometryError("%s: encounter %r has an unknown room" % (what, eid))
+        try:
+            radius = float(dm["radius_cm"])
+            height = float(dm["height_cm"])
+        except (KeyError, TypeError, ValueError):
+            raise GeometryError("%s: radius_cm and height_cm are required" % what)
+        if radius <= 0 or height <= 0:
+            raise GeometryError("%s: radius_cm / height_cm must be positive" % what)
+        sx, sy = float(enc["spawn"]["x"]), float(enc["spawn"]["y"])
+        cyl = Cylinder("Demon_%s" % did, "demon", (sx, sy, height / 2.0), radius, height, demon_tint, False, True, F_BO_DEMONS, room.id)
+        actors.append(cyl)
+        text = str(dm.get("label") or "DEMON %s (%s) %d cm" % (eid, slot or "no slot", int(round(height))))
+        fpc = dm.get("footprint_cm")
+        if fpc is not None:
+            # The audited mesh footprint (REQ-G2-003 AC1 "at the dimensions recorded in G2-001") as a 10 cm marker slab
+            # under the pathing cylinder: NO collision (the lane / route checks stay about the capsule), yawed so the mesh
+            # faces the player approach - w (the wing span) runs ACROSS that facing, d front-to-back, the character rule.
+            try:
+                fw, fd = float(fpc["w"]), float(fpc["d"])
+            except (KeyError, TypeError, ValueError):
+                raise GeometryError("%s: footprint_cm must be {w, d} in cm (got %r)" % (what, fpc))
+            if fw <= 0 or fd <= 0:
+                raise GeometryError("%s: footprint_cm must be positive (got %s x %s)" % (what, fw, fd))
+            fp_tint = _style_tint(style, str(bs.get("demon_footprint_tint", "blockout_demon_footprint")))
+            approach = enc.get("player_approach")
+            facing = 0.0
+            if isinstance(approach, dict) and "x" in approach and "y" in approach:
+                ax, ay = float(approach["x"]) - sx, float(approach["y"]) - sy
+                if math.hypot(ax, ay) > EPS:
+                    facing = math.degrees(math.atan2(ay, ax)) % 360.0
+            actors.append(Box("Demon_%s_footprint" % did, "demon_footprint", (sx, sy, DEMON_FOOTPRINT_H / 2.0), (fw, fd, DEMON_FOOTPRINT_H),
+                              fp_tint, False, True, F_BO_DEMONS, room.id, yaw_plan_deg=(facing - 90.0) % 360.0))
+            text = "%s, footprint %d x %d" % (text, int(round(fw)), int(round(fd)))
+            counts["demon_footprints"] += 1
+        actors.append(item_label("Label_demon_%s" % did, "%s\nr%d h%d" % (text, int(round(radius)), int(round(height))), room, cyl, F_BO_DEMONS))
+        counts["demons"] += 1
+
+    # ---- trigger volumes ------------------------------------------------------------------------------------
+    tr = bo.get("triggers")
+    if tr:
+        th = float(tr["height_cm"])
+        if th <= 0:
+            raise GeometryError("blockout triggers.height_cm must be positive")
+        trig_tint = _style_tint(style, bs["trigger_tint"])
+        for e in fp.get("encounters", []):
+            eid = str(e["id"])
+            rc = e["trigger_rect"]
+            x0, y0 = float(rc["x"]), float(rc["y"])
+            x1, y1 = x0 + float(rc["w"]), y0 + float(rc["h"])
+            cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+            room = next((rooms[rid] for rid in sorted(rooms) if rooms[rid].contains(cx, cy)), rooms.get(str(e.get("room", ""))))
+            if room is None:
+                raise GeometryError("encounter %r: trigger_rect centre is in no room" % eid)
+            vol = _rect_box("Volume_trigger_%s" % eid, "trigger_volume", x0, x1, y0, y1, 0.0, th, trig_tint, False, True, F_BO_VOLUMES, room.id)
+            actors.append(vol)
+            actors.append(item_label("Label_volume_trigger_%s" % eid, dim_text("TRIGGER VOLUME %s" % eid, x1 - x0, y1 - y0, th), room, vol, F_BO_VOLUMES))
+            counts["triggers"] += 1
+
+    # ---- dwell volume -----------------------------------------------------------------------------------------
+    ms = fp.get("money_shot") or {}
+    dw = bo.get("dwell")
+    if dw:
+        dr = ms.get("dwell_rect")
+        room = rooms.get(str(ms.get("room", "")))
+        if not dr or room is None:
+            raise GeometryError("blockout dwell needs money_shot.dwell_rect and money_shot.room in the floor plan")
+        dh = float(dw["height_cm"])
+        if dh <= 0:
+            raise GeometryError("blockout dwell.height_cm must be positive")
+        # The data may name the volume's tint; greybox_style blockout.dwell_tint (a 0.1-opacity volume tint) is the default.
+        dwell_tint = _style_tint(style, str(dw.get("tint") or bs["dwell_tint"]))
+        x0, y0 = float(dr["x"]), float(dr["y"])
+        x1, y1 = x0 + float(dr["w"]), y0 + float(dr["h"])
+        vol = _rect_box("Volume_dwell", "dwell_volume", x0, x1, y0, y1, 0.0, dh, dwell_tint, False, True, F_BO_VOLUMES, room.id)
+        actors.append(vol)
+        actors.append(item_label("Label_volume_dwell", dim_text("DWELL VOLUME (5 s)", x1 - x0, y1 - y0, dh), room, vol, F_BO_VOLUMES))
+        counts["dwell"] += 1
+
+    # ---- backdrop beyond the money-shot window --------------------------------------------------------------
+    backdrop_rect: Optional[List[float]] = None
+    bd = bo.get("backdrop")
+    if bd:
+        wroom = rooms.get(str(ms.get("room", "")))
+        wside = str(ms.get("window_wall", ""))
+        win = [f for f in footprints if f.kind == "window" and wroom is not None and f.room_a == wroom.id and f.side_a == wside]
+        if not win:
+            raise GeometryError("blockout backdrop: no window on %s's %s wall to sit behind" % (ms.get("room"), wside))
+        wf = win[0]
+        try:
+            beyond = float(bd["beyond_window_cm"])
+            width = float(bd["width_cm"])
+            height = float(bd["height_cm"])
+            z0 = float(bd.get("z_cm", 0.0))
+        except (KeyError, TypeError, ValueError):
+            raise GeometryError("blockout backdrop needs beyond_window_cm, width_cm, height_cm (and optional z_cm)")
+        if beyond <= 0 or width <= 0 or height <= 0:
+            raise GeometryError("blockout backdrop: beyond_window_cm, width_cm and height_cm must be positive")
+        thick = float(bs["backdrop_thickness_cm"])
+        bd_tint = _style_tint(style, str(bd.get("tint", "backdrop_fire")))
+        nx, ny = _side_normal(wside)
+        if wside in ("north", "south"):
+            outer = wf.y1 if wside == "south" else wf.y0
+            near = outer + ny * beyond
+            y0b, y1b = sorted([near, near + ny * thick])
+            x0b, x1b = wf.cx - width / 2.0, wf.cx + width / 2.0
+            lx, ly = wf.cx, near
+        else:
+            outer = wf.x1 if wside == "east" else wf.x0
+            near = outer + nx * beyond
+            x0b, x1b = sorted([near, near + nx * thick])
+            y0b, y1b = wf.cy - width / 2.0, wf.cy + width / 2.0
+            lx, ly = near, wf.cy
+        actors.append(_rect_box("Backdrop_%s" % wf.room_a, "backdrop", x0b, x1b, y0b, y1b, z0, z0 + height, bd_tint, False, True, F_BO_BACKDROP, ""))
+        # The label stands on the near face at window mid-height and reads from the window (viewer = window centre).
+        lz = (wf.z_bottom + wf.z_top) / 2.0
+        actors.append(_make_label("Label_backdrop_%s" % wf.room_a, lx - nx * 1.0, ly - ny * 1.0,
+                                  "BACKDROP (placeholder fire plane, REQ-G2-005)\n%d wide x %d high, %d cm beyond the glass" % (int(round(width)), int(round(height)), int(round(beyond))),
+                                  "blockout", style, metrics, F_BO_BACKDROP, "", z_override=lz,
+                                  yaw_plan_deg=label_yaw_facing((lx, ly), (wf.cx, wf.cy)), viewer_plan=(wf.cx, wf.cy), facing="backdrop:window"))
+        counts["labels"] += 1
+        counts["backdrop"] += 1
+        backdrop_rect = [r3(x0b), r3(y0b), r3(x1b - x0b), r3(y1b - y0b), r3(z0), r3(height)]
+
+    meta = {
+        "source": source_rel,
+        "version": 1,
+        "counts": counts,
+        "slots_declared": sorted(slots),
+        "slots_used": sorted(used_slots),
+        "slots_unused": sorted(set(slots) - used_slots),
+        "backdrop_rect_plan": backdrop_rect,
+        "rules": dict(bs["rules"]),
+        "folders": [F_BO_PROPS, F_BO_CHARS, F_BO_PICKUPS, F_BO_DEMONS, F_BO_VOLUMES, F_BO_BACKDROP],
+    }
+    return actors, meta
+
+
 def _boundary_boxes(actors: List[Actor], metrics: Dict[str, Any], style: Dict[str, Any], folder: str) -> List[Box]:
     bd = style["boundary"]
     pad = float(bd["padding_cm"])
@@ -1399,7 +2019,9 @@ def _boundary_boxes(actors: List[Actor], metrics: Dict[str, Any], style: Dict[st
     bottom_z = float(bd["bottom_z_cm"])
     safety_top = -float(bd["safety_slab_below_floor_cm"])
     height = float(metrics["architecture"]["boundary_wall_height_cm"])
-    boxes = [a for a in actors if isinstance(a, Box) and a.visible]
+    # The Gate-2 backdrop plane (kind "backdrop") is scenery beyond the window: it stays OUTSIDE the shell
+    # (Tools/check_manifest.mjs treats it the same way), so it is excluded from the bounds here.
+    boxes = [a for a in actors if isinstance(a, Box) and a.visible and a.kind not in BOUNDARY_EXEMPT_KINDS]
     if not boxes:
         raise GeometryError("no visible boxes to enclose")
     minx = min(b.min_plan[0] for b in boxes) - pad
@@ -1428,7 +2050,8 @@ def _finalize(actors: List[Actor]) -> List[Actor]:
 
 
 def plan_bounds(actors: List[Actor]) -> Dict[str, Any]:
-    boxes = [a for a in actors if isinstance(a, Box) and a.visible]
+    """Bounds of the visible architecture (the backdrop plane beyond the window is excluded, like the boundary)."""
+    boxes = [a for a in actors if isinstance(a, Box) and a.visible and a.kind not in BOUNDARY_EXEMPT_KINDS]
     if not boxes:
         return {}
     return {
@@ -1442,6 +2065,8 @@ def summarize(actors: List[Actor]) -> Dict[str, Any]:
     for a in actors:
         if isinstance(a, Box):
             key = "box:%s" % a.kind
+        elif isinstance(a, Cylinder):
+            key = "cylinder:%s" % a.kind
         elif isinstance(a, Label):
             key = "label:%s" % a.style_key
         elif isinstance(a, Light):
@@ -1457,11 +2082,35 @@ def summarize(actors: List[Actor]) -> Dict[str, Any]:
 # --------------------------------------------------------------------------------------
 
 def _aabb_overlap(a: Box, b: Box, tol: float) -> bool:
+    """AABB test on min_plan / max_plan (conservative for yawed footprints; see _boxes_overlap)."""
     amin, amax = a.min_plan, a.max_plan
     bmin, bmax = b.min_plan, b.max_plan
     for i in range(3):
         if min(amax[i], bmax[i]) - max(amin[i], bmin[i]) <= tol:
             return False
+    return True
+
+
+def _boxes_overlap(a: Box, b: Box, tol: float) -> bool:
+    """Exact overlap test: z interval, then the footprints - AABB when both are axis-aligned (yaw multiple of 90),
+    otherwise the separating-axis test on the four footprint axes.  Two boxes overlap only when they penetrate
+    by more than ``tol`` along EVERY axis tested, so flush faces (props against walls, a character's back on a
+    desk) never count."""
+    if min(a.max_plan[2], b.max_plan[2]) - max(a.min_plan[2], b.min_plan[2]) <= tol:
+        return False
+    if a.axis_aligned and b.axis_aligned:
+        for i in range(2):
+            if min(a.max_plan[i], b.max_plan[i]) - max(a.min_plan[i], b.min_plan[i]) <= tol:
+                return False
+        return True
+    ca, cb = a.corners_plan(), b.corners_plan()
+    for yaw in (a.yaw_plan_deg, b.yaw_plan_deg):
+        for ang in (yaw, yaw + 90.0):
+            ax, ay = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+            pa = [x * ax + y * ay for x, y in ca]
+            pb = [x * ax + y * ay for x, y in cb]
+            if min(max(pa), max(pb)) - max(min(pa), min(pb)) <= tol:
+                return False
     return True
 
 
@@ -1480,7 +2129,7 @@ def validate_geometry(actors: List[Actor], meta: Dict[str, Any], overlap_tol_cm:
             b = coll_sorted[j]
             if b.min_plan[0] >= amax_x - overlap_tol_cm:
                 break
-            if _aabb_overlap(a, b, overlap_tol_cm):
+            if _boxes_overlap(a, b, overlap_tol_cm):
                 failures.append("%s <-> %s" % (a.name, b.name))
     if failures:
         raise GeometryError("visible collision boxes overlap by more than %s cm:\n  %s" % (overlap_tol_cm, "\n  ".join(failures[:25])))
@@ -1499,7 +2148,7 @@ def validate_geometry(actors: List[Actor], meta: Dict[str, Any], overlap_tol_cm:
         for b in solids:
             if b.kind in allowed or b.kind in OVERLAP_WHITELIST_KINDS:
                 continue
-            if _aabb_overlap(b, hole, 0.0):
+            if _boxes_overlap(b, hole, 0.0):
                 raise GeometryError("opening %r (%s) is obstructed by %s" % (f.opening_id, f.kind, b.name))
         # probes just outside the hole must be solid (jambs, header, threshold) -> exact size
         cz = (f.z_bottom + f.z_top) / 2.0

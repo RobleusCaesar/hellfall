@@ -1,8 +1,8 @@
 {
-  "_comment": "HELLFALL greybox styling. Every tint, light, label, marker and layout-spacing number used by Tools/ue/hf_geometry.py lives here; the scripts contain no styling literals. RGB values are linear 0-1. Geometry dimensions (walls, doors, ducts, figure size, label height/size for rooms, feel-gym hall ceiling) come from Data/metrics.json; player body values from Data/movement.json. Change here, rerun Tools/test_dry_run.ps1, then rebuild the map. Gate-1 brief (Rob, 2026-09-06): floors darkest (~0.55, grey-warm), ceilings 0.72, walls lightest (~0.85) so edges read, plus a tiny world-aligned grid texture per surface class (see surface_texture) so floor / ceiling / wall differ.",
-  "version": 2,
+  "_comment": "HELLFALL greybox styling. Every tint, light, label, marker and layout-spacing number used by Tools/ue/hf_geometry.py lives here; the scripts contain no styling literals. RGB values are linear 0-1. Geometry dimensions (walls, doors, ducts, figure size, label height/size for rooms, feel-gym hall ceiling) come from Data/metrics.json; player body values from Data/movement.json. Change here, rerun Tools/test_dry_run.ps1, then rebuild the map. Gate-1 brief (Rob, 2026-09-06): floors darkest (~0.55, grey-warm), ceilings 0.72, walls lightest (~0.85) so edges read, plus a tiny world-aligned grid texture per surface class (see surface_texture) so floor / ceiling / wall differ. Gate-2 blockouts (2026-09-07): tints blockout_* / pickup_halo / backdrop_fire and the blockout section (character default sizes, halo size, backdrop thickness, label lift, placement rules) drive Tools/ue/hf_geometry.py and Tools/validate_blockout.mjs; the blockout data itself is Data/blockout.json (Docs/FLOORPLAN-SCHEMA.md, Blockout data).",
+  "version": 3,
   "tints": {
-    "_comment": "Each tint becomes ONE material asset /Game/Greybox/Materials/M_GB_<key>. 'opacity' < 1 makes the material translucent (markers and glass only). 'surface_class' (floor | ceiling | wall | duct) picks the world-aligned texture recipe from surface_texture.classes; tints without it stay flat (markers, glass, figures, feature slabs). Materials are REBUILT from this table on every editor run (all expressions deleted, graph re-created), so a tint change here always reaches the map.",
+    "_comment": "Each tint becomes ONE material asset /Game/Greybox/Materials/M_GB_<key>. 'opacity' < 1 makes the material translucent (markers and glass only). 'surface_class' (floor | ceiling | wall | duct) picks the world-aligned texture recipe from surface_texture.classes; tints without it stay flat (markers, glass, figures, feature slabs). Materials are REBUILT from this table on every editor run (all expressions deleted, graph re-created), so a tint change here always reaches the map. Gate 2: blockout_<kind> tints colour the prop boxes by kind (furniture / fixture / door / rack / generic), blockout_character the corpses and survivors, blockout_pickup the shotgun body, pickup_halo the translucent green 60 cm cube around a pickup, blockout_demon the two encounter cylinders, blockout_demon_footprint (same hue, opacity 0.3) the 10 cm no-collision Demon_<id>_footprint marker box under each cylinder (the audited mesh footprint, REQ-G2-003 AC1), trigger_volume / dwell_volume the full-height translucent encounter-trigger and dwell VOLUMES (same colours as the 2 cm floor markers encounter_trigger / dwell but opacity 0.1, not 0.3: the demon_2 trigger volume stands 110 cm in front of the CEO doorway and the dwell volume against the glass, so at 0.3 the whole money-shot frame was seen through a red / blue wash - review finding 2026-09-07), backdrop_fire the orange placeholder plane beyond the window (emissive = unlit multiplier on the base colour, wired to Emissive Color; 0 or absent = none).",
     "wall": {
       "rgb": [
         0.85,
@@ -176,6 +176,15 @@
       "roughness": 0.8,
       "opacity": 0.3
     },
+    "trigger_volume": {
+      "rgb": [
+        0.9,
+        0.2,
+        0.2
+      ],
+      "roughness": 0.8,
+      "opacity": 0.1
+    },
     "encounter_lane": {
       "rgb": [
         0.95,
@@ -202,6 +211,15 @@
       ],
       "roughness": 0.8,
       "opacity": 0.3
+    },
+    "dwell_volume": {
+      "rgb": [
+        0.2,
+        0.6,
+        0.95
+      ],
+      "roughness": 0.8,
+      "opacity": 0.1
     },
     "scene_monster": {
       "rgb": [
@@ -247,6 +265,97 @@
       ],
       "roughness": 0.8,
       "opacity": 0.28
+    },
+    "blockout_furniture": {
+      "rgb": [
+        0.62,
+        0.6,
+        0.55
+      ],
+      "roughness": 0.85
+    },
+    "blockout_fixture": {
+      "rgb": [
+        0.58,
+        0.62,
+        0.66
+      ],
+      "roughness": 0.6
+    },
+    "blockout_door": {
+      "rgb": [
+        0.5,
+        0.38,
+        0.27
+      ],
+      "roughness": 0.75
+    },
+    "blockout_rack": {
+      "rgb": [
+        0.52,
+        0.56,
+        0.6
+      ],
+      "roughness": 0.5
+    },
+    "blockout_generic": {
+      "rgb": [
+        0.68,
+        0.67,
+        0.64
+      ],
+      "roughness": 0.9
+    },
+    "blockout_character": {
+      "rgb": [
+        0.85,
+        0.45,
+        0.35
+      ],
+      "roughness": 0.8
+    },
+    "blockout_demon": {
+      "rgb": [
+        0.6,
+        0.08,
+        0.14
+      ],
+      "roughness": 0.7
+    },
+    "blockout_demon_footprint": {
+      "rgb": [
+        0.6,
+        0.08,
+        0.14
+      ],
+      "roughness": 0.7,
+      "opacity": 0.3
+    },
+    "blockout_pickup": {
+      "rgb": [
+        0.2,
+        0.72,
+        0.3
+      ],
+      "roughness": 0.6
+    },
+    "pickup_halo": {
+      "rgb": [
+        0.2,
+        0.95,
+        0.3
+      ],
+      "roughness": 0.8,
+      "opacity": 0.3
+    },
+    "backdrop_fire": {
+      "rgb": [
+        1,
+        0.42,
+        0.05
+      ],
+      "roughness": 1,
+      "emissive": 3
     },
     "boundary": {
       "rgb": [
@@ -295,7 +404,7 @@
     "goal": "wall_goal"
   },
   "labels": {
-    "_comment": "Room label size and height come from metrics.architecture.label_world_size_cm / label_height_above_floor_cm (the room label is clamped one text height below the room light: with lights.drop_below_ceiling_cm 60 a 310 cm room reads at 210, a 280 cm restroom at 180). Colors are linear RGB 0-1. Every label is ONE single-sided TextRender turned toward where the player reads it from (VERIFIED 5.8.2 packaged-run frames 2026-09-06: a TextRender reads from its local +X side and is mirrored from behind; the old double_sided 180-degree twin overlapped it into garbled glyphs, so double_sided is retired - do not set it). Room / note / marker labels face the room's entry point (player start; else the opening from the previous critical-path room, duct mouth included; else a door or open to a critical-path room, corridors first; else the duct mouth; else -plan.y), snapped to the nearest 90 deg only within 10 deg. Wall labels (LOCKED / ELEVATOR / DUCT / WINDOW WALL / COLLAPSED) face into the room; feel-gym labels face the start (-y). wall_offset_cm = distance from a wall face for the wall labels; LOCKED is placed on every enterable side of the door. note.wrap_chars = word-wrap width for NOTE labels (TextRender has no wrapping). notes_enabled=false skips EVERY note-style label (the Gate 2 intent notes and the scene description notes) - the coloured scene markers and their KIND: id labels stay.",
+    "_comment": "Room label size and height come from metrics.architecture.label_world_size_cm / label_height_above_floor_cm (the room label is clamped one text height below the room light: with lights.drop_below_ceiling_cm 60 a 310 cm room reads at 210, a 280 cm restroom at 180). Colors are linear RGB 0-1. Every label is ONE single-sided TextRender turned toward where the player reads it from (VERIFIED 5.8.2 packaged-run frames 2026-09-06: a TextRender reads from its local +X side and is mirrored from behind; the old double_sided 180-degree twin overlapped it into garbled glyphs, so double_sided is retired - do not set it). Room / note / marker labels face the room's entry point (player start; else the opening from the previous critical-path room, duct mouth included; else a door or open to a critical-path room, corridors first; else the duct mouth; else -plan.y), snapped to the nearest 90 deg only within 10 deg. Wall labels (LOCKED / ELEVATOR / DUCT / WINDOW WALL / COLLAPSED) face into the room; feel-gym labels face the start (-y). wall_offset_cm = distance from a wall face for the wall labels; LOCKED is placed on every enterable side of the door. note.wrap_chars = word-wrap width for NOTE labels (TextRender has no wrapping). notes_enabled=false skips EVERY note-style label (the Gate 2 intent notes and the scene description notes) - the coloured scene markers and their KIND: id labels stay. blockout = the small per-blockout dimension label (\"<label> <w> x <d> x <h>\"), placed label_lift_cm above the item (blockout.label_lift_cm) and facing the room entry point like every other label, or - when that would put the text into the ceiling slab - on the item face nearest the entry point at eye height; height_cm is unused (the z comes from the item).",
     "notes_enabled": true,
     "room": {
       "color_rgb": [
@@ -332,7 +441,16 @@
         0.6
       ]
     },
-    "wall_offset_cm": 40
+    "wall_offset_cm": 40,
+    "blockout": {
+      "size_cm": 14,
+      "height_cm": 60,
+      "color_rgb": [
+        0.92,
+        0.9,
+        0.82
+      ]
+    }
   },
   "lights": {
     "_comment": "One PointLight per room as an EVEN FILL light, MOVABLE so the greybox lights without a lighting build (iGPU: shadows off, counts small). Packaged-run finding 2026-09-06: ceiling-hung inverse-square candela lights blew the ceiling around each fixture out to white while the walls read flat tan, and auto-exposure swallowed a 12.5x candela change - so every point light (rooms, duct, feel-gym hall and stations) has inverse-square falloff OFF, a unitless intensity_unitless (ELightUnits::Unitless; intensity_cd is retired and the generator refuses it), falloff_exponent (2.0; per-spec override allowed) and hangs drop_below_ceiling_cm under the ceiling (60: further from the slab shrinks the hot spot). Lights per room: a grid at most light_spacing_cm apart along each axis (ceil(axis/spacing) per axis); radius = clamp(attenuation_diagonal_factor x cell diagonal, min_attenuation_radius_cm, max_attenuation_radius_cm). Gate-1 sweep finding 2026-09-06: one light per room with radius 1.25 x room diagonal gave a 44.8 m corridor a 56 m light and blew the whole floor out to white - hence the spacing and the cap. Greybox-visibility values so Rob can judge space, not Gate 3 mood; temperature_k stays per role. Second gate-1 sweep: overlap of 2-3 grid lights blew corridors out under the fixed exposure, so intensities were cut to ~65% and the radius clamped to 500-800 (= spacing), and auto exposure was re-enabled in Config/DefaultEngine.ini.",
@@ -493,6 +611,54 @@
       "intensity_unitless": 3,
       "temperature_k": 5000,
       "attenuation_radius_cm": 400
+    }
+  },
+  "blockout": {
+    "_comment": "Gate 2 blockout styling and placement rules (REQ-G2-002..005). The blockout DATA is Data/blockout.json (schema: Docs/FLOORPLAN-SCHEMA.md, Blockout data); this block only holds what the generator and Tools/validate_blockout.mjs need beyond that file. kind_tints: prop kind -> tint. character_default_size_cm: [w, d, h] used when a character omits size (w across the body, d front-to-back along yaw_deg = the facing; a prone body therefore lies ACROSS its facing). demon_footprint_tint: tint of the translucent no-collision footprint box (demons[].footprint_cm w x d, 10 cm tall, yawed to face the player approach) drawn under each demon cylinder. trigger_tint / dwell_tint: tints of the trigger / dwell volumes (dwell_tint is the default when Data/blockout.json dwell.tint is absent; the data may name another tint). pickup_halo_cm: MINIMUM edge of the translucent halo box drawn around a pickup with halo: true; the box encloses the item with pickup_halo_margin_cm of clearance on every side (w + 2m, d + 2m, h + 2m, each at least pickup_halo_cm), yawed with the pickup, bottom on the floor - a 60 cube alone left 30 cm of the 120 cm shotgun sticking out at each end. backdrop_thickness_cm: depth of the backdrop slab. label_lift_cm: label height above the item top; when that would put the text into the ceiling slab (item top within label_lift_cm + half the text height of the ceiling, e.g. the 300 cm Demon #2 under a 310 ceiling) the label moves onto the item face nearest the room entry point at movement.player.eye_height_stand_cm instead (label_lift_cm off the face). rules: wall_margin_cm = minimum footprint distance to a room wall unless wall-mounted (then exactly flush); door_swing_cm = depth (and minimum width) of the clear zone kept in front of every door / open / locked door / duct mouth; checkpoint_clear_radius_cm = clear disc around each checkpoint; player_start_clear_radius_cm = clear disc around the player start; sightline_half_width_cm = half width of the door-centre -> window-centre strip kept clear in the money-shot room; snap_warn_cm = a character moved further than this onto its contact surface is reported (the data should read true); sightline_volume_max_opacity = a trigger / dwell volume that stands in the money-shot sightline strip above eye height may only use a tint this translucent or fainter (WARN otherwise: the window would be seen through its wash from the door). Lane widening (36) and the corridor clear width (216) come from Data/movement.json capsule_radius_cm (r and 3 x 2r); steppable items (h <= max_step_height_cm) do not count against a corridor. corridor_clear_min_past_body_cm = the clear width a CHARACTER (pose seated | prone | slumped, contact wall:<side>) may leave in a corridor instead of 216: 150 = capsule diameter 72 + the 78 cm body - a body you step past, not architecture (lead decision 2026-09-07, the corridor guard; props keep 216).",
+    "kind_tints": {
+      "furniture": "blockout_furniture",
+      "fixture": "blockout_fixture",
+      "door": "blockout_door",
+      "rack": "blockout_rack",
+      "generic": "blockout_generic"
+    },
+    "character_tint": "blockout_character",
+    "pickup_tint": "blockout_pickup",
+    "halo_tint": "pickup_halo",
+    "demon_tint": "blockout_demon",
+    "demon_footprint_tint": "blockout_demon_footprint",
+    "trigger_tint": "trigger_volume",
+    "dwell_tint": "dwell_volume",
+    "character_default_size_cm": {
+      "seated": [
+        60,
+        60,
+        130
+      ],
+      "prone": [
+        180,
+        60,
+        30
+      ],
+      "slumped": [
+        80,
+        60,
+        110
+      ]
+    },
+    "pickup_halo_cm": 60,
+    "pickup_halo_margin_cm": 20,
+    "backdrop_thickness_cm": 20,
+    "label_lift_cm": 15,
+    "rules": {
+      "wall_margin_cm": 5,
+      "door_swing_cm": 120,
+      "checkpoint_clear_radius_cm": 60,
+      "player_start_clear_radius_cm": 36,
+      "sightline_half_width_cm": 90,
+      "snap_warn_cm": 0.5,
+      "sightline_volume_max_opacity": 0.1,
+      "corridor_clear_min_past_body_cm": 150
     }
   }
 }

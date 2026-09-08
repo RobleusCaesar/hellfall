@@ -1,0 +1,5918 @@
+{
+ "tool": "Tools/blender/audit_glb.py",
+ "requirement": "REQ-G2-001",
+ "generated": "2026-09-07T16:27:37",
+ "blender_version": "5.2.1 LTS",
+ "importer": "bpy.ops.import_scene.gltf present at startup (bundled io_scene_gltf2 core add-on, --factory-startup); io_scene_gltf2 5.2.40",
+ "command_line": [
+  "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+  "--background",
+  "--factory-startup",
+  "--python",
+  "Tools/blender/audit_glb.py",
+  "--",
+  "Docs/audit/blender_audit_2026-09-07.json"
+ ],
+ "models_dir": "SourceAssets/models",
+ "units": "m for measurements (Blender scene units), cm for targets",
+ "axes": "Blender Z-up after the glTF importer's Y-up conversion: x = width, y = depth, z = height",
+ "budgets_tris": {
+  "hero_weapon": 25000,
+  "enemy": 15000,
+  "human_prop": 10000,
+  "large_furniture": 8000,
+  "small_prop": 4000
+ },
+ "budget_tolerance": 0.2,
+ "file_count": 17,
+ "errors": 0,
+ "cross_check_vs_node_parser": {
+  "available": true,
+  "path": "C:\\Users\\tc_ca\\projects\\hellfall\\Docs/audit/glb_audit.jsonl",
+  "rows": [
+   {
+    "file": "characters/ceo_dead.glb",
+    "compared": true,
+    "node_tris": 9479,
+    "blender_tris": 9477,
+    "tris_rel_dev": 0.00021,
+    "tris_agree_1pct": true,
+    "tris_difference": 2,
+    "faces_blender_drops_on_import": 2,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.167,
+     1.897,
+     0.538
+    ],
+    "blender_rest_size": [
+     1.1673,
+     1.8971,
+     0.538
+    ],
+    "bounds_rel_dev": 0.0003,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 7928,
+    "blender_verts": 7928
+   },
+   {
+    "file": "characters/crimson_hellfiend.glb",
+    "compared": true,
+    "node_tris": 10428,
+    "blender_tris": 10428,
+    "tris_rel_dev": 0.0,
+    "tris_agree_1pct": true,
+    "tris_difference": 0,
+    "faces_blender_drops_on_import": 0,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     0.012,
+     0.005,
+     0.017
+    ],
+    "blender_rest_size": [
+     1.1768,
+     0.4682,
+     1.7
+    ],
+    "bounds_rel_dev": 99.0,
+    "bounds_agree_1pct": false,
+    "skinned": true,
+    "node_verts": 15110,
+    "blender_verts": 15110
+   },
+   {
+    "file": "characters/ember_demon.glb",
+    "compared": true,
+    "node_tris": 10418,
+    "blender_tris": 10418,
+    "tris_rel_dev": 0.0,
+    "tris_agree_1pct": true,
+    "tris_difference": 0,
+    "faces_blender_drops_on_import": 0,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     0.013,
+     0.016,
+     0.017
+    ],
+    "blender_rest_size": [
+     1.2529,
+     1.5755,
+     1.7
+    ],
+    "bounds_rel_dev": 99.0,
+    "bounds_agree_1pct": false,
+    "skinned": true,
+    "node_verts": 16294,
+    "blender_verts": 16294
+   },
+   {
+    "file": "characters/fallen_security_guard.glb",
+    "compared": true,
+    "node_tris": 9485,
+    "blender_tris": 9479,
+    "tris_rel_dev": 0.00063,
+    "tris_agree_1pct": true,
+    "tris_difference": 6,
+    "faces_blender_drops_on_import": 6,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     0.918,
+     1.902,
+     0.971
+    ],
+    "blender_rest_size": [
+     0.9183,
+     1.902,
+     0.9709
+    ],
+    "bounds_rel_dev": 0.0003,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 8063,
+    "blender_verts": 8063
+   },
+   {
+    "file": "characters/intern_sitting.glb",
+    "compared": true,
+    "node_tris": 9846,
+    "blender_tris": 9185,
+    "tris_rel_dev": 0.06713,
+    "tris_agree_1pct": false,
+    "tris_difference": 661,
+    "faces_blender_drops_on_import": 661,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.041,
+     1.784,
+     1.9
+    ],
+    "blender_rest_size": [
+     1.0411,
+     1.784,
+     1.8999
+    ],
+    "bounds_rel_dev": 0.0001,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 4310,
+    "blender_verts": 4310
+   },
+   {
+    "file": "characters/man_sitting.glb",
+    "compared": true,
+    "node_tris": 9506,
+    "blender_tris": 9502,
+    "tris_rel_dev": 0.00042,
+    "tris_agree_1pct": true,
+    "tris_difference": 4,
+    "faces_blender_drops_on_import": 4,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.284,
+     1.905,
+     1.128
+    ],
+    "blender_rest_size": [
+     1.2844,
+     1.9045,
+     1.1284
+    ],
+    "bounds_rel_dev": 0.0004,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 8700,
+    "blender_verts": 8700
+   },
+   {
+    "file": "props/bathroom_vanity.glb",
+    "compared": true,
+    "node_tris": 7794,
+    "blender_tris": 7792,
+    "tris_rel_dev": 0.00026,
+    "tris_agree_1pct": true,
+    "tris_difference": 2,
+    "faces_blender_drops_on_import": 2,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.903,
+     0.418,
+     0.854
+    ],
+    "blender_rest_size": [
+     1.9034,
+     0.418,
+     0.8537
+    ],
+    "bounds_rel_dev": 0.0004,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 7369,
+    "blender_verts": 7369
+   },
+   {
+    "file": "props/broken_door.glb",
+    "compared": true,
+    "node_tris": 4012,
+    "blender_tris": 4000,
+    "tris_rel_dev": 0.00299,
+    "tris_agree_1pct": true,
+    "tris_difference": 12,
+    "faces_blender_drops_on_import": 12,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.902,
+     0.986,
+     0.107
+    ],
+    "blender_rest_size": [
+     1.9024,
+     0.9856,
+     0.1069
+    ],
+    "bounds_rel_dev": 0.0009,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 2005,
+    "blender_verts": 2005
+   },
+   {
+    "file": "props/ceo_couch_coffee_table.glb",
+    "compared": true,
+    "node_tris": 8126,
+    "blender_tris": 8104,
+    "tris_rel_dev": 0.00271,
+    "tris_agree_1pct": true,
+    "tris_difference": 22,
+    "faces_blender_drops_on_import": 22,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.901,
+     1.721,
+     0.543
+    ],
+    "blender_rest_size": [
+     1.9007,
+     1.7214,
+     0.5429
+    ],
+    "bounds_rel_dev": 0.0002,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 4017,
+    "blender_verts": 4017
+   },
+   {
+    "file": "props/closed_door.glb",
+    "compared": true,
+    "node_tris": 3806,
+    "blender_tris": 3805,
+    "tris_rel_dev": 0.00026,
+    "tris_agree_1pct": true,
+    "tris_difference": 1,
+    "faces_blender_drops_on_import": 1,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     0.882,
+     0.145,
+     1.903
+    ],
+    "blender_rest_size": [
+     0.8816,
+     0.1454,
+     1.9029
+    ],
+    "bounds_rel_dev": 0.0028,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 5279,
+    "blender_verts": 5279
+   },
+   {
+    "file": "props/closed_elevator.glb",
+    "compared": true,
+    "node_tris": 3790,
+    "blender_tris": 3790,
+    "tris_rel_dev": 0.0,
+    "tris_agree_1pct": true,
+    "tris_difference": 0,
+    "faces_blender_drops_on_import": 0,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.163,
+     0.178,
+     1.903
+    ],
+    "blender_rest_size": [
+     1.1631,
+     0.1782,
+     1.9034
+    ],
+    "bounds_rel_dev": 0.0011,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 4156,
+    "blender_verts": 4156
+   },
+   {
+    "file": "props/kitchen_lunch_table.glb",
+    "compared": true,
+    "node_tris": 7806,
+    "blender_tris": 7803,
+    "tris_rel_dev": 0.00038,
+    "tris_agree_1pct": true,
+    "tris_difference": 3,
+    "faces_blender_drops_on_import": 3,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.899,
+     1.349,
+     1.063
+    ],
+    "blender_rest_size": [
+     1.8987,
+     1.3491,
+     1.0631
+    ],
+    "bounds_rel_dev": 0.0002,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 7583,
+    "blender_verts": 7583
+   },
+   {
+    "file": "props/mop_and_bucket.glb",
+    "compared": true,
+    "node_tris": 3791,
+    "blender_tris": 3791,
+    "tris_rel_dev": 0.0,
+    "tris_agree_1pct": true,
+    "tris_difference": 0,
+    "faces_blender_drops_on_import": 0,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.644,
+     1.267,
+     1.893
+    ],
+    "blender_rest_size": [
+     1.6439,
+     1.2672,
+     1.8928
+    ],
+    "bounds_rel_dev": 0.0002,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 4710,
+    "blender_verts": 4710
+   },
+   {
+    "file": "props/reception_desk.glb",
+    "compared": true,
+    "node_tris": 7798,
+    "blender_tris": 7796,
+    "tris_rel_dev": 0.00026,
+    "tris_agree_1pct": true,
+    "tris_difference": 2,
+    "faces_blender_drops_on_import": 2,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.896,
+     1.888,
+     1.33
+    ],
+    "blender_rest_size": [
+     1.8964,
+     1.8881,
+     1.3303
+    ],
+    "bounds_rel_dev": 0.0002,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 8385,
+    "blender_verts": 8385
+   },
+   {
+    "file": "props/refrigerator_open.glb",
+    "compared": true,
+    "node_tris": 7792,
+    "blender_tris": 7789,
+    "tris_rel_dev": 0.00039,
+    "tris_agree_1pct": true,
+    "tris_difference": 3,
+    "faces_blender_drops_on_import": 3,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     0.919,
+     1.303,
+     1.902
+    ],
+    "blender_rest_size": [
+     0.9192,
+     1.3027,
+     1.9023
+    ],
+    "bounds_rel_dev": 0.0002,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 9183,
+    "blender_verts": 9183
+   },
+   {
+    "file": "props/toilet_bowl.glb",
+    "compared": true,
+    "node_tris": 3798,
+    "blender_tris": 3798,
+    "tris_rel_dev": 0.0,
+    "tris_agree_1pct": true,
+    "tris_difference": 0,
+    "faces_blender_drops_on_import": 0,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.634,
+     1.685,
+     1.896
+    ],
+    "blender_rest_size": [
+     1.6337,
+     1.6848,
+     1.8964
+    ],
+    "bounds_rel_dev": 0.0002,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 3887,
+    "blender_verts": 3887
+   },
+   {
+    "file": "weapons/shotgun.glb",
+    "compared": true,
+    "node_tris": 23818,
+    "blender_tris": 23816,
+    "tris_rel_dev": 8e-05,
+    "tris_agree_1pct": true,
+    "tris_difference": 2,
+    "faces_blender_drops_on_import": 2,
+    "difference_explained_by_degenerates": true,
+    "node_size_as_blender_xyz": [
+     1.902,
+     0.099,
+     0.355
+    ],
+    "blender_rest_size": [
+     1.9021,
+     0.0989,
+     0.355
+    ],
+    "bounds_rel_dev": 0.001,
+    "bounds_agree_1pct": true,
+    "skinned": false,
+    "node_verts": 16477,
+    "blender_verts": 16477
+   }
+  ],
+  "tris_disagreements": [
+   "characters/intern_sitting.glb"
+  ],
+  "bounds_disagreements": [
+   "characters/crimson_hellfiend.glb",
+   "characters/ember_demon.glb"
+  ],
+  "all_tris_differences_explained_by_degenerates": true
+ },
+ "asset_slots": {
+  "SM_CeoDead": {
+   "source": "SourceAssets/models/characters/ceo_dead.glb",
+   "class": "human_prop",
+   "target_size_cm": {
+    "w": 104.6,
+    "d": 170.0,
+    "h": 48.2
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.1673,
+    1.8971,
+    0.538
+   ],
+   "tris": 9477,
+   "budget_tris": 10000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.8961,
+   "drive": {
+    "mode": "y",
+    "cm": 170,
+    "measured_m": 1.8971,
+    "anchor": "y extent 1.8971 m"
+   },
+   "rig": null,
+   "note": "On his back, arms spread, knees bent and folded to one side, so the long axis is shorter than stature: 170 along the body for a ~180 man; ~105 across the arms, ~48 thick at the knees."
+  },
+  "SK_CrimsonHellfiend": {
+   "source": "SourceAssets/models/characters/crimson_hellfiend.glb",
+   "class": "enemy",
+   "target_size_cm": {
+    "w": 207.7,
+    "d": 82.6,
+    "h": 300.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.1768,
+    0.4682,
+    1.7
+   ],
+   "tris": 10428,
+   "budget_tris": 15000,
+   "budget_fits": true,
+   "uniform_scale_factor": 1.7647,
+   "drive": {
+    "mode": "z",
+    "cm": 300,
+    "measured_m": 1.7,
+    "anchor": "z extent 1.7000 m"
+   },
+   "rig": {
+    "bones": 24,
+    "actions": [
+     "dying_backwards",
+     "Hit_Reaction_1",
+     "Idle_5",
+     "Idle_8",
+     "Right_Hand_Sword_Slash",
+     "Running",
+     "Shield_Push_Left",
+     "Simple_Kick",
+     "Walking",
+     "walking_2_inplace"
+    ]
+   },
+   "note": "Demon #2, visibly larger: 300 tall (spec capsule 300 / radius 60 in encounters.demon_2). Rest pose is a T/A-pose with wings; feet at z = 0 in the file."
+  },
+  "SK_EmberDemon": {
+   "source": "SourceAssets/models/characters/ember_demon.glb",
+   "class": "enemy",
+   "target_size_cm": {
+    "w": 162.1,
+    "d": 203.9,
+    "h": 220.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.2529,
+    1.5755,
+    1.7
+   ],
+   "tris": 10418,
+   "budget_tris": 15000,
+   "budget_fits": true,
+   "uniform_scale_factor": 1.2941,
+   "drive": {
+    "mode": "z",
+    "cm": 220,
+    "measured_m": 1.7,
+    "anchor": "z extent 1.7000 m"
+   },
+   "rig": {
+    "bones": 24,
+    "actions": [
+     "Attack",
+     "Hit_Reaction",
+     "Idle_8",
+     "Shot_and_Fall_Backward",
+     "Walking"
+    ]
+   },
+   "note": "Demon #1, 220 tall (spec capsule 220 / radius 45 in Data/floorplan.json encounters.demon_1). Rest pose is a wings-spread A-pose, so width is wingtip to wingtip. Feet already at z = 0 in the file."
+  },
+  "SM_FallenSecurityGuard": {
+   "source": "SourceAssets/models/characters/fallen_security_guard.glb",
+   "class": "human_prop",
+   "target_size_cm": {
+    "w": 77.6,
+    "d": 160.6,
+    "h": 82.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    0.9183,
+    1.902,
+    0.9709
+   ],
+   "tris": 9479,
+   "budget_tris": 10000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.8446,
+   "drive": {
+    "mode": "z",
+    "cm": 82,
+    "measured_m": 0.9709,
+    "anchor": "z extent 0.9709 m"
+   },
+   "rig": null,
+   "note": "NOT prone: a seated slump - back against a wall, legs straight out, chin on chest (the 1 : 2 height : length ratio). Crown at 82 -> legs project ~160 from the wall. Placed along a 280 corridor wall he would leave ~120 clear (< 216 minimum), so the blockout must seat him in a recess / bay or across a corridor end; flagged for the blockout designer."
+  },
+  "SM_InternSitting": {
+   "source": "SourceAssets/models/characters/intern_sitting.glb",
+   "class": "human_prop",
+   "target_size_cm": {
+    "w": 49.3,
+    "d": 84.5,
+    "h": 90.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.0411,
+    1.784,
+    1.8999
+   ],
+   "tris": 9185,
+   "budget_tris": 10000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.4737,
+   "drive": {
+    "mode": "z",
+    "cm": 90,
+    "measured_m": 1.8999,
+    "anchor": "z extent 1.8999 m"
+   },
+   "rig": null,
+   "note": "Seated on the floor, knees drawn up, arms around the knees, head down on the knees (hair volume adds to the top): crown at 90; ~50 wide, ~85 back-to-toes. Back to a wall."
+  },
+  "SM_ManSitting": {
+   "source": "SourceAssets/models/characters/man_sitting.glb",
+   "class": "human_prop",
+   "target_size_cm": {
+    "w": 96.8,
+    "d": 143.5,
+    "h": 85.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.2844,
+    1.9045,
+    1.1284
+   ],
+   "tris": 9502,
+   "budget_tris": 10000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.7533,
+   "drive": {
+    "mode": "z",
+    "cm": 85,
+    "measured_m": 1.1284,
+    "anchor": "z extent 1.1284 m"
+   },
+   "rig": null,
+   "note": "Seated on the floor, leaning back on his hands / the racks, legs out, head tilted back: crown at 85. Legs reach ~143 from the back plane - fits the 430 closet in front of the 60-deep racks."
+  },
+  "SM_BathroomVanity": {
+   "source": "SourceAssets/models/props/bathroom_vanity.glb",
+   "class": "large_furniture",
+   "target_size_cm": {
+    "w": 246.2,
+    "d": 54.1,
+    "h": 110.4
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.9034,
+    0.418,
+    0.8537
+   ],
+   "tris": 7792,
+   "budget_tris": 8000,
+   "budget_fits": true,
+   "uniform_scale_factor": 1.2934,
+   "drive": {
+    "mode": "surface",
+    "cm": 85,
+    "measured_m": 0.6572,
+    "anchor": "dominant up-facing surface 0.657 m above the bottom"
+   },
+   "rig": null,
+   "note": "Three-basin vanity with three taps, one mesh. Counter surface at 85; the taps set the overall height. Floor-standing, back face flush to the wall."
+  },
+  "SM_BrokenDoor": {
+   "source": "SourceAssets/models/props/broken_door.glb",
+   "class": "small_prop",
+   "target_size_cm": {
+    "w": 205.0,
+    "d": 106.2,
+    "h": 11.5
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.9024,
+    0.9856,
+    0.1069
+   ],
+   "tris": 4000,
+   "budget_tris": 4000,
+   "budget_fits": true,
+   "uniform_scale_factor": 1.0776,
+   "drive": {
+    "mode": "x",
+    "cm": 205,
+    "measured_m": 1.9024,
+    "anchor": "x extent 1.9024 m"
+   },
+   "rig": null,
+   "note": "Leaf lying flat with knob and hinge stubs at one end. Long axis = 205 leaf height; width (~106, the model is wider than a real 90 leaf) and thickness follow."
+  },
+  "SM_CeoCouchCoffeeTable": {
+   "source": "SourceAssets/models/props/ceo_couch_coffee_table.glb",
+   "class": "large_furniture",
+   "target_size_cm": {
+    "w": 280.1,
+    "d": 253.7,
+    "h": 80.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.9007,
+    1.7214,
+    0.5429
+   ],
+   "tris": 8104,
+   "budget_tris": 8000,
+   "budget_fits": false,
+   "uniform_scale_factor": 1.4736,
+   "drive": {
+    "mode": "z",
+    "cm": 80,
+    "measured_m": 0.5429,
+    "anchor": "z extent 0.5429 m"
+   },
+   "rig": null,
+   "note": "L-set in one mesh: 3-seat sofa, perpendicular 2-seat loveseat, rectangular coffee table in front of the sofa (the table sits in front of the sofa, not between the two couches). Sofa back 80 tall -> ~215 sofa, ~160 loveseat, ~120 x 70 table."
+  },
+  "SM_ClosedDoor": {
+   "source": "SourceAssets/models/props/closed_door.glb",
+   "class": "small_prop",
+   "target_size_cm": {
+    "w": 101.9,
+    "d": 16.8,
+    "h": 220.0
+   },
+   "pivot": "wall",
+   "normalized_size_m": [
+    0.8816,
+    0.1454,
+    1.9029
+   ],
+   "tris": 3805,
+   "budget_tris": 4000,
+   "budget_fits": true,
+   "uniform_scale_factor": 1.1561,
+   "drive": {
+    "mode": "z",
+    "cm": 220,
+    "measured_m": 1.9029,
+    "anchor": "z extent 1.9029 m"
+   },
+   "rig": null,
+   "note": "Panel with casing. 220 tall fills the frozen 120 x 220 opening height; at the model's 0.46 aspect it is ~102 wide, so the greybox jamb fills ~9 cm each side. Stretching to 120 wide rejected (texture smear)."
+  },
+  "SM_ClosedElevator": {
+   "source": "SourceAssets/models/props/closed_elevator.glb",
+   "class": "small_prop",
+   "target_size_cm": {
+    "w": 134.4,
+    "d": 20.6,
+    "h": 220.0
+   },
+   "pivot": "wall",
+   "normalized_size_m": [
+    1.1631,
+    0.1782,
+    1.9034
+   ],
+   "tris": 3790,
+   "budget_tris": 4000,
+   "budget_fits": true,
+   "uniform_scale_factor": 1.1558,
+   "drive": {
+    "mode": "z",
+    "cm": 220,
+    "measured_m": 1.9034,
+    "anchor": "z extent 1.9034 m"
+   },
+   "rig": null,
+   "note": "Two sliding panels in a surround, aspect 0.61: a narrow single car. 220 tall matches the frozen elevator_doors blocker (200 x 220) and gives ~134 wide, centred in the 200 blocker with the greybox filling the flanks. Scaling to 200 wide would be 327 tall (> 310 ceiling) - rejected."
+  },
+  "SM_KitchenLunchTable": {
+   "source": "SourceAssets/models/props/kitchen_lunch_table.glb",
+   "class": "large_furniture",
+   "target_size_cm": {
+    "w": 159.7,
+    "d": 113.5,
+    "h": 89.4
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.8987,
+    1.3491,
+    1.0631
+   ],
+   "tris": 7803,
+   "budget_tris": 8000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.8412,
+   "drive": {
+    "mode": "surface",
+    "cm": 75,
+    "measured_m": 0.8916,
+    "anchor": "dominant up-facing surface 0.892 m above the bottom"
+   },
+   "rig": null,
+   "note": "Round pedestal table with TWO chairs (not four) and cups / a tray on top, one mesh. Table top at 75; the chair backs (tallest element) follow. 'One chair pushed out' is a blockout note, not a second mesh."
+  },
+  "SM_MopAndBucket": {
+   "source": "SourceAssets/models/props/mop_and_bucket.glb",
+   "class": "small_prop",
+   "target_size_cm": {
+    "w": 130.3,
+    "d": 100.4,
+    "h": 150.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.6439,
+    1.2672,
+    1.8928
+   ],
+   "tris": 3791,
+   "budget_tris": 4000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.7925,
+   "drive": {
+    "mode": "z",
+    "cm": 150,
+    "measured_m": 1.8928,
+    "anchor": "z extent 1.8928 m"
+   },
+   "rig": null,
+   "note": "Wringer bucket + leaning mop + a 'wet floor' A-frame sign, one mesh. Mop handle top at 150 gives a ~86 bucket/wringer and a ~67 sign, both real-world."
+  },
+  "SM_ReceptionDesk": {
+   "source": "SourceAssets/models/props/reception_desk.glb",
+   "class": "large_furniture",
+   "target_size_cm": {
+    "w": 157.4,
+    "d": 156.7,
+    "h": 110.4
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    1.8964,
+    1.8881,
+    1.3303
+   ],
+   "tris": 7796,
+   "budget_tris": 8000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.8298,
+   "drive": {
+    "mode": "surface",
+    "cm": 75,
+    "measured_m": 0.9038,
+    "anchor": "dominant up-facing surface 0.904 m above the bottom"
+   },
+   "rig": null,
+   "note": "One mesh: desk block + chair behind + monitor + cup + a fallen item. The chair back rises above the work surface, so the surface is DESK height (75), not a standing counter; the monitor top sets the overall height. Reused as the CEO desk (spec)."
+  },
+  "SM_RefrigeratorOpen": {
+   "source": "SourceAssets/models/props/refrigerator_open.glb",
+   "class": "large_furniture",
+   "target_size_cm": {
+    "w": 87.0,
+    "d": 123.3,
+    "h": 180.0
+   },
+   "pivot": "floor",
+   "normalized_size_m": [
+    0.9192,
+    1.3027,
+    1.9023
+   ],
+   "tris": 7789,
+   "budget_tris": 8000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.9462,
+   "drive": {
+    "mode": "z",
+    "cm": 180,
+    "measured_m": 1.9023,
+    "anchor": "z extent 1.9023 m"
+   },
+   "rig": null,
+   "note": "Domestic fridge 180 tall; the door is modelled swung open ~90 deg, which is what the depth includes."
+  },
+  "SM_ToiletBowl": {
+   "source": "SourceAssets/models/props/toilet_bowl.glb",
+   "class": "small_prop",
+   "target_size_cm": {
+    "w": 40.0,
+    "d": 41.3,
+    "h": 46.4
+   },
+   "pivot": "wall",
+   "normalized_size_m": [
+    1.6337,
+    1.6848,
+    1.8964
+   ],
+   "tris": 3798,
+   "budget_tris": 4000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.2448,
+   "drive": {
+    "mode": "x",
+    "cm": 40,
+    "measured_m": 1.6337,
+    "anchor": "x extent 1.6337 m"
+   },
+   "rig": null,
+   "note": "NOT a floor toilet: a wall-hung bowl with exposed plumbing (drain pipe down and back into the wall, flush valve on top), no tank, no pedestal - hence the near-cubic raw bounds. Bowl width 40 is the anchor; rim lands ~40 above the box bottom, so hang the box with its bottom at z ~2."
+  },
+  "SM_Shotgun": {
+   "source": "SourceAssets/models/weapons/shotgun.glb",
+   "class": "hero_weapon",
+   "target_size_cm": {
+    "w": 120.0,
+    "d": 6.2,
+    "h": 22.4
+   },
+   "pivot": "muzzle",
+   "normalized_size_m": [
+    1.9021,
+    0.0989,
+    0.355
+   ],
+   "tris": 23816,
+   "budget_tris": 25000,
+   "budget_fits": true,
+   "uniform_scale_factor": 0.6309,
+   "drive": {
+    "mode": "x",
+    "cm": 120,
+    "measured_m": 1.9021,
+    "anchor": "x extent 1.9021 m"
+   },
+   "rig": null,
+   "note": "Pump shotgun 120 long (28in-barrel class); height (stock drop + pump) and width follow. Same mesh for viewmodel and world pickup; pivot muzzle-back-along-barrel per REQ-G4-001."
+  }
+ },
+ "rejected": [
+  {
+   "file": "characters/crimson_hellfiend_texture_0_1.png",
+   "disposition": "rejected - duplicate",
+   "reason": "byte-identical to crimson_hellfiend_texture_0.png (same size, same MD5); the embedded copy inside the GLB is the one that travels with the mesh (the GLB carries texture_0 and texture_0.001, both 1024 x 1024)"
+  }
+ ],
+ "files": [
+  {
+   "file": "characters/ceo_dead.glb",
+   "bytes": 610348,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 3,
+    "materials": 1,
+    "tris_from_indices": 9479,
+    "size_yup_m": [
+     1.1673,
+     0.538,
+     1.8971
+    ],
+    "min_yup_m": [
+     -0.5843,
+     -0.2713,
+     -0.9491
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.6153141856193542,
+       -0.28360849618911743,
+       -1
+      ],
+      "max": [
+       0.6153141856193542,
+       0.28360849618911743,
+       1
+      ],
+      "size": [
+       1.2306283712387085,
+       0.5672169923782349,
+       2
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 9479,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 2,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 1,
+     "dropped_by_blender_import": 2
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00059,
+      0.00048,
+      -0.00227
+     ],
+     "scale": [
+      0.94857,
+      0.94857,
+      0.94857
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 9477,
+     "verts": 7928,
+     "polygons": 9477,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.5843,
+       -0.9481,
+       -0.2713
+      ],
+      "max": [
+       0.5831,
+       0.9491,
+       0.2667
+      ],
+      "size": [
+       1.1673,
+       1.8971,
+       0.538
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 9477,
+   "polygons": 9477,
+   "verts": 7928,
+   "tris_including_importer_artifacts": 9477,
+   "bounds_rest_m": {
+    "min": [
+     -0.5843,
+     -0.9481,
+     -0.2713
+    ],
+    "max": [
+     0.5831,
+     0.9491,
+     0.2667
+    ],
+    "size": [
+     1.1673,
+     1.8971,
+     0.538
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.5843,
+     -0.9481,
+     -0.2713
+    ],
+    "max": [
+     0.5831,
+     0.9491,
+     0.2667
+    ],
+    "size": [
+     1.1673,
+     1.8971,
+     0.538
+    ]
+   },
+   "normalized_longest_axis_m": 1.8971,
+   "normalized_longest_axis": "y",
+   "origin_at_floor": false,
+   "min_z_m": -0.2713,
+   "bbox_centre_m": [
+    -0.0006,
+    0.0005,
+    -0.0023
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.1576,
+     1.4135
+    ],
+    "min": [
+     -0.5753,
+     -0.8383
+    ],
+    "max": [
+     0.5823,
+     0.5752
+    ],
+    "verts": 667
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.15,
+     "z_above_bottom": 0.4213,
+     "area_m2": 0.05555,
+     "fraction_of_height": 0.783
+    },
+    {
+     "z_world": 0.14,
+     "z_above_bottom": 0.4113,
+     "area_m2": 0.03208,
+     "fraction_of_height": 0.764
+    },
+    {
+     "z_world": 0.13,
+     "z_above_bottom": 0.4013,
+     "area_m2": 0.025,
+     "fraction_of_height": 0.746
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.1673,
+     1.8971,
+     0.538
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 3,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_CeoDead",
+    "class": "human_prop",
+    "class_budget_tris": 10000,
+    "tris": 9477,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -5.2,
+    "pivot": "floor",
+    "drive": {
+     "mode": "y",
+     "cm": 170,
+     "measured_m": 1.8971,
+     "anchor": "y extent 1.8971 m"
+    },
+    "uniform_scale_factor": 0.8961,
+    "target_size_cm": {
+     "w": 104.6,
+     "d": 170.0,
+     "h": 48.2
+    },
+    "disposition": "kept",
+    "note": "On his back, arms spread, knees bent and folded to one side, so the long axis is shorter than stature: 170 along the body for a ~180 man; ~105 across the arms, ~48 thick at the knees."
+   }
+  },
+  {
+   "file": "characters/crimson_hellfiend.glb",
+   "bytes": 5970448,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [
+     "KHR_materials_specular"
+    ],
+    "nodes": 26,
+    "meshes": 1,
+    "mesh_node_names": [
+     "char1"
+    ],
+    "skins": 1,
+    "joints": 24,
+    "skinned_mesh_nodes": [
+     "char1"
+    ],
+    "animations": [
+     "Hit_Reaction_1",
+     "Idle_5",
+     "Idle_8",
+     "Right_Hand_Sword_Slash",
+     "Running",
+     "Shield_Push_Left",
+     "Simple_Kick",
+     "Walking",
+     "dying_backwards",
+     "walking_2_inplace"
+    ],
+    "images": 2,
+    "materials": 1,
+    "tris_from_indices": 10428,
+    "size_yup_m": [
+     0.0118,
+     0.017,
+     0.0047
+    ],
+    "min_yup_m": [
+     -0.0059,
+     -0.0,
+     -0.0023
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.5884144306182861,
+       -1.3916726970819582e-07,
+       -0.23411910235881805
+      ],
+      "max": [
+       0.5884144306182861,
+       1.6999998092651367,
+       0.23411907255649567
+      ],
+      "size": [
+       1.1768288612365723,
+       1.6999999484324064,
+       0.4682381749153137
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 10428,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 0,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 0,
+     "dropped_by_blender_import": 0
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [
+    [
+     "Armature",
+     "Hit_Reaction_1"
+    ]
+   ],
+   "objects": [
+    {
+     "name": "Armature",
+     "type": "ARMATURE",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      0.01,
+      0.01,
+      0.01
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    },
+    {
+     "name": "char1",
+     "type": "MESH",
+     "parent": "Armature",
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      0.01,
+      0.01,
+      0.01
+     ],
+     "modifiers": [
+      "ARMATURE"
+     ],
+     "importer_artifact": false
+    },
+    {
+     "name": "Icosphere",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "modifiers": [],
+     "importer_artifact": true
+    }
+   ],
+   "importer_artifacts": [
+    "Icosphere"
+   ],
+   "mesh_objects": [
+    {
+     "name": "char1",
+     "tris": 10428,
+     "verts": 15110,
+     "polygons": 10428,
+     "armature_deformed": true,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.5884,
+       -0.2341,
+       -0.0
+      ],
+      "max": [
+       0.5884,
+       0.2341,
+       1.7
+      ],
+      "size": [
+       1.1768,
+       0.4682,
+       1.7
+      ]
+     }
+    },
+    {
+     "name": "Icosphere",
+     "tris": 80,
+     "verts": 42,
+     "polygons": 80,
+     "armature_deformed": false,
+     "importer_artifact": true,
+     "bounds_rest_m": {
+      "min": [
+       -0.9511,
+       -1.0,
+       -1.0
+      ],
+      "max": [
+       0.9511,
+       1.0,
+       1.0
+      ],
+      "size": [
+       1.9021,
+       2.0,
+       2.0
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "char1"
+   ],
+   "tris": 10428,
+   "polygons": 10428,
+   "verts": 15110,
+   "tris_including_importer_artifacts": 10508,
+   "bounds_rest_m": {
+    "min": [
+     -0.5884,
+     -0.2341,
+     -0.0
+    ],
+    "max": [
+     0.5884,
+     0.2341,
+     1.7
+    ],
+    "size": [
+     1.1768,
+     0.4682,
+     1.7
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.5884,
+     -0.2341,
+     -0.0
+    ],
+    "max": [
+     0.5884,
+     0.2341,
+     1.7
+    ],
+    "size": [
+     1.1768,
+     0.4682,
+     1.7
+    ]
+   },
+   "normalized_longest_axis_m": 1.7,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": true,
+   "min_z_m": -0.0,
+   "bbox_centre_m": [
+    0.0,
+    0.0,
+    0.85
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.64,
+     0.3132
+    ],
+    "min": [
+     -0.32,
+     -0.2341
+    ],
+    "max": [
+     0.32,
+     0.0791
+    ],
+    "verts": 1565
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 1.35,
+     "z_above_bottom": 1.35,
+     "area_m2": 0.00545,
+     "fraction_of_height": 0.794
+    },
+    {
+     "z_world": 1.31,
+     "z_above_bottom": 1.31,
+     "area_m2": 0.00431,
+     "fraction_of_height": 0.771
+    },
+    {
+     "z_world": 1.3,
+     "z_above_bottom": 1.3,
+     "area_m2": 0.00242,
+     "fraction_of_height": 0.765
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     0.0118,
+     0.0047,
+     0.017
+    ],
+    "mode": "skinned: axis order checked up to a uniform scale",
+    "blender_over_header_ratios": [
+     99.73,
+     99.62,
+     100.0
+    ],
+    "ratio_spread": 0.0038,
+    "ok": true
+   },
+   "materials": [
+    "Material_1"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "texture_0",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "texture_0.001",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 2,
+   "armature": {
+    "name": "Armature",
+    "bones": 24,
+    "root_bones": [
+     "Hips"
+    ],
+    "world_scale": [
+     0.01,
+     0.01,
+     0.01
+    ],
+    "armature_count": 1,
+    "deformed_mesh_objects": [
+     "char1"
+    ],
+    "vertex_groups": 24
+   },
+   "actions": [
+    {
+     "name": "dying_backwards",
+     "frame_range": [
+      0.0,
+      53.6
+     ],
+     "seconds_at_24_fps": 2.23
+    },
+    {
+     "name": "Hit_Reaction_1",
+     "frame_range": [
+      0.0,
+      29.6
+     ],
+     "seconds_at_24_fps": 1.23
+    },
+    {
+     "name": "Idle_5",
+     "frame_range": [
+      0.0,
+      44.8
+     ],
+     "seconds_at_24_fps": 1.87
+    },
+    {
+     "name": "Idle_8",
+     "frame_range": [
+      0.0,
+      192.0
+     ],
+     "seconds_at_24_fps": 8.0
+    },
+    {
+     "name": "Right_Hand_Sword_Slash",
+     "frame_range": [
+      0.0,
+      36.0
+     ],
+     "seconds_at_24_fps": 1.5
+    },
+    {
+     "name": "Running",
+     "frame_range": [
+      0.0,
+      15.2
+     ],
+     "seconds_at_24_fps": 0.63
+    },
+    {
+     "name": "Shield_Push_Left",
+     "frame_range": [
+      0.0,
+      57.6
+     ],
+     "seconds_at_24_fps": 2.4
+    },
+    {
+     "name": "Simple_Kick",
+     "frame_range": [
+      0.0,
+      56.0
+     ],
+     "seconds_at_24_fps": 2.33
+    },
+    {
+     "name": "Walking",
+     "frame_range": [
+      0.0,
+      24.8
+     ],
+     "seconds_at_24_fps": 1.03
+    },
+    {
+     "name": "walking_2_inplace",
+     "frame_range": [
+      0.0,
+      28.8
+     ],
+     "seconds_at_24_fps": 1.2
+    }
+   ],
+   "decision": {
+    "unreal_name": "SK_CrimsonHellfiend",
+    "class": "enemy",
+    "class_budget_tris": 15000,
+    "tris": 10428,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -30.5,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 300,
+     "measured_m": 1.7,
+     "anchor": "z extent 1.7000 m"
+    },
+    "uniform_scale_factor": 1.7647,
+    "target_size_cm": {
+     "w": 207.7,
+     "d": 82.6,
+     "h": 300.0
+    },
+    "disposition": "kept",
+    "note": "Demon #2, visibly larger: 300 tall (spec capsule 300 / radius 60 in encounters.demon_2). Rest pose is a T/A-pose with wings; feet at z = 0 in the file."
+   }
+  },
+  {
+   "file": "characters/ember_demon.glb",
+   "bytes": 1428148,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [
+     "EXT_texture_webp",
+     "KHR_materials_specular"
+    ],
+    "nodes": 26,
+    "meshes": 1,
+    "mesh_node_names": [
+     "char1"
+    ],
+    "skins": 1,
+    "joints": 24,
+    "skinned_mesh_nodes": [
+     "char1"
+    ],
+    "animations": [
+     "Attack",
+     "Hit_Reaction",
+     "Idle_8",
+     "Shot_and_Fall_Backward",
+     "Walking"
+    ],
+    "images": 1,
+    "materials": 1,
+    "tris_from_indices": 10418,
+    "size_yup_m": [
+     0.0125,
+     0.017,
+     0.0158
+    ],
+    "min_yup_m": [
+     -0.0063,
+     0.0,
+     -0.0079
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.6264561414718628,
+       3.090763200930269e-08,
+       -0.7877588272094727
+      ],
+      "max": [
+       0.6264561414718628,
+       1.7000000476837158,
+       0.7877587080001831
+      ],
+      "size": [
+       1.2529122829437256,
+       1.7000000167760838,
+       1.5755175352096558
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 10418,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 0,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 0,
+     "dropped_by_blender_import": 0
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [
+    [
+     "Armature",
+     "Attack"
+    ]
+   ],
+   "objects": [
+    {
+     "name": "Armature",
+     "type": "ARMATURE",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      0.01,
+      0.01,
+      0.01
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    },
+    {
+     "name": "char1",
+     "type": "MESH",
+     "parent": "Armature",
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      0.01,
+      0.01,
+      0.01
+     ],
+     "modifiers": [
+      "ARMATURE"
+     ],
+     "importer_artifact": false
+    },
+    {
+     "name": "Icosphere",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "modifiers": [],
+     "importer_artifact": true
+    }
+   ],
+   "importer_artifacts": [
+    "Icosphere"
+   ],
+   "mesh_objects": [
+    {
+     "name": "char1",
+     "tris": 10418,
+     "verts": 16294,
+     "polygons": 10418,
+     "armature_deformed": true,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.6265,
+       -0.7878,
+       -0.0
+      ],
+      "max": [
+       0.6265,
+       0.7878,
+       1.7
+      ],
+      "size": [
+       1.2529,
+       1.5755,
+       1.7
+      ]
+     }
+    },
+    {
+     "name": "Icosphere",
+     "tris": 80,
+     "verts": 42,
+     "polygons": 80,
+     "armature_deformed": false,
+     "importer_artifact": true,
+     "bounds_rest_m": {
+      "min": [
+       -0.9511,
+       -1.0,
+       -1.0
+      ],
+      "max": [
+       0.9511,
+       1.0,
+       1.0
+      ],
+      "size": [
+       1.9021,
+       2.0,
+       2.0
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "char1"
+   ],
+   "tris": 10418,
+   "polygons": 10418,
+   "verts": 16294,
+   "tris_including_importer_artifacts": 10498,
+   "bounds_rest_m": {
+    "min": [
+     -0.6265,
+     -0.7878,
+     -0.0
+    ],
+    "max": [
+     0.6265,
+     0.7878,
+     1.7
+    ],
+    "size": [
+     1.2529,
+     1.5755,
+     1.7
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.6265,
+     -0.7878,
+     -0.0
+    ],
+    "max": [
+     0.6265,
+     0.7878,
+     1.7
+    ],
+    "size": [
+     1.2529,
+     1.5755,
+     1.7
+    ]
+   },
+   "normalized_longest_axis_m": 1.7,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": true,
+   "min_z_m": -0.0,
+   "bbox_centre_m": [
+    -0.0,
+    -0.0,
+    0.85
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.0099,
+     0.9599
+    ],
+    "min": [
+     -0.6265,
+     -0.5647
+    ],
+    "max": [
+     0.3835,
+     0.3952
+    ],
+    "verts": 1069
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 1.58,
+     "z_above_bottom": 1.58,
+     "area_m2": 0.00273,
+     "fraction_of_height": 0.929
+    },
+    {
+     "z_world": 1.37,
+     "z_above_bottom": 1.37,
+     "area_m2": 0.00247,
+     "fraction_of_height": 0.806
+    },
+    {
+     "z_world": 1.45,
+     "z_above_bottom": 1.45,
+     "area_m2": 0.0024,
+     "fraction_of_height": 0.853
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     0.0125,
+     0.0158,
+     0.017
+    ],
+    "mode": "skinned: axis order checked up to a uniform scale",
+    "blender_over_header_ratios": [
+     100.23,
+     99.72,
+     100.0
+    ],
+    "ratio_spread": 0.0052,
+    "ok": true
+   },
+   "materials": [
+    "Material_1"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "texture_0",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 1,
+   "armature": {
+    "name": "Armature",
+    "bones": 24,
+    "root_bones": [
+     "Hips"
+    ],
+    "world_scale": [
+     0.01,
+     0.01,
+     0.01
+    ],
+    "armature_count": 1,
+    "deformed_mesh_objects": [
+     "char1"
+    ],
+    "vertex_groups": 24
+   },
+   "actions": [
+    {
+     "name": "Attack",
+     "frame_range": [
+      0.0,
+      67.2
+     ],
+     "seconds_at_24_fps": 2.8
+    },
+    {
+     "name": "Hit_Reaction",
+     "frame_range": [
+      0.0,
+      39.2
+     ],
+     "seconds_at_24_fps": 1.63
+    },
+    {
+     "name": "Idle_8",
+     "frame_range": [
+      0.0,
+      192.0
+     ],
+     "seconds_at_24_fps": 8.0
+    },
+    {
+     "name": "Shot_and_Fall_Backward",
+     "frame_range": [
+      0.0,
+      84.0
+     ],
+     "seconds_at_24_fps": 3.5
+    },
+    {
+     "name": "Walking",
+     "frame_range": [
+      0.0,
+      24.8
+     ],
+     "seconds_at_24_fps": 1.03
+    }
+   ],
+   "decision": {
+    "unreal_name": "SK_EmberDemon",
+    "class": "enemy",
+    "class_budget_tris": 15000,
+    "tris": 10418,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -30.5,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 220,
+     "measured_m": 1.7,
+     "anchor": "z extent 1.7000 m"
+    },
+    "uniform_scale_factor": 1.2941,
+    "target_size_cm": {
+     "w": 162.1,
+     "d": 203.9,
+     "h": 220.0
+    },
+    "disposition": "kept",
+    "note": "Demon #1, 220 tall (spec capsule 220 / radius 45 in Data/floorplan.json encounters.demon_1). Rest pose is a wings-spread A-pose, so width is wingtip to wingtip. Feet already at z = 0 in the file."
+   }
+  },
+  {
+   "file": "characters/fallen_security_guard.glb",
+   "bytes": 617492,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 9485,
+    "size_yup_m": [
+     0.9183,
+     0.9709,
+     1.902
+    ],
+    "min_yup_m": [
+     -0.4586,
+     -0.478,
+     -0.952
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.4828333258628845,
+       -0.5104525685310364,
+       -1
+      ],
+      "max": [
+       0.4828333258628845,
+       0.5104525685310364,
+       1
+      ],
+      "size": [
+       0.965666651725769,
+       1.0209051370620728,
+       2
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 9485,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 6,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 25,
+     "dropped_by_blender_import": 6
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      0.00057,
+      0.00103,
+      0.00739
+     ],
+     "scale": [
+      0.951,
+      0.951,
+      0.951
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 9479,
+     "verts": 8063,
+     "polygons": 9479,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.4586,
+       -0.95,
+       -0.478
+      ],
+      "max": [
+       0.4597,
+       0.952,
+       0.4928
+      ],
+      "size": [
+       0.9183,
+       1.902,
+       0.9709
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 9479,
+   "polygons": 9479,
+   "verts": 8063,
+   "tris_including_importer_artifacts": 9479,
+   "bounds_rest_m": {
+    "min": [
+     -0.4586,
+     -0.95,
+     -0.478
+    ],
+    "max": [
+     0.4597,
+     0.952,
+     0.4928
+    ],
+    "size": [
+     0.9183,
+     1.902,
+     0.9709
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.4586,
+     -0.95,
+     -0.478
+    ],
+    "max": [
+     0.4597,
+     0.952,
+     0.4928
+    ],
+    "size": [
+     0.9183,
+     1.902,
+     0.9709
+    ]
+   },
+   "normalized_longest_axis_m": 1.902,
+   "normalized_longest_axis": "y",
+   "origin_at_floor": false,
+   "min_z_m": -0.478,
+   "bbox_centre_m": [
+    0.0006,
+    0.001,
+    0.0074
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.9152,
+     1.5969
+    ],
+    "min": [
+     -0.4586,
+     -0.8934
+    ],
+    "max": [
+     0.4566,
+     0.7034
+    ],
+    "verts": 1662
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": -0.19,
+     "z_above_bottom": 0.288,
+     "area_m2": 0.01636,
+     "fraction_of_height": 0.297
+    },
+    {
+     "z_world": -0.29,
+     "z_above_bottom": 0.188,
+     "area_m2": 0.0163,
+     "fraction_of_height": 0.194
+    },
+    {
+     "z_world": -0.21,
+     "z_above_bottom": 0.268,
+     "area_m2": 0.01058,
+     "fraction_of_height": 0.276
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     0.9183,
+     1.902,
+     0.9709
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_FallenSecurityGuard",
+    "class": "human_prop",
+    "class_budget_tris": 10000,
+    "tris": 9479,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -5.2,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 82,
+     "measured_m": 0.9709,
+     "anchor": "z extent 0.9709 m"
+    },
+    "uniform_scale_factor": 0.8446,
+    "target_size_cm": {
+     "w": 77.6,
+     "d": 160.6,
+     "h": 82.0
+    },
+    "disposition": "kept",
+    "note": "NOT prone: a seated slump - back against a wall, legs straight out, chin on chest (the 1 : 2 height : length ratio). Crown at 82 -> legs project ~160 from the wall. Placed along a 280 corridor wall he would leave ~120 clear (< 216 minimum), so the blockout must seat him in a recess / bay or across a corridor end; flagged for the blockout designer."
+   }
+  },
+  {
+   "file": "characters/intern_sitting.glb",
+   "bytes": 611980,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 9846,
+    "size_yup_m": [
+     1.0411,
+     1.8999,
+     1.784
+    ],
+    "min_yup_m": [
+     -0.5215,
+     -0.9517,
+     -0.8879
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.5214660167694092,
+       -0.9517049789428711,
+       -0.8878800272941589
+      ],
+      "max": [
+       0.5196160078048706,
+       0.9482120275497437,
+       0.8961179852485657
+      ],
+      "size": [
+       1.0410820245742798,
+       1.8999170064926147,
+       1.7839980125427246
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 9846,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 661,
+     "duplicate_face_same_winding": 32,
+     "zero_area_distinct_index": 0,
+     "dropped_by_blender_import": 661
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 9185,
+     "verts": 4310,
+     "polygons": 9185,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.5215,
+       -0.8961,
+       -0.9517
+      ],
+      "max": [
+       0.5196,
+       0.8879,
+       0.9482
+      ],
+      "size": [
+       1.0411,
+       1.784,
+       1.8999
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 9185,
+   "polygons": 9185,
+   "verts": 4310,
+   "tris_including_importer_artifacts": 9185,
+   "bounds_rest_m": {
+    "min": [
+     -0.5215,
+     -0.8961,
+     -0.9517
+    ],
+    "max": [
+     0.5196,
+     0.8879,
+     0.9482
+    ],
+    "size": [
+     1.0411,
+     1.784,
+     1.8999
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.5215,
+     -0.8961,
+     -0.9517
+    ],
+    "max": [
+     0.5196,
+     0.8879,
+     0.9482
+    ],
+    "size": [
+     1.0411,
+     1.784,
+     1.8999
+    ]
+   },
+   "normalized_longest_axis_m": 1.8999,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": false,
+   "min_z_m": -0.9517,
+   "bbox_centre_m": [
+    -0.0009,
+    -0.0041,
+    -0.0017
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.633,
+     1.6259
+    ],
+    "min": [
+     -0.3142,
+     -0.8961
+    ],
+    "max": [
+     0.3188,
+     0.7298
+    ],
+    "verts": 201
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.52,
+     "z_above_bottom": 1.4717,
+     "area_m2": 0.02681,
+     "fraction_of_height": 0.775
+    },
+    {
+     "z_world": -0.0,
+     "z_above_bottom": 0.9517,
+     "area_m2": 0.01743,
+     "fraction_of_height": 0.501
+    },
+    {
+     "z_world": 0.4,
+     "z_above_bottom": 1.3517,
+     "area_m2": 0.01695,
+     "fraction_of_height": 0.711
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.0411,
+     1.784,
+     1.8999
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_InternSitting",
+    "class": "human_prop",
+    "class_budget_tris": 10000,
+    "tris": 9185,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -8.2,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 90,
+     "measured_m": 1.8999,
+     "anchor": "z extent 1.8999 m"
+    },
+    "uniform_scale_factor": 0.4737,
+    "target_size_cm": {
+     "w": 49.3,
+     "d": 84.5,
+     "h": 90.0
+    },
+    "disposition": "kept",
+    "note": "Seated on the floor, knees drawn up, arms around the knees, head down on the knees (hair volume adds to the top): crown at 90; ~50 wide, ~85 back-to-toes. Back to a wall."
+   }
+  },
+  {
+   "file": "characters/man_sitting.glb",
+   "bytes": 763348,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 9506,
+    "size_yup_m": [
+     1.2844,
+     1.1284,
+     1.9045
+    ],
+    "min_yup_m": [
+     -0.645,
+     -0.5688,
+     -0.9509
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.6743980050086975,
+       -0.5924863219261169,
+       -1
+      ],
+      "max": [
+       0.6743980050086975,
+       0.5924863219261169,
+       1
+      ],
+      "size": [
+       1.348796010017395,
+       1.1849726438522339,
+       2
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 9506,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 4,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 48,
+     "dropped_by_blender_import": 4
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00282,
+      -0.00137,
+      -0.00463
+     ],
+     "scale": [
+      0.95227,
+      0.95227,
+      0.95227
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 9502,
+     "verts": 8700,
+     "polygons": 9502,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.645,
+       -0.9536,
+       -0.5688
+      ],
+      "max": [
+       0.6394,
+       0.9509,
+       0.5596
+      ],
+      "size": [
+       1.2844,
+       1.9045,
+       1.1284
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 9502,
+   "polygons": 9502,
+   "verts": 8700,
+   "tris_including_importer_artifacts": 9502,
+   "bounds_rest_m": {
+    "min": [
+     -0.645,
+     -0.9536,
+     -0.5688
+    ],
+    "max": [
+     0.6394,
+     0.9509,
+     0.5596
+    ],
+    "size": [
+     1.2844,
+     1.9045,
+     1.1284
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.645,
+     -0.9536,
+     -0.5688
+    ],
+    "max": [
+     0.6394,
+     0.9509,
+     0.5596
+    ],
+    "size": [
+     1.2844,
+     1.9045,
+     1.1284
+    ]
+   },
+   "normalized_longest_axis_m": 1.9045,
+   "normalized_longest_axis": "y",
+   "origin_at_floor": false,
+   "min_z_m": -0.5688,
+   "bbox_centre_m": [
+    -0.0028,
+    -0.0014,
+    -0.0046
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.2844,
+     1.6318
+    ],
+    "min": [
+     -0.645,
+     -0.889
+    ],
+    "max": [
+     0.6394,
+     0.7428
+    ],
+    "verts": 1239
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": -0.29,
+     "z_above_bottom": 0.2788,
+     "area_m2": 0.02381,
+     "fraction_of_height": 0.247
+    },
+    {
+     "z_world": 0.12,
+     "z_above_bottom": 0.6888,
+     "area_m2": 0.01242,
+     "fraction_of_height": 0.61
+    },
+    {
+     "z_world": 0.19,
+     "z_above_bottom": 0.7588,
+     "area_m2": 0.01159,
+     "fraction_of_height": 0.672
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.2844,
+     1.9045,
+     1.1284
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_ManSitting",
+    "class": "human_prop",
+    "class_budget_tris": 10000,
+    "tris": 9502,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -5.0,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 85,
+     "measured_m": 1.1284,
+     "anchor": "z extent 1.1284 m"
+    },
+    "uniform_scale_factor": 0.7533,
+    "target_size_cm": {
+     "w": 96.8,
+     "d": 143.5,
+     "h": 85.0
+    },
+    "disposition": "kept",
+    "note": "Seated on the floor, leaning back on his hands / the racks, legs out, head tilted back: crown at 85. Legs reach ~143 from the back plane - fits the 430 closet in front of the 60-deep racks."
+   }
+  },
+  {
+   "file": "props/bathroom_vanity.glb",
+   "bytes": 606324,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 7794,
+    "size_yup_m": [
+     1.9034,
+     0.8537,
+     0.418
+    ],
+    "min_yup_m": [
+     -0.9522,
+     -0.4272,
+     -0.2086
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -1,
+       -0.44853052496910095,
+       -0.21961119771003723
+      ],
+      "max": [
+       1,
+       0.44853052496910095,
+       0.21961119771003723
+      ],
+      "size": [
+       2,
+       0.8970610499382019,
+       0.43922239542007446
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 7794,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 2,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 17,
+     "dropped_by_blender_import": 2
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00048,
+      -0.00039,
+      -0.00035
+     ],
+     "scale": [
+      0.9517,
+      0.9517,
+      0.9517
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 7792,
+     "verts": 7369,
+     "polygons": 7792,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.9522,
+       -0.2094,
+       -0.4272
+      ],
+      "max": [
+       0.9512,
+       0.2086,
+       0.4265
+      ],
+      "size": [
+       1.9034,
+       0.418,
+       0.8537
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 7792,
+   "polygons": 7792,
+   "verts": 7369,
+   "tris_including_importer_artifacts": 7792,
+   "bounds_rest_m": {
+    "min": [
+     -0.9522,
+     -0.2094,
+     -0.4272
+    ],
+    "max": [
+     0.9512,
+     0.2086,
+     0.4265
+    ],
+    "size": [
+     1.9034,
+     0.418,
+     0.8537
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.9522,
+     -0.2094,
+     -0.4272
+    ],
+    "max": [
+     0.9512,
+     0.2086,
+     0.4265
+    ],
+    "size": [
+     1.9034,
+     0.418,
+     0.8537
+    ]
+   },
+   "normalized_longest_axis_m": 1.9034,
+   "normalized_longest_axis": "x",
+   "origin_at_floor": false,
+   "min_z_m": -0.4272,
+   "bbox_centre_m": [
+    -0.0005,
+    -0.0004,
+    -0.0004
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.9005,
+     0.3922
+    ],
+    "min": [
+     -0.9522,
+     -0.1849
+    ],
+    "max": [
+     0.9483,
+     0.2073
+    ],
+    "verts": 232
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.23,
+     "z_above_bottom": 0.6572,
+     "area_m2": 0.56846,
+     "fraction_of_height": 0.77
+    },
+    {
+     "z_world": 0.11,
+     "z_above_bottom": 0.5372,
+     "area_m2": 0.046,
+     "fraction_of_height": 0.629
+    },
+    {
+     "z_world": 0.12,
+     "z_above_bottom": 0.5472,
+     "area_m2": 0.03543,
+     "fraction_of_height": 0.641
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.9034,
+     0.418,
+     0.8537
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_BathroomVanity",
+    "class": "large_furniture",
+    "class_budget_tris": 8000,
+    "tris": 7792,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -2.6,
+    "pivot": "floor",
+    "drive": {
+     "mode": "surface",
+     "cm": 85,
+     "measured_m": 0.6572,
+     "anchor": "dominant up-facing surface 0.657 m above the bottom"
+    },
+    "uniform_scale_factor": 1.2934,
+    "target_size_cm": {
+     "w": 246.2,
+     "d": 54.1,
+     "h": 110.4
+    },
+    "disposition": "kept",
+    "note": "Three-basin vanity with three taps, one mesh. Counter surface at 85; the taps set the overall height. Floor-standing, back face flush to the wall.",
+    "surface_height_cm": 85
+   }
+  },
+  {
+   "file": "props/broken_door.glb",
+   "bytes": 321012,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 4012,
+    "size_yup_m": [
+     1.9024,
+     0.1069,
+     0.9856
+    ],
+    "min_yup_m": [
+     -0.952,
+     -0.0605,
+     -0.5025
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.9519699811935425,
+       -0.06049099937081337,
+       -0.5024809837341309
+      ],
+      "max": [
+       0.9504169821739197,
+       0.046434998512268066,
+       0.48315900564193726
+      ],
+      "size": [
+       1.9023869633674622,
+       0.10692599788308144,
+       0.9856399893760681
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 4012,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 12,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 0,
+     "dropped_by_blender_import": 12
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 4000,
+     "verts": 2005,
+     "polygons": 4000,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.952,
+       -0.4832,
+       -0.0605
+      ],
+      "max": [
+       0.9504,
+       0.5025,
+       0.0464
+      ],
+      "size": [
+       1.9024,
+       0.9856,
+       0.1069
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 4000,
+   "polygons": 4000,
+   "verts": 2005,
+   "tris_including_importer_artifacts": 4000,
+   "bounds_rest_m": {
+    "min": [
+     -0.952,
+     -0.4832,
+     -0.0605
+    ],
+    "max": [
+     0.9504,
+     0.5025,
+     0.0464
+    ],
+    "size": [
+     1.9024,
+     0.9856,
+     0.1069
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.952,
+     -0.4832,
+     -0.0605
+    ],
+    "max": [
+     0.9504,
+     0.5025,
+     0.0464
+    ],
+    "size": [
+     1.9024,
+     0.9856,
+     0.1069
+    ]
+   },
+   "normalized_longest_axis_m": 1.9024,
+   "normalized_longest_axis": "x",
+   "origin_at_floor": false,
+   "min_z_m": -0.0605,
+   "bbox_centre_m": [
+    -0.0008,
+    0.0097,
+    -0.007
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.9013,
+     0.9135
+    ],
+    "min": [
+     -0.9511,
+     -0.4829
+    ],
+    "max": [
+     0.9502,
+     0.4306
+    ],
+    "verts": 441
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": -0.02,
+     "z_above_bottom": 0.0405,
+     "area_m2": 1.01257,
+     "fraction_of_height": 0.379
+    },
+    {
+     "z_world": -0.01,
+     "z_above_bottom": 0.0505,
+     "area_m2": 0.65804,
+     "fraction_of_height": 0.472
+    },
+    {
+     "z_world": -0.0,
+     "z_above_bottom": 0.0605,
+     "area_m2": 0.00614,
+     "fraction_of_height": 0.566
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.9024,
+     0.9856,
+     0.1069
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_BrokenDoor",
+    "class": "small_prop",
+    "class_budget_tris": 4000,
+    "tris": 4000,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": 0.0,
+    "pivot": "floor",
+    "drive": {
+     "mode": "x",
+     "cm": 205,
+     "measured_m": 1.9024,
+     "anchor": "x extent 1.9024 m"
+    },
+    "uniform_scale_factor": 1.0776,
+    "target_size_cm": {
+     "w": 205.0,
+     "d": 106.2,
+     "h": 11.5
+    },
+    "disposition": "kept",
+    "note": "Leaf lying flat with knob and hinge stubs at one end. Long axis = 205 leaf height; width (~106, the model is wider than a real 90 leaf) and thickness follow."
+   }
+  },
+  {
+   "file": "props/ceo_couch_coffee_table.glb",
+   "bytes": 420756,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 8126,
+    "size_yup_m": [
+     1.9007,
+     0.5429,
+     1.7214
+    ],
+    "min_yup_m": [
+     -0.9507,
+     -0.2711,
+     -0.8638
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.9507459998130798,
+       -0.2710770070552826,
+       -0.8637779951095581
+      ],
+      "max": [
+       0.9499970078468323,
+       0.27184998989105225,
+       0.8576340079307556
+      ],
+      "size": [
+       1.900743007659912,
+       0.5429269969463348,
+       1.7214120030403137
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 8126,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 22,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 0,
+     "dropped_by_blender_import": 22
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 8104,
+     "verts": 4017,
+     "polygons": 8104,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.9507,
+       -0.8576,
+       -0.2711
+      ],
+      "max": [
+       0.95,
+       0.8638,
+       0.2718
+      ],
+      "size": [
+       1.9007,
+       1.7214,
+       0.5429
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 8104,
+   "polygons": 8104,
+   "verts": 4017,
+   "tris_including_importer_artifacts": 8104,
+   "bounds_rest_m": {
+    "min": [
+     -0.9507,
+     -0.8576,
+     -0.2711
+    ],
+    "max": [
+     0.95,
+     0.8638,
+     0.2718
+    ],
+    "size": [
+     1.9007,
+     1.7214,
+     0.5429
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.9507,
+     -0.8576,
+     -0.2711
+    ],
+    "max": [
+     0.95,
+     0.8638,
+     0.2718
+    ],
+    "size": [
+     1.9007,
+     1.7214,
+     0.5429
+    ]
+   },
+   "normalized_longest_axis_m": 1.9007,
+   "normalized_longest_axis": "x",
+   "origin_at_floor": false,
+   "min_z_m": -0.2711,
+   "bbox_centre_m": [
+    -0.0004,
+    0.0031,
+    0.0004
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.8965,
+     1.696
+    ],
+    "min": [
+     -0.9487,
+     -0.8429
+    ],
+    "max": [
+     0.9478,
+     0.8531
+    ],
+    "verts": 76
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.01,
+     "z_above_bottom": 0.2811,
+     "area_m2": 0.32463,
+     "fraction_of_height": 0.518
+    },
+    {
+     "z_world": 0.04,
+     "z_above_bottom": 0.3111,
+     "area_m2": 0.19645,
+     "fraction_of_height": 0.573
+    },
+    {
+     "z_world": 0.05,
+     "z_above_bottom": 0.3211,
+     "area_m2": 0.19629,
+     "fraction_of_height": 0.591
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.9007,
+     1.7214,
+     0.5429
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_CeoCouchCoffeeTable",
+    "class": "large_furniture",
+    "class_budget_tris": 8000,
+    "tris": 8104,
+    "budget_fits": false,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": 1.3,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 80,
+     "measured_m": 0.5429,
+     "anchor": "z extent 0.5429 m"
+    },
+    "uniform_scale_factor": 1.4736,
+    "target_size_cm": {
+     "w": 280.1,
+     "d": 253.7,
+     "h": 80.0
+    },
+    "disposition": "kept",
+    "note": "L-set in one mesh: 3-seat sofa, perpendicular 2-seat loveseat, rectangular coffee table in front of the sofa (the table sits in front of the sofa, not between the two couches). Sofa back 80 tall -> ~215 sofa, ~160 loveseat, ~120 x 70 table."
+   }
+  },
+  {
+   "file": "props/closed_door.glb",
+   "bytes": 423200,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 3806,
+    "size_yup_m": [
+     0.8816,
+     1.9029,
+     0.1454
+    ],
+    "min_yup_m": [
+     -0.4411,
+     -0.9523,
+     -0.0746
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.46330147981643677,
+       -1,
+       -0.07641834765672684
+      ],
+      "max": [
+       0.46330147981643677,
+       1,
+       0.07641834765672684
+      ],
+      "size": [
+       0.9266029596328735,
+       2,
+       0.15283669531345367
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 3806,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 1,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 54,
+     "dropped_by_blender_import": 1
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00029,
+      0.00186,
+      -0.00085
+     ],
+     "scale": [
+      0.95145,
+      0.95145,
+      0.95145
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 3805,
+     "verts": 5279,
+     "polygons": 3805,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.4411,
+       -0.0709,
+       -0.9523
+      ],
+      "max": [
+       0.4405,
+       0.0746,
+       0.9506
+      ],
+      "size": [
+       0.8816,
+       0.1454,
+       1.9029
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 3805,
+   "polygons": 3805,
+   "verts": 5279,
+   "tris_including_importer_artifacts": 3805,
+   "bounds_rest_m": {
+    "min": [
+     -0.4411,
+     -0.0709,
+     -0.9523
+    ],
+    "max": [
+     0.4405,
+     0.0746,
+     0.9506
+    ],
+    "size": [
+     0.8816,
+     0.1454,
+     1.9029
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.4411,
+     -0.0709,
+     -0.9523
+    ],
+    "max": [
+     0.4405,
+     0.0746,
+     0.9506
+    ],
+    "size": [
+     0.8816,
+     0.1454,
+     1.9029
+    ]
+   },
+   "normalized_longest_axis_m": 1.9029,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": false,
+   "min_z_m": -0.9523,
+   "bbox_centre_m": [
+    -0.0003,
+    0.0019,
+    -0.0008
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.8778,
+     0.1155
+    ],
+    "min": [
+     -0.4382,
+     -0.0425
+    ],
+    "max": [
+     0.4396,
+     0.0729
+    ],
+    "verts": 425
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.9,
+     "z_above_bottom": 1.8523,
+     "area_m2": 0.03252,
+     "fraction_of_height": 0.973
+    },
+    {
+     "z_world": 0.86,
+     "z_above_bottom": 1.8123,
+     "area_m2": 0.02535,
+     "fraction_of_height": 0.952
+    },
+    {
+     "z_world": 0.91,
+     "z_above_bottom": 1.8623,
+     "area_m2": 0.01321,
+     "fraction_of_height": 0.979
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     0.8816,
+     0.1454,
+     1.9029
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_ClosedDoor",
+    "class": "small_prop",
+    "class_budget_tris": 4000,
+    "tris": 3805,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -4.9,
+    "pivot": "wall",
+    "drive": {
+     "mode": "z",
+     "cm": 220,
+     "measured_m": 1.9029,
+     "anchor": "z extent 1.9029 m"
+    },
+    "uniform_scale_factor": 1.1561,
+    "target_size_cm": {
+     "w": 101.9,
+     "d": 16.8,
+     "h": 220.0
+    },
+    "disposition": "kept",
+    "note": "Panel with casing. 220 tall fills the frozen 120 x 220 opening height; at the model's 0.46 aspect it is ~102 wide, so the greybox jamb fills ~9 cm each side. Stretching to 120 wide rejected (texture smear)."
+   }
+  },
+  {
+   "file": "props/closed_elevator.glb",
+   "bytes": 400988,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 3,
+    "materials": 1,
+    "tris_from_indices": 3790,
+    "size_yup_m": [
+     1.1631,
+     1.9034,
+     0.1782
+    ],
+    "min_yup_m": [
+     -0.582,
+     -0.9522,
+     -0.09
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.6110416054725647,
+       -1,
+       -0.09363079071044922
+      ],
+      "max": [
+       0.6110416054725647,
+       1,
+       0.09363079071044922
+      ],
+      "size": [
+       1.2220832109451294,
+       2,
+       0.18726158142089844
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 3790,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 0,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 11,
+     "dropped_by_blender_import": 0
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00049,
+      0.0009,
+      -0.00046
+     ],
+     "scale": [
+      0.95172,
+      0.95172,
+      0.95172
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 3790,
+     "verts": 4156,
+     "polygons": 3790,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.582,
+       -0.0882,
+       -0.9522
+      ],
+      "max": [
+       0.5811,
+       0.09,
+       0.9513
+      ],
+      "size": [
+       1.1631,
+       0.1782,
+       1.9034
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 3790,
+   "polygons": 3790,
+   "verts": 4156,
+   "tris_including_importer_artifacts": 3790,
+   "bounds_rest_m": {
+    "min": [
+     -0.582,
+     -0.0882,
+     -0.9522
+    ],
+    "max": [
+     0.5811,
+     0.09,
+     0.9513
+    ],
+    "size": [
+     1.1631,
+     0.1782,
+     1.9034
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.582,
+     -0.0882,
+     -0.9522
+    ],
+    "max": [
+     0.5811,
+     0.09,
+     0.9513
+    ],
+    "size": [
+     1.1631,
+     0.1782,
+     1.9034
+    ]
+   },
+   "normalized_longest_axis_m": 1.9034,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": false,
+   "min_z_m": -0.9522,
+   "bbox_centre_m": [
+    -0.0005,
+    0.0009,
+    -0.0005
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.1626,
+     0.1661
+    ],
+    "min": [
+     -0.5817,
+     -0.0761
+    ],
+    "max": [
+     0.5809,
+     0.09
+    ],
+    "verts": 792
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.9,
+     "z_above_bottom": 1.8522,
+     "area_m2": 0.10293,
+     "fraction_of_height": 0.973
+    },
+    {
+     "z_world": 0.95,
+     "z_above_bottom": 1.9022,
+     "area_m2": 0.06638,
+     "fraction_of_height": 0.999
+    },
+    {
+     "z_world": 0.82,
+     "z_above_bottom": 1.7722,
+     "area_m2": 0.02128,
+     "fraction_of_height": 0.931
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.1631,
+     0.1782,
+     1.9034
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 3,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_ClosedElevator",
+    "class": "small_prop",
+    "class_budget_tris": 4000,
+    "tris": 3790,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -5.2,
+    "pivot": "wall",
+    "drive": {
+     "mode": "z",
+     "cm": 220,
+     "measured_m": 1.9034,
+     "anchor": "z extent 1.9034 m"
+    },
+    "uniform_scale_factor": 1.1558,
+    "target_size_cm": {
+     "w": 134.4,
+     "d": 20.6,
+     "h": 220.0
+    },
+    "disposition": "kept",
+    "note": "Two sliding panels in a surround, aspect 0.61: a narrow single car. 220 tall matches the frozen elevator_doors blocker (200 x 220) and gives ~134 wide, centred in the 200 blocker with the greybox filling the flanks. Scaling to 200 wide would be 327 tall (> 310 ceiling) - rejected."
+   }
+  },
+  {
+   "file": "props/kitchen_lunch_table.glb",
+   "bytes": 628416,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 7806,
+    "size_yup_m": [
+     1.8987,
+     1.0631,
+     1.3491
+    ],
+    "min_yup_m": [
+     -0.9529,
+     -0.5316,
+     -0.6746
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -1,
+       -0.5598925948143005,
+       -0.7105319499969482
+      ],
+      "max": [
+       1,
+       0.5598925948143005,
+       0.7105319499969482
+      ],
+      "size": [
+       2,
+       1.119785189628601,
+       1.4210638999938965
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 7806,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 3,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 4,
+     "dropped_by_blender_import": 3
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00358,
+      0.0001,
+      -8e-05
+     ],
+     "scale": [
+      0.94935,
+      0.94935,
+      0.94935
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 7803,
+     "verts": 7583,
+     "polygons": 7803,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.9529,
+       -0.6744,
+       -0.5316
+      ],
+      "max": [
+       0.9458,
+       0.6746,
+       0.5315
+      ],
+      "size": [
+       1.8987,
+       1.3491,
+       1.0631
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 7803,
+   "polygons": 7803,
+   "verts": 7583,
+   "tris_including_importer_artifacts": 7803,
+   "bounds_rest_m": {
+    "min": [
+     -0.9529,
+     -0.6744,
+     -0.5316
+    ],
+    "max": [
+     0.9458,
+     0.6746,
+     0.5315
+    ],
+    "size": [
+     1.8987,
+     1.3491,
+     1.0631
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.9529,
+     -0.6744,
+     -0.5316
+    ],
+    "max": [
+     0.9458,
+     0.6746,
+     0.5315
+    ],
+    "size": [
+     1.8987,
+     1.3491,
+     1.0631
+    ]
+   },
+   "normalized_longest_axis_m": 1.8987,
+   "normalized_longest_axis": "x",
+   "origin_at_floor": false,
+   "min_z_m": -0.5316,
+   "bbox_centre_m": [
+    -0.0036,
+    0.0001,
+    -0.0001
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.8987,
+     1.3491
+    ],
+    "min": [
+     -0.9529,
+     -0.6744
+    ],
+    "max": [
+     0.9458,
+     0.6746
+    ],
+    "verts": 781
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.36,
+     "z_above_bottom": 0.8916,
+     "area_m2": 0.49225,
+     "fraction_of_height": 0.839
+    },
+    {
+     "z_world": 0.35,
+     "z_above_bottom": 0.8816,
+     "area_m2": 0.33373,
+     "fraction_of_height": 0.829
+    },
+    {
+     "z_world": 0.02,
+     "z_above_bottom": 0.5516,
+     "area_m2": 0.14859,
+     "fraction_of_height": 0.519
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.8987,
+     1.3491,
+     1.0631
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_KitchenLunchTable",
+    "class": "large_furniture",
+    "class_budget_tris": 8000,
+    "tris": 7803,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -2.5,
+    "pivot": "floor",
+    "drive": {
+     "mode": "surface",
+     "cm": 75,
+     "measured_m": 0.8916,
+     "anchor": "dominant up-facing surface 0.892 m above the bottom"
+    },
+    "uniform_scale_factor": 0.8412,
+    "target_size_cm": {
+     "w": 159.7,
+     "d": 113.5,
+     "h": 89.4
+    },
+    "disposition": "kept",
+    "note": "Round pedestal table with TWO chairs (not four) and cups / a tray on top, one mesh. Table top at 75; the chair backs (tallest element) follow. 'One chair pushed out' is a blockout note, not a second mesh.",
+    "surface_height_cm": 75
+   }
+  },
+  {
+   "file": "props/mop_and_bucket.glb",
+   "bytes": 557312,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 3791,
+    "size_yup_m": [
+     1.6439,
+     1.8928,
+     1.2672
+    ],
+    "min_yup_m": [
+     -0.8275,
+     -0.95,
+     -0.6352
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.8685262799263,
+       -1,
+       -0.669515073299408
+      ],
+      "max": [
+       0.8685262799263,
+       1,
+       0.669515073299408
+      ],
+      "size": [
+       1.7370525598526,
+       2,
+       1.339030146598816
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 3791,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 0,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 11,
+     "dropped_by_blender_import": 0
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00556,
+      0.00163,
+      -0.00366
+     ],
+     "scale": [
+      0.94638,
+      0.94638,
+      0.94638
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 3791,
+     "verts": 4710,
+     "polygons": 3791,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.8275,
+       -0.632,
+       -0.95
+      ],
+      "max": [
+       0.8164,
+       0.6352,
+       0.9427
+      ],
+      "size": [
+       1.6439,
+       1.2672,
+       1.8928
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 3791,
+   "polygons": 3791,
+   "verts": 4710,
+   "tris_including_importer_artifacts": 3791,
+   "bounds_rest_m": {
+    "min": [
+     -0.8275,
+     -0.632,
+     -0.95
+    ],
+    "max": [
+     0.8164,
+     0.6352,
+     0.9427
+    ],
+    "size": [
+     1.6439,
+     1.2672,
+     1.8928
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.8275,
+     -0.632,
+     -0.95
+    ],
+    "max": [
+     0.8164,
+     0.6352,
+     0.9427
+    ],
+    "size": [
+     1.6439,
+     1.2672,
+     1.8928
+    ]
+   },
+   "normalized_longest_axis_m": 1.8928,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": false,
+   "min_z_m": -0.95,
+   "bbox_centre_m": [
+    -0.0056,
+    0.0016,
+    -0.0037
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.1644,
+     1.2039
+    ],
+    "min": [
+     -0.348,
+     -0.5687
+    ],
+    "max": [
+     0.8164,
+     0.6352
+    ],
+    "verts": 816
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": -0.35,
+     "z_above_bottom": 0.6,
+     "area_m2": 0.25406,
+     "fraction_of_height": 0.317
+    },
+    {
+     "z_world": -0.36,
+     "z_above_bottom": 0.59,
+     "area_m2": 0.05082,
+     "fraction_of_height": 0.312
+    },
+    {
+     "z_world": -0.37,
+     "z_above_bottom": 0.58,
+     "area_m2": 0.03259,
+     "fraction_of_height": 0.306
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.6439,
+     1.2672,
+     1.8928
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_MopAndBucket",
+    "class": "small_prop",
+    "class_budget_tris": 4000,
+    "tris": 3791,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -5.2,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 150,
+     "measured_m": 1.8928,
+     "anchor": "z extent 1.8928 m"
+    },
+    "uniform_scale_factor": 0.7925,
+    "target_size_cm": {
+     "w": 130.3,
+     "d": 100.4,
+     "h": 150.0
+    },
+    "disposition": "kept",
+    "note": "Wringer bucket + leaning mop + a 'wet floor' A-frame sign, one mesh. Mop handle top at 150 gives a ~86 bucket/wringer and a ~67 sign, both real-world."
+   }
+  },
+  {
+   "file": "props/reception_desk.glb",
+   "bytes": 680480,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 3,
+    "materials": 1,
+    "tris_from_indices": 7798,
+    "size_yup_m": [
+     1.8964,
+     1.3303,
+     1.8881
+    ],
+    "min_yup_m": [
+     -0.9489,
+     -0.6638,
+     -0.9453
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -1,
+       -0.7014984488487244,
+       -0.9956053495407104
+      ],
+      "max": [
+       1,
+       0.7014984488487244,
+       0.9956053495407104
+      ],
+      "size": [
+       2,
+       1.4029968976974487,
+       1.991210699081421
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 7798,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 2,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 22,
+     "dropped_by_blender_import": 2
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00069,
+      0.00121,
+      0.00142
+     ],
+     "scale": [
+      0.94821,
+      0.94821,
+      0.94821
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 7796,
+     "verts": 8385,
+     "polygons": 7796,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.9489,
+       -0.9428,
+       -0.6638
+      ],
+      "max": [
+       0.9475,
+       0.9453,
+       0.6666
+      ],
+      "size": [
+       1.8964,
+       1.8881,
+       1.3303
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 7796,
+   "polygons": 7796,
+   "verts": 8385,
+   "tris_including_importer_artifacts": 7796,
+   "bounds_rest_m": {
+    "min": [
+     -0.9489,
+     -0.9428,
+     -0.6638
+    ],
+    "max": [
+     0.9475,
+     0.9453,
+     0.6666
+    ],
+    "size": [
+     1.8964,
+     1.8881,
+     1.3303
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.9489,
+     -0.9428,
+     -0.6638
+    ],
+    "max": [
+     0.9475,
+     0.9453,
+     0.6666
+    ],
+    "size": [
+     1.8964,
+     1.8881,
+     1.3303
+    ]
+   },
+   "normalized_longest_axis_m": 1.8964,
+   "normalized_longest_axis": "x",
+   "origin_at_floor": false,
+   "min_z_m": -0.6638,
+   "bbox_centre_m": [
+    -0.0007,
+    0.0012,
+    0.0014
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     1.8122,
+     1.8479
+    ],
+    "min": [
+     -0.9146,
+     -0.9178
+    ],
+    "max": [
+     0.8975,
+     0.9301
+    ],
+    "verts": 990
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.24,
+     "z_above_bottom": 0.9038,
+     "area_m2": 2.44001,
+     "fraction_of_height": 0.679
+    },
+    {
+     "z_world": -0.27,
+     "z_above_bottom": 0.3938,
+     "area_m2": 0.9164,
+     "fraction_of_height": 0.296
+    },
+    {
+     "z_world": 0.17,
+     "z_above_bottom": 0.8338,
+     "area_m2": 0.62057,
+     "fraction_of_height": 0.627
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.8964,
+     1.8881,
+     1.3303
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 3,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_ReceptionDesk",
+    "class": "large_furniture",
+    "class_budget_tris": 8000,
+    "tris": 7796,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -2.5,
+    "pivot": "floor",
+    "drive": {
+     "mode": "surface",
+     "cm": 75,
+     "measured_m": 0.9038,
+     "anchor": "dominant up-facing surface 0.904 m above the bottom"
+    },
+    "uniform_scale_factor": 0.8298,
+    "target_size_cm": {
+     "w": 157.4,
+     "d": 156.7,
+     "h": 110.4
+    },
+    "disposition": "kept",
+    "note": "One mesh: desk block + chair behind + monitor + cup + a fallen item. The chair back rises above the work surface, so the surface is DESK height (75), not a standing counter; the monitor top sets the overall height. Reused as the CEO desk (spec).",
+    "surface_height_cm": 75
+   }
+  },
+  {
+   "file": "props/refrigerator_open.glb",
+   "bytes": 790356,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 7792,
+    "size_yup_m": [
+     0.9192,
+     1.9023,
+     1.3027
+    ],
+    "min_yup_m": [
+     -0.4599,
+     -0.9516,
+     -0.6518
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.4831995666027069,
+       -1,
+       -0.6847743391990662
+      ],
+      "max": [
+       0.4831995666027069,
+       1,
+       0.6847743391990662
+      ],
+      "size": [
+       0.9663991332054138,
+       2,
+       1.3695486783981323
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 7792,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 3,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 74,
+     "dropped_by_blender_import": 3
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00031,
+      0.0005,
+      -0.00041
+     ],
+     "scale": [
+      0.95117,
+      0.95117,
+      0.95117
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 7789,
+     "verts": 9183,
+     "polygons": 7789,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.4599,
+       -0.6508,
+       -0.9516
+      ],
+      "max": [
+       0.4593,
+       0.6518,
+       0.9508
+      ],
+      "size": [
+       0.9192,
+       1.3027,
+       1.9023
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 7789,
+   "polygons": 7789,
+   "verts": 9183,
+   "tris_including_importer_artifacts": 7789,
+   "bounds_rest_m": {
+    "min": [
+     -0.4599,
+     -0.6508,
+     -0.9516
+    ],
+    "max": [
+     0.4593,
+     0.6518,
+     0.9508
+    ],
+    "size": [
+     0.9192,
+     1.3027,
+     1.9023
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.4599,
+     -0.6508,
+     -0.9516
+    ],
+    "max": [
+     0.4593,
+     0.6518,
+     0.9508
+    ],
+    "size": [
+     0.9192,
+     1.3027,
+     1.9023
+    ]
+   },
+   "normalized_longest_axis_m": 1.9023,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": false,
+   "min_z_m": -0.9516,
+   "bbox_centre_m": [
+    -0.0003,
+    0.0005,
+    -0.0004
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.9192,
+     1.2721
+    ],
+    "min": [
+     -0.4599,
+     -0.6203
+    ],
+    "max": [
+     0.4593,
+     0.6518
+    ],
+    "verts": 576
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.95,
+     "z_above_bottom": 1.9016,
+     "area_m2": 0.70057,
+     "fraction_of_height": 1.0
+    },
+    {
+     "z_world": -0.39,
+     "z_above_bottom": 0.5616,
+     "area_m2": 0.39265,
+     "fraction_of_height": 0.295
+    },
+    {
+     "z_world": -0.81,
+     "z_above_bottom": 0.1416,
+     "area_m2": 0.06619,
+     "fraction_of_height": 0.074
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     0.9192,
+     1.3027,
+     1.9023
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_RefrigeratorOpen",
+    "class": "large_furniture",
+    "class_budget_tris": 8000,
+    "tris": 7789,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -2.6,
+    "pivot": "floor",
+    "drive": {
+     "mode": "z",
+     "cm": 180,
+     "measured_m": 1.9023,
+     "anchor": "z extent 1.9023 m"
+    },
+    "uniform_scale_factor": 0.9462,
+    "target_size_cm": {
+     "w": 87.0,
+     "d": 123.3,
+     "h": 180.0
+    },
+    "disposition": "kept",
+    "note": "Domestic fridge 180 tall; the door is modelled swung open ~90 deg, which is what the depth includes."
+   }
+  },
+  {
+   "file": "props/toilet_bowl.glb",
+   "bytes": 269892,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 3,
+    "materials": 1,
+    "tris_from_indices": 3798,
+    "size_yup_m": [
+     1.6337,
+     1.8964,
+     1.6848
+    ],
+    "min_yup_m": [
+     -0.8183,
+     -0.9499,
+     -0.8453
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -0.861445963382721,
+       -1,
+       -0.8884243369102478
+      ],
+      "max": [
+       0.861445963382721,
+       1,
+       0.8884243369102478
+      ],
+      "size": [
+       1.722891926765442,
+       2,
+       1.7768486738204956
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 3798,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 0,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 0,
+     "dropped_by_blender_import": 0
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00149,
+      0.00286,
+      -0.00171
+     ],
+     "scale": [
+      0.94821,
+      0.94821,
+      0.94821
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 3798,
+     "verts": 3887,
+     "polygons": 3798,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.8183,
+       -0.8396,
+       -0.9499
+      ],
+      "max": [
+       0.8153,
+       0.8453,
+       0.9465
+      ],
+      "size": [
+       1.6337,
+       1.6848,
+       1.8964
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 3798,
+   "polygons": 3798,
+   "verts": 3887,
+   "tris_including_importer_artifacts": 3798,
+   "bounds_rest_m": {
+    "min": [
+     -0.8183,
+     -0.8396,
+     -0.9499
+    ],
+    "max": [
+     0.8153,
+     0.8453,
+     0.9465
+    ],
+    "size": [
+     1.6337,
+     1.6848,
+     1.8964
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.8183,
+     -0.8396,
+     -0.9499
+    ],
+    "max": [
+     0.8153,
+     0.8453,
+     0.9465
+    ],
+    "size": [
+     1.6337,
+     1.6848,
+     1.8964
+    ]
+   },
+   "normalized_longest_axis_m": 1.8964,
+   "normalized_longest_axis": "z",
+   "origin_at_floor": false,
+   "min_z_m": -0.9499,
+   "bbox_centre_m": [
+    -0.0015,
+    0.0029,
+    -0.0017
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.1108,
+     0.1267
+    ],
+    "min": [
+     -0.0582,
+     0.0367
+    ],
+    "max": [
+     0.0526,
+     0.1634
+    ],
+    "verts": 19
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.69,
+     "z_above_bottom": 1.6399,
+     "area_m2": 0.29986,
+     "fraction_of_height": 0.865
+    },
+    {
+     "z_world": 0.7,
+     "z_above_bottom": 1.6499,
+     "area_m2": 0.10921,
+     "fraction_of_height": 0.87
+    },
+    {
+     "z_world": -0.33,
+     "z_above_bottom": 0.6199,
+     "area_m2": 0.07505,
+     "fraction_of_height": 0.327
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.6337,
+     1.6848,
+     1.8964
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 3,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_ToiletBowl",
+    "class": "small_prop",
+    "class_budget_tris": 4000,
+    "tris": 3798,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -5.1,
+    "pivot": "wall",
+    "drive": {
+     "mode": "x",
+     "cm": 40,
+     "measured_m": 1.6337,
+     "anchor": "x extent 1.6337 m"
+    },
+    "uniform_scale_factor": 0.2448,
+    "target_size_cm": {
+     "w": 40.0,
+     "d": 41.3,
+     "h": 46.4
+    },
+    "disposition": "kept",
+    "note": "NOT a floor toilet: a wall-hung bowl with exposed plumbing (drain pipe down and back into the wall, flush valve on top), no tank, no pedestal - hence the near-cubic raw bounds. Bowl width 40 is the anchor; rim lands ~40 above the box bottom, so hang the box with its bottom at z ~2."
+   }
+  },
+  {
+   "file": "weapons/shotgun.glb",
+   "bytes": 1129960,
+   "header": {
+    "generator": "glTF-Transform v4.5.0",
+    "gltf_version": "2.0",
+    "extensions_used": [],
+    "nodes": 1,
+    "meshes": 1,
+    "mesh_node_names": [
+     "mesh_node"
+    ],
+    "skins": 0,
+    "joints": 0,
+    "skinned_mesh_nodes": [],
+    "animations": [],
+    "images": 4,
+    "materials": 1,
+    "tris_from_indices": 23818,
+    "size_yup_m": [
+     1.9021,
+     0.355,
+     0.0989
+    ],
+    "min_yup_m": [
+     -0.9515,
+     -0.1767,
+     -0.0499
+    ],
+    "raw_position_accessor_bounds_m": [
+     {
+      "min": [
+       -1,
+       -0.18665120005607605,
+       -0.052003540098667145
+      ],
+      "max": [
+       1,
+       0.18665120005607605,
+       0.052003540098667145
+      ],
+      "size": [
+       2,
+       0.3733024001121521,
+       0.10400708019733429
+      ]
+     }
+    ],
+    "bounds_method": "accessor min/max through node TRS - wrong for skinned meshes, whose node transform glTF says to ignore (bind buffers already in metres, armature node scale 0.01)",
+    "degenerate": {
+     "triangles": 23818,
+     "duplicate_index": 0,
+     "duplicate_face_any_winding": 2,
+     "duplicate_face_same_winding": 0,
+     "zero_area_distinct_index": 16,
+     "dropped_by_blender_import": 2
+    }
+   },
+   "errors": [],
+   "import_result": [
+    "FINISHED"
+   ],
+   "rest_pose_cleared_actions": [],
+   "objects": [
+    {
+     "name": "mesh_node",
+     "type": "MESH",
+     "parent": null,
+     "location_m": [
+      -0.00044,
+      0.00044,
+      0.00078
+     ],
+     "scale": [
+      0.95105,
+      0.95105,
+      0.95105
+     ],
+     "modifiers": [],
+     "importer_artifact": false
+    }
+   ],
+   "importer_artifacts": [],
+   "mesh_objects": [
+    {
+     "name": "mesh_node",
+     "tris": 23816,
+     "verts": 16477,
+     "polygons": 23816,
+     "armature_deformed": false,
+     "importer_artifact": false,
+     "bounds_rest_m": {
+      "min": [
+       -0.9515,
+       -0.049,
+       -0.1767
+      ],
+      "max": [
+       0.9506,
+       0.0499,
+       0.1783
+      ],
+      "size": [
+       1.9021,
+       0.0989,
+       0.355
+      ]
+     }
+    }
+   ],
+   "subject_mesh_objects": [
+    "mesh_node"
+   ],
+   "tris": 23816,
+   "polygons": 23816,
+   "verts": 16477,
+   "tris_including_importer_artifacts": 23816,
+   "bounds_rest_m": {
+    "min": [
+     -0.9515,
+     -0.049,
+     -0.1767
+    ],
+    "max": [
+     0.9506,
+     0.0499,
+     0.1783
+    ],
+    "size": [
+     1.9021,
+     0.0989,
+     0.355
+    ]
+   },
+   "bounds_undeformed_m": {
+    "min": [
+     -0.9515,
+     -0.049,
+     -0.1767
+    ],
+    "max": [
+     0.9506,
+     0.0499,
+     0.1783
+    ],
+    "size": [
+     1.9021,
+     0.0989,
+     0.355
+    ]
+   },
+   "normalized_longest_axis_m": 1.9021,
+   "normalized_longest_axis": "x",
+   "origin_at_floor": false,
+   "min_z_m": -0.1767,
+   "bbox_centre_m": [
+    -0.0004,
+    0.0004,
+    0.0008
+   ],
+   "object_origin_at_bbox_centre_xy": true,
+   "low_slice_footprint_m": {
+    "size": [
+     0.1449,
+     0.0647
+    ],
+    "min": [
+     0.8029,
+     -0.0317
+    ],
+    "max": [
+     0.9478,
+     0.0329
+    ],
+    "verts": 548
+   },
+   "up_facing_surfaces_m": [
+    {
+     "z_world": 0.17,
+     "z_above_bottom": 0.3467,
+     "area_m2": 0.02931,
+     "fraction_of_height": 0.977
+    },
+    {
+     "z_world": 0.18,
+     "z_above_bottom": 0.3567,
+     "area_m2": 0.00708,
+     "fraction_of_height": 1.005
+    },
+    {
+     "z_world": 0.1,
+     "z_above_bottom": 0.2767,
+     "area_m2": 0.00371,
+     "fraction_of_height": 0.779
+    }
+   ],
+   "yup_to_zup": {
+    "expected_size_from_header": [
+     1.9021,
+     0.0989,
+     0.355
+    ],
+    "mode": "static: extents",
+    "max_rel_dev": 0.0,
+    "ok": true
+   },
+   "materials": [
+    "material"
+   ],
+   "material_count": 1,
+   "images": [
+    {
+     "name": "base_color",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "emissive",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "metallic_roughness",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    },
+    {
+     "name": "normal",
+     "size_px": [
+      1024,
+      1024
+     ],
+     "packed": true,
+     "channels": 4
+    }
+   ],
+   "image_count": 4,
+   "armature": null,
+   "actions": [],
+   "decision": {
+    "unreal_name": "SM_Shotgun",
+    "class": "hero_weapon",
+    "class_budget_tris": 25000,
+    "tris": 23816,
+    "budget_fits": true,
+    "budget_within_tolerance": true,
+    "budget_delta_pct": -4.7,
+    "pivot": "muzzle",
+    "drive": {
+     "mode": "x",
+     "cm": 120,
+     "measured_m": 1.9021,
+     "anchor": "x extent 1.9021 m"
+    },
+    "uniform_scale_factor": 0.6309,
+    "target_size_cm": {
+     "w": 120.0,
+     "d": 6.2,
+     "h": 22.4
+    },
+    "disposition": "kept",
+    "note": "Pump shotgun 120 long (28in-barrel class); height (stock drop + pump) and width follow. Same mesh for viewmodel and world pickup; pivot muzzle-back-along-barrel per REQ-G4-001."
+   }
+  }
+ ]
+}

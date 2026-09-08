@@ -9,6 +9,13 @@
 //   * money shot (greybox manifests only): from the CEO door centre at eye height, looking along the
 //     plan's window direction (Unreal +X for the agreed plan), the horizontal angle subtended by the window
 //     wall. PASS when the part inside the FOV covers >= 60% of the horizontal FOV.
+//   * Gate-2 blockouts (manifests built with Data/blockout.json): yawed footprints use the exact footprint (SAT) in
+//     the overlap check, so a prop flush against a wall (0 cm overlap, tolerance 0.5) passes and an angled desk is
+//     only flagged when it really penetrates a neighbour; every Blockout/* collision box must lie inside its room
+//     rect (nothing protrudes through a wall), on or above the floor and under the ceiling; demon cylinders must be
+//     collision-free with the engine-cylinder scale; the backdrop plane must sit outside the boundary shell.
+//   * labels: every label that belongs to a room keeps its text top under that room's ceiling (a label lifted above a
+//     tall blockout must not end up inside the slab - Label_demon_demon_2 did, review finding 2026-09-07).
 //   Marker kinds (scene / encounter / checkpoint / dwell markers, no collision) are ignored by every check.
 // Exit 0 on PASS, 1 on FAIL.
 import fs from 'node:fs';
@@ -37,9 +44,29 @@ const actors = Array.isArray(doc.actors) ? doc.actors : [];
 const boxes = actors.filter((a) => a.type === 'box');
 
 // ---- bounds & counts -------------------------------------------------------------------------------------
+// AABB of a box; a yawed footprint (yaw_plan_deg, Gate-2 blockouts) gives its conservative bounding rectangle.
 const aabb = (b) => {
   const [cx, cy, cz] = b.center_plan, [w, d, h] = b.size_plan;
-  return { x0: cx - w / 2, x1: cx + w / 2, y0: cy - d / 2, y1: cy + d / 2, z0: cz - h / 2, z1: cz + h / 2 };
+  const yaw = (b.yaw_plan_deg || 0) * Math.PI / 180, c = Math.abs(Math.cos(yaw)), s = Math.abs(Math.sin(yaw));
+  const hx = w / 2 * c + d / 2 * s, hy = w / 2 * s + d / 2 * c;
+  return { x0: cx - hx, x1: cx + hx, y0: cy - hy, y1: cy + hy, z0: cz - h / 2, z1: cz + h / 2 };
+};
+const axisAligned = (b) => { const m = Math.abs((b.yaw_plan_deg || 0) % 90); return m < 1e-9 || Math.abs(m - 90) < 1e-9; };
+// Exact footprint corners (plan x, y): w along (cos yaw, sin yaw), d along (-sin yaw, cos yaw) - the generator's Box convention.
+const footprintCorners = (b) => {
+  const [cx, cy] = b.center_plan, [w, d] = b.size_plan;
+  const yaw = (b.yaw_plan_deg || 0) * Math.PI / 180, ux = Math.cos(yaw), uy = Math.sin(yaw), vx = -uy, vy = ux;
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sw, sd]) => [cx + sw * ux * w / 2 + sd * vx * d / 2, cy + sw * uy * w / 2 + sd * vy * d / 2]);
+};
+// Separating-axis test on the two footprints (z already tested by the caller): overlap only when both penetrate by > tol on every axis.
+const footprintsOverlap = (A, B, tol) => {
+  const ca = footprintCorners(A), cb = footprintCorners(B);
+  for (const yaw of [A.yaw_plan_deg || 0, B.yaw_plan_deg || 0]) for (const ang of [yaw, yaw + 90]) {
+    const nx = Math.cos(ang * Math.PI / 180), ny = Math.sin(ang * Math.PI / 180);
+    const pa = ca.map(([x, y]) => x * nx + y * ny), pb = cb.map(([x, y]) => x * nx + y * ny);
+    if (Math.min(Math.max(...pa), Math.max(...pb)) - Math.max(Math.min(...pa), Math.min(...pb)) <= tol) return false;
+  }
+  return true;
 };
 const visible = boxes.filter((b) => b.visible);
 const bounds = visible.reduce((acc, b) => {
@@ -48,7 +75,7 @@ const bounds = visible.reduce((acc, b) => {
 }, { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity, z0: Infinity, z1: -Infinity });
 const counts = {};
 for (const a of actors) {
-  const k = a.type === 'box' ? `box:${a.kind}` : a.type === 'label' ? `label:${a.style}` : a.type === 'light' ? `light:${a.light_type}` : a.type;
+  const k = a.type === 'box' ? `box:${a.kind}` : a.type === 'cylinder' ? `cylinder:${a.kind}` : a.type === 'label' ? `label:${a.style}` : a.type === 'light' ? `light:${a.light_type}` : a.type;
   counts[k] = (counts[k] || 0) + 1;
 }
 console.log(`manifest ${path.basename(manifestPath)} -> map ${doc.map}, ${actors.length} actors`);
@@ -69,6 +96,18 @@ for (const a of actors) {
     const [w, d, h] = a.size_plan;
     const sc = a.ue.scale;
     if (Math.abs(sc[0] - d / 100) > 1e-3 || Math.abs(sc[1] - w / 100) > 1e-3 || Math.abs(sc[2] - h / 100) > 1e-3) fail(`box ${a.name}: UE scale does not match size/100 (with X<->Y swap)`);
+    // A footprint yaw is a rotation, not a facing: plan and UE turn the same way, so UE yaw == plan yaw (normalised).
+    const yawWant = (((a.yaw_plan_deg || 0) % 360) + 360) % 360, yawGot = ((a.ue.rotation[2] % 360) + 360) % 360;
+    if (Math.abs(((yawWant - yawGot) % 360 + 540) % 360 - 180) > 1e-3) fail(`box ${a.name}: UE yaw ${a.ue.rotation[2]} does not equal the footprint yaw ${a.yaw_plan_deg}`);
+  }
+  if (a.type === 'cylinder') {
+    const r = a.radius_cm, h = a.height_cm, sc = a.ue.scale;
+    if (!(r > 0) || !(h > 0)) fail(`cylinder ${a.name}: radius / height must be positive`);
+    if (Math.abs(sc[0] - 2 * r / 100) > 1e-3 || Math.abs(sc[1] - 2 * r / 100) > 1e-3 || Math.abs(sc[2] - h / 100) > 1e-3) fail(`cylinder ${a.name}: UE scale must be (2r/100, 2r/100, h/100) for the 100 x 100 engine cylinder`);
+    if (Math.abs(a.center_plan[2] - h / 2) > 1e-3) fail(`cylinder ${a.name}: centre z must be h/2 (it stands on the floor)`);
+    const loc = a.ue.location;
+    if (Math.abs(loc[0] - a.center_plan[1]) > 1e-3 || Math.abs(loc[1] + a.center_plan[0]) > 1e-3 || Math.abs(loc[2] - a.center_plan[2]) > 1e-3) fail(`cylinder ${a.name}: UE location does not follow UE.X=plan.y, UE.Y=-plan.x`);
+    if (a.collision) fail(`cylinder ${a.name} must have no collision (demon blockouts keep the lane checks honest)`);
   }
 }
 const starts = actors.filter((a) => a.type === 'player_start');
@@ -87,11 +126,62 @@ for (let i = 0; i < coll.length; i++) {
     const ox = Math.min(A.r.x1, B.r.x1) - Math.max(A.r.x0, B.r.x0);
     const oy = Math.min(A.r.y1, B.r.y1) - Math.max(A.r.y0, B.r.y0);
     const oz = Math.min(A.r.z1, B.r.z1) - Math.max(A.r.z0, B.r.z0);
-    if (ox > tol && oy > tol && oz > tol) overlaps.push(`${A.b.name} <-> ${B.b.name} (overlap ${ox.toFixed(1)} x ${oy.toFixed(1)} x ${oz.toFixed(1)} cm)`);
+    if (!(ox > tol && oy > tol && oz > tol)) continue;
+    // AABBs overlap; a yawed footprint (Gate-2 blockout) gets the exact separating-axis test before it counts.
+    if ((!axisAligned(A.b) || !axisAligned(B.b)) && !footprintsOverlap(A.b, B.b, tol)) continue;
+    overlaps.push(`${A.b.name} <-> ${B.b.name} (overlap ${ox.toFixed(1)} x ${oy.toFixed(1)} x ${oz.toFixed(1)} cm${axisAligned(A.b) && axisAligned(B.b) ? '' : ', exact footprints'})`);
   }
 }
-console.log(`  overlap check: ${coll.length} collision boxes, ${pairs} candidate pairs, tolerance ${tol} cm, whitelist ${[...WHITELIST].join('/')} -> ${overlaps.length ? 'FAIL' : 'ok'}`);
+const yawed = coll.filter((p) => !axisAligned(p.b)).length;
+console.log(`  overlap check: ${coll.length} collision boxes (${yawed} yawed, exact footprints), ${pairs} candidate pairs, tolerance ${tol} cm, whitelist ${[...WHITELIST].join('/')} -> ${overlaps.length ? 'FAIL' : 'ok'}`);
 for (const o of overlaps.slice(0, 30)) fail(`overlap: ${o}`);
+
+// ---- Gate-2 blockouts: inside their room (flush allowed), on the floor, under the ceiling; backdrop beyond the shell ------
+const roomMeta = new Map((doc.meta && Array.isArray(doc.meta.rooms) ? doc.meta.rooms : []).map((r) => [r.id, r]));
+const blockoutColl = boxes.filter((b) => typeof b.folder === 'string' && b.folder.startsWith('Blockout/') && b.collision && b.visible);
+const blockoutFails = [];
+for (const b of blockoutColl) {
+  const room = roomMeta.get(b.room);
+  if (!room || !Array.isArray(room.rect)) { blockoutFails.push(`${b.name}: room ${JSON.stringify(b.room)} is not in meta.rooms`); continue; }
+  const [rx, ry, rw, rh] = room.rect, r = aabb(b);
+  const out = footprintCorners(b).filter(([x, y]) => x < rx - tol || x > rx + rw + tol || y < ry - tol || y > ry + rh + tol);
+  if (out.length) blockoutFails.push(`${b.name} protrudes through a wall of ${b.room}: footprint x ${r.x0.toFixed(1)}..${r.x1.toFixed(1)} y ${r.y0.toFixed(1)}..${r.y1.toFixed(1)} vs room x ${rx}..${rx + rw} y ${ry}..${ry + rh}`);
+  if (r.z0 < -tol) blockoutFails.push(`${b.name} sinks ${(-r.z0).toFixed(1)} cm into the floor`);
+  if (r.z1 > room.ceiling_cm + tol) blockoutFails.push(`${b.name} pokes ${(r.z1 - room.ceiling_cm).toFixed(1)} cm through the ${b.room} ceiling`);
+}
+const backdrops = boxes.filter((b) => b.kind === 'backdrop');
+const shell = boxes.filter((b) => b.kind === 'boundary').map(aabb);
+for (const b of backdrops) {
+  if (b.collision) blockoutFails.push(`${b.name}: the backdrop must have no collision`);
+  const r = aabb(b);
+  if (shell.some((s) => Math.min(s.x1, r.x1) - Math.max(s.x0, r.x0) > tol && Math.min(s.y1, r.y1) - Math.max(s.y0, r.y0) > tol && Math.min(s.z1, r.z1) - Math.max(s.z0, r.z0) > tol)) blockoutFails.push(`${b.name} intersects the boundary shell`);
+  if (shell.length) {
+    const sx0 = Math.min(...shell.map((s) => s.x0)), sx1 = Math.max(...shell.map((s) => s.x1)), sy0 = Math.min(...shell.map((s) => s.y0)), sy1 = Math.max(...shell.map((s) => s.y1));
+    if (r.x0 > sx0 && r.x1 < sx1 && r.y0 > sy0 && r.y1 < sy1) blockoutFails.push(`${b.name} lies inside the boundary shell; the backdrop belongs beyond the window, outside it`);
+  }
+}
+const cylinders = actors.filter((a) => a.type === 'cylinder');
+if (blockoutColl.length || backdrops.length || cylinders.length) {
+  console.log(`  blockout check: ${blockoutColl.length} collision blockout(s) inside their rooms (tolerance ${tol} cm), ${cylinders.length} cylinder(s), ${backdrops.length} backdrop(s) beyond the shell -> ${blockoutFails.length ? 'FAIL' : 'ok'}`);
+  const bm = doc.meta && doc.meta.blockout;
+  if (bm && bm.counts) console.log(`  blockout meta: ${bm.source} -> ${Object.entries(bm.counts).map(([k, v]) => `${k} ${v}`).join(', ')}${bm.slots_unused && bm.slots_unused.length ? `; unused slots ${bm.slots_unused.join(', ')}` : ''}`);
+} else console.log('  blockout check: no blockouts in this manifest (greybox-only build)');
+for (const m of blockoutFails.slice(0, 30)) fail(`blockout: ${m}`);
+
+// ---- labels under their room's ceiling ------------------------------------------------------------------------------
+// A TextRender is centred vertically on pos_plan z, so the text top is z + size_cm / 2; it must stay 1 cm under the ceiling.
+const labelFails = [];
+let labelsChecked = 0;
+for (const a of actors) {
+  if (a.type !== 'label' || !a.room) continue;
+  const room = roomMeta.get(a.room);
+  if (!room || !(room.ceiling_cm > 0)) continue;
+  labelsChecked++;
+  const top = a.pos_plan[2] + (a.size_cm || 0) / 2;
+  if (top > room.ceiling_cm - 1) labelFails.push(`${a.name}: text top z ${top.toFixed(1)} reaches the ${a.room} ceiling ${room.ceiling_cm} (label z ${a.pos_plan[2]}, size ${a.size_cm})`);
+}
+if (labelsChecked) console.log(`  label check: ${labelsChecked} room label(s) keep their text top under the ceiling (< ceiling - 1 cm) -> ${labelFails.length ? 'FAIL' : 'ok'}`);
+for (const m of labelFails.slice(0, 20)) fail(`label: ${m}`);
 
 // ---- hidden boundary present --------------------------------------------------------------------------------------
 const boundary = boxes.filter((b) => b.kind === 'boundary');
